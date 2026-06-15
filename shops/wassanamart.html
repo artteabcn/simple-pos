@@ -99,13 +99,13 @@
     }
     function up() {
         document.querySelectorAll(".row").forEach(r => {
-            const s = r.querySelector("select"); const cur = s.value; s.innerHTML = "<option value=\"\">-- Item --</option>";
+            const s = r.querySelector("select"); const cur = s.value; s.innerHTML = "<option value=&quot;&quot;>-- Item --</option>";
             dataset.forEach(d => { if(f==="ALL" || d.category===f) { const o = document.createElement("option"); o.value=d.id; o.innerText= (l==="EN"?d.nameEN:d.nameTH) + " (" + d.price + ")"; s.appendChild(o); }}); s.value = cur;
         });
     }
     function add() {
         const id = "r_"+Math.random().toString(36).substr(2,5); const d = document.createElement("div"); d.className="row"; d.id=id;
-        d.innerHTML = "<select onchange=\"hc('" + id + "')\"></select><input type=\"number\" class=\"q\" value=\"1\" min=\"1\" oninput=\"calc()\"><input type=\"number\" class=\"p\" value=\"0\" readonly style=\"opacity:0.6;\"><button onclick=\"document.getElementById('" + id + "').remove(); calc();\">✕</button>";
+        d.innerHTML = "<select onchange='hc("" + id + "")'></select><input type="number" class="q" value="1" min="1" oninput="calc()"><input type="number" class="p" value="0" readonly style="opacity:0.6;"><button onclick='document.getElementById("" + id + "").remove(); calc();'>✕</button>";
         document.getElementById("lines").appendChild(d); up();
     }
     function hc(id) { const r = document.getElementById(id); const m = dataset.find(d => d.id === r.querySelector("select").value); r.querySelector(".p").value = m ? m.price : 0; calc(); }
@@ -120,18 +120,18 @@
         const vat = (sub - dVal + sVal) * 0.07; const total = (sub - dVal + sVal + vat);
         document.getElementById("totalBox").innerText = Math.round(total).toLocaleString() + ".00 ฿";
         values = { items, sub, dVal, sVal, vat, total }; const dStr = new Date().toLocaleString("en-GB"); const labels = dict[l];
-        let rHTML = ""; items.forEach(i => { rHTML += "<tr><td>" + (l==="EN"?i.nEN:i.nTH) + "</td><td style=\"text-align:right;\">" + i.q + "</td><td style=\"text-align:right;\">" + Math.round(i.p) + ".00</td><td style=\"text-align:right;\">" + Math.round(i.t) + ".00</td></tr>"; });
-        let docContent = "<html><body style=\"font-family:sans-serif;font-size:12px;padding:10px;color:#333;\">" +
-        "<table><tr><td><strong>wassana minimart</strong><br>" + labels.tax + " DBD 085567012791<br>Moo 4, Khanom Beach, Nakhon Si Thammarat, Thailand<br>Tel:  833972 285</td><td style=\"text-align:right;vertical-align:top;\"><strong>" + labels.title + "</strong><br>Ref: REC-CF<br>" + dStr + "</td></tr></table><br>" +
-        "<div style=\"display:flex;justify-content:between;\"><span>Loc: " + document.getElementById("tab").value + "</span> <span style=\"margin-left:auto;\">Note: " + document.getElementById("note").value + "</span></div><br>" +
-        \"<table style=\\\"width:100%;border-collapse:collapse;\\\"><thead style=\\\"background:#2563eb;color:white;\\\"><tr><th style=\\\"text-align:left;padding:4px;\\\">Item</th><th style=\\\"text-align:right;padding:4px;\\\">Qty</th><th style=\\\"text-align:right;padding:4px;\\\">Unit</th><th style=\\\"text-align:right;padding:4px;\\\">Total</th></tr></thead><tbody>\" + (rHTML || "<tr><td colspan=\\\"4\\\" style=\\\"text-align:center;padding:10px;\\\">Empty Ticket</td></tr>") + \"</tbody></table>\" +
-        "<table style=\"width:45%; margin-left:auto; margin-top:10px; font-weight:bold; line-height:1.6;\">" +
-        "<tr><td>" + labels.sub + "</td><td style=\"text-align:right;\">" + Math.round(sub) + ".00</td></tr>" +
-        (dVal > 0 ? "<tr><td style=\"color:#ef4444;\">" + labels.disc + "</td><td style=\"text-align:right;color:#ef4444;\">-" + Math.round(dVal) + ".00</td></tr>" : "") +
-        (sVal > 0 ? "<tr><td>" + labels.sc + "</td><td style=\"text-align:right;\">+" + Math.round(sVal) + ".00</td></tr>" : "") +
-        "<tr><td>" + labels.vat + "</td><td style=\"text-align:right;\">" + Math.round(vat) + ".00</td></tr>" +
-        "<tr style=\"color:#2563eb;font-size:13px;background:#f0f6ff;\"><td>" + labels.total + "</td><td style=\"text-align:right;\">" + Math.round(total) + ".00</td></tr>" +
-        "</table><br><div style=\"font-size:11px;\"><strong>" + labels.payment + "</strong> " + document.getElementById("pm").value + "</div></body></html>";
+        let rHTML = ""; items.forEach(i => { rHTML += "<tr><td>" + (l==="EN"?i.nEN:i.nTH) + "</td><td style="text-align:right;">" + i.q + "</td><td style="text-align:right;">" + Math.round(i.p) + ".00</td><td style="text-align:right;">" + Math.round(i.t) + ".00</td></tr>"; });
+        let docContent = "<html><body style="font-family:sans-serif;font-size:12px;padding:10px;color:#333;">" +
+        "<table><tr><td><strong>wassana minimart</strong><br>" + labels.tax + " DBD 085567012791<br>Moo 4, Khanom Beach, Nakhon Si Thammarat, Thailand<br>Tel:  833972 285</td><td style="text-align:right;vertical-align:top;"><strong>" + labels.title + "</strong><br>Ref: REC-CF<br>" + dStr + "</td></tr></table><br>" +
+        "<div style="display:flex;justify-content:between;"><span>Loc: " + document.getElementById("tab").value + "</span> <span style="margin-left:auto;">Note: " + document.getElementById("note").value + "</span></div><br>" +
+        "<table style="width:100%;border-collapse:collapse;"><thead style="background:#2563eb;color:white;"><tr><th style="text-align:left;padding:4px;">Item</th><th style="text-align:right;padding:4px;">Qty</th><th style="text-align:right;padding:4px;">Unit</th><th style="text-align:right;padding:4px;">Total</th></tr></thead><tbody>" + (rHTML || "<tr><td colspan="4" style="text-align:center;padding:10px;">Empty Ticket</td></tr>") + "</tbody></table>" +
+        "<table style="width:45%; margin-left:auto; margin-top:10px; font-weight:bold; line-height:1.6;">" +
+        "<tr><td>" + labels.sub + "</td><td style="text-align:right;">" + Math.round(sub) + ".00</td></tr>" +
+        (dVal > 0 ? "<tr><td style="color:#ef4444;">" + labels.disc + "</td><td style="text-align:right;color:#ef4444;">-" + Math.round(dVal) + ".00</td></tr>" : "") +
+        (sVal > 0 ? "<tr><td>" + labels.sc + "</td><td style="text-align:right;">+" + Math.round(sVal) + ".00</td></tr>" : "") +
+        "<tr><td>" + labels.vat + "</td><td style="text-align:right;">" + Math.round(vat) + ".00</td></tr>" +
+        "<tr style="color:#2563eb;font-size:13px;background:#f0f6ff;"><td>" + labels.total + "</td><td style="text-align:right;">" + Math.round(total) + ".00</td></tr>" +
+        "</table><br><div style="font-size:11px;"><strong>" + labels.payment + "</strong> " + document.getElementById("pm").value + "</div></body></html>";
         document.querySelector("iframe").srcdoc = docContent;
     }
     fb(); add();
