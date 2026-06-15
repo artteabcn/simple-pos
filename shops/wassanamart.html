@@ -1,132 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>wassana minimart - POS</title>
-<style>
-:root{--bg:#f7fafc;--card:#fff;--text:#1a202c;--muted:#718096;--primary:#2563eb;--pl:#eff6ff;--bdr:#e2e8f0;--danger:#ef4444;--success:#10b981;}
-@media(prefers-color-scheme:dark){:root{--bg:#121620;--card:#1a202c;--text:#edf2f7;--muted:#a0aec0;--primary:#3b82f6;--pl:rgba(59,130,246,.12);--bdr:#2d3748;}}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);margin:0;}
-.app{max-width:600px;margin:0 auto;padding:12px 14px 20px;}
-header{display:flex;align-items:center;justify-content:space-between;padding:10px 0 14px;gap:10px;}
-.hdr-left{display:flex;align-items:center;gap:10px;min-width:0;}
-.logo-img{height:52px;width:auto;border-radius:8px;flex-shrink:0;object-fit:contain;}
-.shop-name{font-size:1.2rem;font-weight:800;color:var(--primary);margin:0;line-height:1.25;word-break:break-word;}
-.lang-toggle{display:flex;gap:3px;background:var(--bdr);border-radius:22px;padding:3px;flex-shrink:0;}
-.lang-btn{background:none;border:none;padding:7px 14px;border-radius:18px;font-weight:700;font-size:.85rem;cursor:pointer;color:var(--muted);min-height:36px;}
-.lang-btn.active{background:var(--primary);color:#fff;}
-.nav{display:flex;gap:4px;background:var(--bdr);border-radius:12px;padding:4px;margin-bottom:14px;}
-.nav button{flex:1;background:none;border:none;padding:0;min-height:52px;font-weight:700;font-size:.95rem;color:var(--muted);cursor:pointer;border-radius:9px;}
-.nav button.active{background:var(--card);color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,.08);}
-.panel{display:none;}.panel.active{display:block;}
-.hero{background:var(--card);border:2px solid var(--primary);padding:18px 16px;border-radius:14px;text-align:center;font-size:2rem;font-weight:800;color:var(--primary);margin-bottom:14px;}
-.card{background:var(--card);padding:14px;border-radius:14px;border:1px solid var(--bdr);margin-bottom:12px;}
-.filter-bar{display:flex;gap:8px;overflow-x:auto;margin-bottom:14px;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
-.filter-bar::-webkit-scrollbar{display:none;}
-.chip{background:var(--bdr);border:none;padding:0 18px;border-radius:22px;font-size:.9rem;font-weight:600;cursor:pointer;white-space:nowrap;min-height:44px;display:flex;align-items:center;color:var(--text);}
-.chip.active{background:var(--primary);color:#fff;}
-.item-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-bottom:10px;align-items:center;}
-.item-row select{width:100%;padding:12px 10px;border-radius:9px;border:1px solid var(--bdr);font-size:.95rem;background:var(--bg);color:var(--text);min-height:52px;}
-.qty-stepper{display:flex;align-items:center;border:1px solid var(--bdr);border-radius:9px;overflow:hidden;flex-shrink:0;}
-.qty-stepper button{background:var(--bdr);border:none;width:42px;height:52px;font-size:1.4rem;font-weight:700;cursor:pointer;color:var(--text);}
-.qty-stepper input{width:46px;text-align:center;border:none;border-left:1px solid var(--bdr);border-right:1px solid var(--bdr);font-size:1rem;font-weight:700;height:52px;background:var(--card);color:var(--text);-moz-appearance:textfield;}
-.qty-stepper input::-webkit-inner-spin-button,.qty-stepper input::-webkit-outer-spin-button{-webkit-appearance:none;}
-.del-btn{background:var(--danger);color:#fff;border:none;border-radius:9px;width:46px;height:52px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.add-btn{width:100%;min-height:52px;background:var(--pl);color:var(--primary);border:2px dashed var(--primary);border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;}
-.opts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-.opt-group label{display:block;font-size:.7rem;font-weight:700;margin-bottom:6px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
-.opt-group select{width:100%;padding:10px 8px;border-radius:8px;border:1px solid var(--bdr);font-size:.9rem;background:var(--bg);color:var(--text);min-height:48px;}
-.btn{width:100%;min-height:52px;border:none;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
-.btn-primary{background:var(--primary);color:#fff;}
-.btn-danger-full{background:var(--danger);color:#fff;}
-.meta-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
-.meta-row input{width:100%;padding:12px;border-radius:8px;border:1px solid var(--bdr);font-size:.95rem;background:var(--bg);color:var(--text);min-height:48px;box-sizing:border-box;}
-iframe{width:100%;height:500px;border:1px solid var(--bdr);border-radius:12px;background:white;margin-top:12px;}
-footer{text-align:center;padding:12px 0 4px;}
-.edit-trigger{background:none;border:none;color:var(--bdr);font-size:.85rem;cursor:pointer;padding:6px 12px;border-radius:6px;transition:color .2s;}
-.edit-trigger:hover{color:var(--muted);}
-/* Edit modal */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;overflow-y:auto;padding:16px;}
-.modal-overlay.open{display:block;}
-.modal-box{background:var(--card);border-radius:16px;padding:18px;max-width:560px;margin:0 auto;}
-.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
-.modal-header h3{margin:0;color:var(--primary);font-size:1.1rem;}
-.modal-close{background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--muted);padding:4px 8px;}
-.edit-item-card{background:var(--bg);border:1px solid var(--bdr);border-radius:10px;padding:10px;margin-bottom:10px;}
-.edit-item-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;}
-.edit-item-row.three{grid-template-columns:1fr 1fr 80px;}
-.edit-item-card input{width:100%;padding:9px 10px;border-radius:7px;border:1px solid var(--bdr);font-size:.9rem;background:var(--card);color:var(--text);box-sizing:border-box;}
-.edit-item-card select{width:100%;padding:9px 10px;border-radius:7px;border:1px solid var(--bdr);font-size:.9rem;background:var(--card);color:var(--text);}
-.del-item-btn{background:var(--danger);color:#fff;border:none;border-radius:7px;padding:8px;cursor:pointer;font-size:.95rem;width:100%;}
-.save-status{text-align:center;font-size:.85rem;padding:8px;border-radius:8px;margin-top:8px;display:none;}
-.save-status.ok{background:#d1fae5;color:#065f46;display:block;}
-.save-status.err{background:#fee2e2;color:#991b1b;display:block;}</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>wassana minimart - POS Terminal</title>
+    <style>
+        :root { --bg-color: #f7fafc; --card-bg: #ffffff; --text-main: #1a202c; --text-muted: #718096; --primary: #2563eb; --primary-light: #eff6ff; --border: #e2e8f0; --danger: #ef4444; }
+        @media (prefers-color-scheme: dark) { :root { --bg-color: #121620; --card-bg: #1a202c; --text-main: #edf2f7; --text-muted: #a0aec0; --primary: #3b82f6; --primary-light: rgba(59, 130, 246, 0.1); --border: #2d3748; } }
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 12px; }
+        .app { max-width: 750px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 16px; }
+        .nav { display: flex; background: var(--border); border-radius: 8px; padding: 4px; margin-bottom: 16px; }
+        .nav button { flex:1; background:none; border:none; padding:10px; font-weight:700; color:var(--text-muted); cursor:pointer; border-radius:6px; }
+        .nav button.active { background:var(--card-bg); color:var(--primary); }
+        .panel { display:none; } .panel.active { display:block; }
+        .hero { background:var(--card-bg); border: 2px solid var(--primary); padding:16px; border-radius:12px; text-align:center; font-size:1.8rem; font-weight:800; color:var(--primary); margin-bottom:16px; }
+        .card { background:var(--card-bg); padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:12px; }
+        .filter-bar { display:flex; gap:8px; overflow-x:auto; margin-bottom:12px; }
+        .chip { background:var(--border); border:none; padding:6px 12px; border-radius:20px; font-size:0.85rem; font-weight:600; cursor:pointer; }
+        .chip.active { background:var(--primary); color:white; }
+        .row { display:grid; grid-template-columns: 2.5fr 1fr 1fr 0.4fr; gap:8px; margin-bottom:8px; align-items:center; }
+        .btn { width:100%; height:42px; border:none; border-radius:6px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+        .btn-primary { background:var(--primary); color:white; }
+        iframe { width:100%; height:500px; border:1px solid var(--border); border-radius:12px; background:white; margin-top:12px; }
+    </style>
 </head>
 <body>
 <div class="app">
-<header>
-  <div class="hdr-left"><h1 class="shop-name">wassana minimart</h1></div>
-  <div class="lang-toggle">
-    <button id="lEN" class="lang-btn active" onclick="sl('EN')">EN</button>
-    <button id="lTH" class="lang-btn" onclick="sl('TH')">ไทย</button>
-  </div>
-</header>
-<div class="nav">
-  <button id="b1" class="active" onclick="m('calc')">🧾 Order</button>
-  <button id="b2" onclick="m('doc')">🖨️ Invoice</button>
-</div>
-<div class="hero" id="totalBox">0.00 ฿</div>
-<div id="pCalc" class="panel active">
-  <div class="filter-bar" id="fBar"></div>
-  <div class="card">
-    <div id="lines"></div>
-    <button class="add-btn" id="addBtn" onclick="add()">➕ Add Item</button>
-  </div>
-  <div class="card">
-    <div class="opts">
-      <div class="opt-group"><label id="lDisc">Discount</label><select id="disc" onchange="calc()"><option value="0">None</option><option value="5">5%</option><option value="10">10%</option></select></div>
-      <div class="opt-group"><label id="lSc">Service</label><select id="sc" onchange="calc()"><option value="0">0%</option><option value="10">10%</option></select></div>
-      <div class="opt-group"><label id="lPm">Payment</label><select id="pm" onchange="calc()"><option value="Cash / เงินสด">Cash</option><option value="Credit Card">Card</option><option value="PromptPay / พร้อมเพย์">PromptPay</option></select></div>
+    <header><h1>wassana minimart</h1><p style="color:var(--text-muted); margin:4px 0 0 0;">POS Client Node</p></header>
+    <div class="nav"><button id="b1" class="active" onclick="m('calc')">1. Order Intake</button><button id="b2" onclick="m('doc')">2. Invoice Preview</button></div>
+    <div class="hero" id="totalBox">0.00 ฿</div>
+    <div id="pCalc" class="panel active">
+        <div class="filter-bar" id="fBar"></div>
+        <div class="card"><div id="lines"></div><button class="btn" style="background:var(--primary-light); color:var(--primary);" onclick="add()">➕ Add New Line Item</button></div>
+        <div class="card"><div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+            <div><label style="font-size:0.75rem; font-weight:700;">Discount</label><select id="disc" onchange="calc()"><option value="0">None</option><option value="5">5%</option><option value="10">10%</option></select></div>
+            <div><label style="font-size:0.75rem; font-weight:700;">Service Charge</label><select id="sc" onchange="calc()"><option value="0">0%</option><option value="10">10%</option></select></div>
+            <div><label style="font-size:0.75rem; font-weight:700;">Payment Route</label><select id="pm" onchange="calc()"><option value="Cash / เงินสด">Cash</option><option value="Credit Card">Card</option><option value="PromptPay / พร้อมเพย์">PromptPay</option></select></div>
+        </div></div>
     </div>
-  </div>
-</div>
-<div id="pDoc" class="panel">
-  <div class="card meta-row">
-    <input type="text" id="tab" value="Table 01" oninput="calc()">
-    <input type="text" id="note" value="2 Guests" oninput="calc()">
-  </div>
-  <button class="btn btn-primary" id="printBtn" onclick="window.frames[0].focus();window.frames[0].print();">🖨️ Print Receipt</button>
-  <iframe></iframe>
-</div>
-<footer>
-  <button class="edit-trigger" onclick="openEdit()" title="Staff menu editor">⚙ Edit Menu</button>
-</footer>
-</div>
-
-<!-- Edit modal -->
-<div class="modal-overlay" id="editModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>✏️ Edit Menu</h3>
-      <button class="modal-close" onclick="closeEdit()">✕</button>
+    <div id="pDoc" class="panel">
+        <div class="card" style="display:flex; gap:8px;"><button class="btn btn-primary" id="lEN" onclick="sl('EN')">English Layout</button><button class="btn" style="background:var(--border);" id="lTH" onclick="sl('TH')">ภาษาไทย</button></div>
+        <div class="card" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <input type="text" id="tab" value="Table 01" oninput="calc()"><input type="text" id="note" value="2 Guests" oninput="calc()">
+        </div>
+        <button class="btn btn-primary" onclick="window.frames[0].focus(); window.frames[0].print();">🖨️ Print Receipt Document</button>
+        <iframe></iframe>
     </div>
-    <div id="editList"></div>
-    <button class="add-btn" onclick="addEditItem()" style="margin-bottom:12px">➕ Add Item</button>
-    <button class="btn btn-primary" onclick="saveMenu()">💾 Save to Server</button>
-    <button class="btn" style="background:var(--bdr);color:var(--text);margin-top:8px" onclick="closeEdit()">Cancel</button>
-    <div id="saveStatus" class="save-status"></div>
-  </div>
 </div>
 <script>
-const SLUG="wassanamart";
-const SHOP_PIN="1234";
-const LOGO_URL="";
-const PP_ID="";
-const CURRENCY="฿";
-const VAT_MODE="inclusive";
-let l="EN",f="ALL",dataset=[
+let l="EN", f="ALL", dataset = [
     {
         "id": "m1",
         "nameEN": "Chang beer S",
@@ -162,255 +86,60 @@ let l="EN",f="ALL",dataset=[
         "price": 100,
         "category": "Shots/ยิง"
     }
-];
-const dict={
-  EN:{title:"RECEIPT / GUEST CHECK",tax:"Tax ID:",sub:"Subtotal",vatIncl:"incl. VAT 7%",vatExtra:"VAT (7%)",sc:"Service Charge",disc:"Discount",total:"TOTAL (฿)",payment:"Payment:"},
-  TH:{title:"ใบเสร็จรับเงิน",tax:"เลขประจำตัวผู้เสียภาษี:",sub:"รวมยอด",vatIncl:"รวม VAT 7% แล้ว",vatExtra:"ภาษีมูลค่าเพิ่ม (7%)",sc:"ค่าบริการ",disc:"ส่วนลด",total:"ยอดรวมสุทธิ (฿)",payment:"ช่องทางชำระ:"}
+], values = { items:[], sub:0, dVal:0, sVal:0, vat:0, total:0 };
+const dict = {
+    EN: { title: "RECEIPT / GUEST CHECK", tax: "Tax ID:", sub: "Subtotal", vat: "VAT (7%)", sc: "Service Charge", disc: "Discount", total: "Total Due (฿)", payment: "Payment Route:" },
+    TH: { title: "ใบเสร็จรับเงิน / เช็คบิล", tax: "เลขประจำตัวผู้เสียภาษี:", sub: "รวมยอดอาหาร", vat: "ภาษี (7%)", sc: "ค่าบริการ", disc: "ส่วนลด", total: "ยอดเงินรวมทั้งสิ้นสุทธิ (฿)", payment: "ช่องทางชำระเงิน:" }
 };
-const uiDict={
-  EN:{orderTab:"🧾 Order",invoiceTab:"🖨️ Invoice",addItem:"➕ Add Item",disc:"Discount",sc:"Service",pm:"Payment",print:"🖨️ Print Receipt"},
-  TH:{orderTab:"🧾 คำสั่งซื้อ",invoiceTab:"🖨️ ใบแจ้งหนี้",addItem:"➕ เพิ่มรายการ",disc:"ส่วนลด",sc:"ค่าบริการ",pm:"ชำระเงิน",print:"🖨️ พิมพ์ใบเสร็จ"}
-};
-async function loadLiveMenu(){
-  try{
-    const r=await fetch(`/data/${SLUG}-menu.json`);
-    if(r.ok){dataset=await r.json();fb();up();}
-  }catch(e){}
+function m(p){ document.getElementById("pCalc").className=p==="calc"?"panel active":"panel"; document.getElementById("pDoc").className=p==="doc"?"panel active":"panel"; document.getElementById("b1").className=p==="calc"?"active":""; document.getElementById("b2").className=p==="doc"?"active":""; }
+function sl(lang){ l=lang; document.getElementById("lEN").className=l==="EN"?"btn btn-primary":"btn"; document.getElementById("lTH").className=l==="TH"?"btn btn-primary":"btn"; up(); calc(); }
+function fb() {
+    const bar = document.getElementById("fBar"); const cats = ["ALL", ...new Set(dataset.map(d => d.category).filter(Boolean))]; bar.innerHTML = "";
+    cats.forEach(c => { const b = document.createElement("button"); b.className = "chip " + (f === c ? "active" : ""); b.innerText = c; b.onclick = () => { f = c; fb(); up(); }; bar.appendChild(b); });
 }
-function m(p){
-  document.getElementById("pCalc").className=p==="calc"?"panel active":"panel";
-  document.getElementById("pDoc").className=p==="doc"?"panel active":"panel";
-  document.getElementById("b1").className=p==="calc"?"active":"";
-  document.getElementById("b2").className=p==="doc"?"active":"";
-  if(p==="doc")calc();
-}
-function sl(lang){
-  l=lang;
-  document.getElementById("lEN").className=l==="EN"?"lang-btn active":"lang-btn";
-  document.getElementById("lTH").className=l==="TH"?"lang-btn active":"lang-btn";
-  const ui=uiDict[l];
-  document.getElementById("b1").textContent=ui.orderTab;
-  document.getElementById("b2").textContent=ui.invoiceTab;
-  document.getElementById("addBtn").textContent=ui.addItem;
-  document.getElementById("lDisc").textContent=ui.disc;
-  document.getElementById("lSc").textContent=ui.sc;
-  document.getElementById("lPm").textContent=ui.pm;
-  document.getElementById("printBtn").textContent=ui.print;
-  up();calc();
-}
-function fb(){
-  const bar=document.getElementById("fBar");
-  const cats=["ALL",...new Set(dataset.map(d=>d.category).filter(Boolean))];
-  bar.innerHTML="";
-  cats.forEach(c=>{
-    const b=document.createElement("button");b.type="button";
-    b.className="chip"+(f===c?" active":"");b.textContent=c;
-    b.onclick=()=>{f=c;fb();up();};
-    bar.appendChild(b);
-  });
-}
-function up(){
-  document.querySelectorAll(".item-row select").forEach(s=>{
-    const cur=s.value;
-    s.innerHTML=`<option value="">-- ${l==="EN"?"Select item":"เลือกรายการ"} --</option>`;
-    dataset.forEach(d=>{
-      if(f==="ALL"||d.category===f){
-        const o=document.createElement("option");o.value=d.id;
-        o.text=(l==="EN"?d.nameEN:d.nameTH)+` (${CURRENCY}${d.price})`;
-        s.appendChild(o);
-      }
+function up() {
+    document.querySelectorAll(".row select").forEach(s => {
+        const cur = s.value; s.innerHTML = '<option value="">-- Item --</option>';
+        dataset.forEach(d => { if(f==="ALL" || d.category===f || d.id===cur) { const o = document.createElement("option"); o.value=d.id; o.innerText= (l==="EN"?d.nameEN:d.nameTH) + " (" + d.price + ")"; s.appendChild(o); }}); s.value = cur;
     });
-    s.value=cur;
-  });
 }
-function add(){
-  const id="r_"+Math.random().toString(36).substr(2,5);
-  const row=document.createElement("div");row.className="item-row";row.id=id;
-  const sel=document.createElement("select");sel.onchange=()=>hc(id);
-  const step=document.createElement("div");step.className="qty-stepper";
-  const bM=document.createElement("button");bM.type="button";bM.textContent="−";
-  bM.onclick=()=>{const q=row.querySelector(".q");q.value=Math.max(1,(parseInt(q.value)||1)-1);calc();};
-  const qIn=document.createElement("input");qIn.type="number";qIn.className="q";qIn.value="1";qIn.min="1";qIn.oninput=calc;
-  const bP=document.createElement("button");bP.type="button";bP.textContent="+";
-  bP.onclick=()=>{const q=row.querySelector(".q");q.value=(parseInt(q.value)||0)+1;calc();};
-  step.append(bM,qIn,bP);
-  const del=document.createElement("button");del.type="button";del.className="del-btn";del.textContent="✕";
-  del.onclick=()=>{row.remove();calc();};
-  row.append(sel,step,del);
-  document.getElementById("lines").appendChild(row);up();
+function add() {
+    const id = "r_"+Math.random().toString(36).substr(2,5);
+    const d = document.createElement("div"); d.className="row"; d.id=id;
+    const sel = document.createElement("select"); sel.onchange = function() { hc(id); };
+    const qIn = document.createElement("input"); qIn.type="number"; qIn.className="q"; qIn.value="1"; qIn.min="1"; qIn.oninput = calc;
+    const pIn = document.createElement("input"); pIn.type="number"; pIn.className="p"; pIn.value="0"; pIn.readOnly=true; pIn.style.opacity="0.6";
+    const del = document.createElement("button"); del.innerText="✕"; del.onclick = function() { d.remove(); calc(); };
+    d.appendChild(sel); d.appendChild(qIn); d.appendChild(pIn); d.appendChild(del);
+    document.getElementById("lines").appendChild(d); up();
 }
-function hc(id){
-  const sel=document.getElementById(id).querySelector("select");
-  const item=dataset.find(d=>d.id===sel.value);
-  sel.dataset.price=item?item.price:0;calc();
-}
-function ppPayload(rawId,amount){
-  const id=rawId.replace(/\D/g,"");if(!id)return"";
-  let acc=id,tag="02";
-  if(id.length===10){acc="0066"+id.slice(1);tag="01";}
-  const aid="0016A000000677010111";
-  const af=tag+String(acc.length).padStart(2,"0")+acc;
-  const mi="29"+String((aid+af).length).padStart(2,"0")+aid+af;
-  const amt=amount>0?"54"+String(amount.toFixed(2).length).padStart(2,"0")+amount.toFixed(2):"";
-  const raw="000201010212"+mi+"5802TH5303764"+amt+"6304";
-  return raw+crc16(raw);
-}
-function crc16(s){
-  let c=0xFFFF;
-  for(let i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(let j=0;j<8;j++)c=(c&0x8000)?((c<<1)^0x1021)&0xFFFF:(c<<1)&0xFFFF;}
-  return c.toString(16).toUpperCase().padStart(4,"0");
-}
-function calc(){
-  let sub=0;const items=[];
-  document.querySelectorAll(".item-row").forEach(row=>{
-    const sel=row.querySelector("select");
-    const qty=parseInt(row.querySelector(".q").value)||0;
-    const pr=parseFloat(sel.dataset.price)||0;
-    if(sel.value&&qty>0){
-      const item=dataset.find(d=>d.id===sel.value);
-      if(item){sub+=qty*pr;items.push({nEN:item.nameEN,nTH:item.nameTH,q:qty,p:pr,t:qty*pr});}
-    }
-  });
-  const disc=parseFloat(document.getElementById("disc").value)||0;
-  const scPct=parseFloat(document.getElementById("sc").value)||0;
-  const dVal=sub*disc/100;
-  const afterDisc=sub-dVal;
-  const sVal=afterDisc*scPct/100;
-  const afterSc=afterDisc+sVal;
-  let vat=0,total=0;
-  if(VAT_MODE==="inclusive"){total=afterSc;vat=total*7/107;}
-  else if(VAT_MODE==="exclusive"){vat=afterSc*0.07;total=afterSc+vat;}
-  else{total=afterSc;vat=0;}
-  document.getElementById("totalBox").textContent=Math.round(total).toLocaleString()+".00 "+CURRENCY;
-  const labels=dict[l];
-  const dStr=new Date().toLocaleString("en-GB");
-  const tab=document.getElementById("tab").value;
-  const note=document.getElementById("note").value;
-  const pm=document.getElementById("pm").value;
-  let rows="";
-  items.forEach(i=>{
-    rows+=`<tr>
-      <td style="padding:5px 6px">${l==="EN"?i.nEN:i.nTH}</td>
-      <td style="text-align:right;padding:5px 6px">${i.q}</td>
-      <td style="text-align:right;padding:5px 6px">${Math.round(i.p)}.00</td>
-      <td style="text-align:right;padding:5px 6px;font-weight:600">${Math.round(i.t)}.00</td>
-    </tr>`;
-  });
-  let vatLine="";
-  if(VAT_MODE==="inclusive"&&vat>0){
-    vatLine=`<tr><td style="color:#555;font-size:11px">${labels.vatIncl}</td><td style="text-align:right;font-size:11px;color:#555">(${Math.round(vat)}.00)</td></tr>`;
-  } else if(VAT_MODE==="exclusive"&&vat>0){
-    vatLine=`<tr><td style="color:#555">${labels.vatExtra}</td><td style="text-align:right;font-weight:600">+${Math.round(vat)}.00</td></tr>`;
-  }
-  const ppData=PP_ID?ppPayload(PP_ID,total):"";
-  const ppSection=ppData?`
-    <div style="text-align:center;margin:14px 0;padding:12px;border:1px solid #e2e8f0;border-radius:8px">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=10&data=${encodeURIComponent(ppData)}"
-           width="200" height="200" alt="PromptPay QR" style="display:block;margin:0 auto">
-      <div style="font-size:11px;color:#555;margin-top:6px;font-weight:600">พร้อมเพย์ · PromptPay · ${PP_ID}</div>
-      <div style="font-size:14px;color:#2563eb;font-weight:800;margin-top:4px">${CURRENCY}${Math.round(total)}.00</div>
-    </div>`:"";
-  const logoHtml=LOGO_URL?`<div style="text-align:center;margin-bottom:10px"><img src="" style="max-height:56px;width:auto" alt="logo"></div>`:"";
-  const empty=`<tr><td colspan="4" style="text-align:center;padding:14px;color:#aaa">-- Empty --</td></tr>`;
-  const doc=`<!DOCTYPE html><html><body style="font-family:sans-serif;font-size:13px;padding:14px;color:#222;margin:0">
-  ${logoHtml}
-  <table style="width:100%;margin-bottom:10px"><tr>
-    <td style="vertical-align:top;padding-right:10px"><strong style="font-size:15px">wassana minimart</strong><br>
-    <span style="color:#666">DBD 085567012791</span><br><span style="color:#666">Moo 4, Khanom Beach, Nakhon Si Thammarat, Thailand</span><br><span style="color:#666">Tel:  833972 285</span></td>
-    <td style="text-align:right;vertical-align:top"><strong style="font-size:14px">${labels.title}</strong><br>
-    <span style="color:#666;font-size:11px">Ref: REC-CF · ${dStr}</span></td>
-  </tr></table>
-  <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:12px;color:#555">
-    <span>📍 ${tab}</span><span>👥 ${note}</span>
-  </div>
-  <table style="width:100%;border-collapse:collapse;margin-bottom:12px">
-    <thead><tr style="background:#2563eb;color:#fff">
-      <th style="text-align:left;padding:6px">Item</th>
-      <th style="text-align:right;padding:6px">Qty</th>
-      <th style="text-align:right;padding:6px">Unit</th>
-      <th style="text-align:right;padding:6px">Total</th>
-    </tr></thead><tbody>${rows||empty}</tbody>
-  </table>
-  <table style="width:50%;margin-left:auto;border-collapse:collapse;line-height:2">
-    <tr><td style="color:#555">${labels.sub}</td><td style="text-align:right;font-weight:600">${Math.round(sub)}.00</td></tr>
-    ${dVal>0?`<tr><td style="color:#ef4444">${labels.disc}</td><td style="text-align:right;color:#ef4444;font-weight:600">-${Math.round(dVal)}.00</td></tr>`:""}
-    ${sVal>0?`<tr><td style="color:#555">${labels.sc}</td><td style="text-align:right;font-weight:600">+${Math.round(sVal)}.00</td></tr>`:""}
-    ${vatLine}
-    <tr style="background:#eff6ff"><td style="color:#2563eb;font-weight:800;font-size:15px;padding:5px 6px">${labels.total}</td>
-      <td style="text-align:right;color:#2563eb;font-weight:800;font-size:15px;padding:5px 6px">${Math.round(total)}.00</td></tr>
-  </table>
-  <div style="margin-top:10px;font-size:12px;color:#555"><strong>${labels.payment}</strong> ${pm}</div>
-  ${ppSection}
-  </body></html>`;
-  document.querySelector("iframe").srcdoc=doc;
-}
-let editItems=[];
-function openEdit(){
-  const pin=prompt("🔐 Enter staff PIN:");
-  if(pin===null)return;
-  if(pin!==SHOP_PIN){alert("❌ Incorrect PIN.");return;}
-  editItems=JSON.parse(JSON.stringify(dataset));
-  renderEditList();
-  document.getElementById("editModal").classList.add("open");
-  document.getElementById("saveStatus").className="save-status";
-}
-function closeEdit(){
-  document.getElementById("editModal").classList.remove("open");
-}
-function getCategories(){
-  return [...new Set(editItems.map(d=>d.category).filter(Boolean))];
-}
-function renderEditList(){
-  const list=document.getElementById("editList");
-  list.innerHTML="";
-  const cats=getCategories();
-  editItems.forEach((item,i)=>{
-    const card=document.createElement("div");card.className="edit-item-card";
-    const catOptions=cats.map(c=>`<option value="${c}" ${item.category===c?"selected":""}>${c}</option>`).join("");
-    card.innerHTML=`
-      <div class="edit-item-row"><input value="${item.nameEN||""}" placeholder="English name" oninput="editItems[${i}].nameEN=this.value"><input value="${item.nameTH||""}" placeholder="ชื่อภาษาไทย" oninput="editItems[${i}].nameTH=this.value"></div>
-      <div class="edit-item-row three">
-        <select onchange="editItems[${i}].category=this.value"><option value="">-- Category --</option>${catOptions}</select>
-        <input type="number" value="${item.price||0}" placeholder="Price" oninput="editItems[${i}].price=parseFloat(this.value)||0">
-        <button class="del-item-btn" onclick="editItems.splice(${i},1);renderEditList()">✕</button>
-      </div>`,
-    list.appendChild(card);
-  });
-}
-function addEditItem(){
-  const cats=getCategories();
-  editItems.push({id:"item_"+Math.random().toString(36).substr(2,5),nameEN:"",nameTH:"",price:0,category:cats[0]||""});
-  renderEditList();
-}
-async function saveMenu(){
-  const status=document.getElementById("saveStatus");
-  status.className="save-status";
-  try{
-    const menuJson=JSON.stringify(editItems,null,2);
-    const catMap={};
-    editItems.forEach(item=>{
-      if(!catMap[item.category])catMap[item.category]={id:"cat_"+Date.now()+Math.random().toString(36).substr(2,3),categoryName:item.category,visible:true,items:[]};
-      catMap[item.category].items.push({id:item.id,nameEN:item.nameEN,nameTH:item.nameTH,price:item.price});
+function hc(id) { const r = document.getElementById(id); const m = dataset.find(d => d.id === r.querySelector("select").value); r.querySelector(".p").value = m ? m.price : 0; calc(); }
+function calc() {
+    let sub = 0; const items = [];
+    document.querySelectorAll(".row").forEach(r => {
+        const id = r.querySelector("select").value; const qty = parseFloat(r.querySelector(".q").value)||0; const pr = parseFloat(r.querySelector(".p").value)||0;
+        if (id && qty > 0) { const m = dataset.find(d => d.id===id); sub += (qty*pr); items.push({ nEN: m.nameEN, nTH: m.nameTH, q: qty, p: pr, t: (qty*pr) }); }
     });
-    const manifest={bizName:"wassana minimart",bizTax:"DBD 085567012791",bizAddress:"Moo 4, Khanom Beach, Nakhon Si Thammarat, Thailand",bizTel:"Tel:  833972 285",bizCurrency:CURRENCY,bizLogo:LOGO_URL,bizPromptpay:PP_ID,bizVatMode:VAT_MODE,menuStructure:Object.values(catMap)};
-    const apiPost=(path,content,msg)=>fetch("/api/deploy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,path,content,message:msg})});
-    const r1=await apiPost(`data/${SLUG}-menu.json`,menuJson,"pos(edit): menu update from POS terminal");
-    const r2=await apiPost(`data/${SLUG}-manifest.json`,JSON.stringify(manifest,null,2),"pos(edit): manifest sync from POS terminal");
-    if(r1.ok&&r2.ok){
-      dataset=editItems;fb();up();calc();
-      status.textContent="✅ Saved! Menu updated on server.";
-      status.className="save-status ok";
-      setTimeout(closeEdit,1500);
-    }else{
-      status.textContent="❌ Save failed. Check server connection.";
-      status.className="save-status err";
-    }
-  }catch(e){
-    status.textContent="❌ "+e.message;
-    status.className="save-status err";
-  }
+    const dVal = sub * (parseFloat(document.getElementById("disc").value)/100);
+    const sVal = (sub - dVal) * (parseFloat(document.getElementById("sc").value)/100);
+    const vat = (sub - dVal + sVal) * 0.07; const total = (sub - dVal + sVal + vat);
+    document.getElementById("totalBox").innerText = Math.round(total).toLocaleString() + ".00 ฿";
+    values = { items, sub, dVal, sVal, vat, total }; const dStr = new Date().toLocaleString("en-GB"); const labels = dict[l];
+    let rHTML = ""; items.forEach(i => { rHTML += '<tr><td>' + (l==="EN"?i.nEN:i.nTH) + '</td><td style="text-align:right">' + i.q + '</td><td style="text-align:right">' + Math.round(i.p) + '.00</td><td style="text-align:right">' + Math.round(i.t) + '.00</td></tr>'; });
+    let docContent = '<html><body style="font-family:sans-serif;font-size:12px;padding:10px;color:#333;">' +
+    '<table><tr><td><strong>wassana minimart</strong><br>' + labels.tax + ' DBD 085567012791<br>Moo 4, Khanom Beach, Nakhon Si Thammarat, Thailand<br>Tel:  833972 285</td><td style="text-align:right;vertical-align:top"><strong>' + labels.title + '</strong><br>Ref: REC-CF<br>' + dStr + '</td></tr></table><br>' +
+    '<div style="display:flex;justify-content:between"><span>Loc: ' + document.getElementById("tab").value + '</span> <span style="margin-left:auto">Note: ' + document.getElementById("note").value + '</span></div><br>' +
+    '<table style="width:100%;border-collapse:collapse"><thead style="background:#2563eb;color:white"><tr><th style="text-align:left;padding:4px">Item</th><th style="text-align:right;padding:4px">Qty</th><th style="text-align:right;padding:4px">Unit</th><th style="text-align:right;padding:4px">Total</th></tr></thead><tbody>' + (rHTML || '<tr><td colspan="4" style="text-align:center;padding:10px">Empty Ticket</td></tr>') + '</tbody></table>' +
+    '<table style="width:45%;margin-left:auto;margin-top:10px;font-weight:bold;line-height:1.6">' +
+    '<tr><td>' + labels.sub + '</td><td style="text-align:right">' + Math.round(sub) + '.00</td></tr>' +
+    (dVal > 0 ? '<tr><td style="color:#ef4444">' + labels.disc + '</td><td style="text-align:right;color:#ef4444">-' + Math.round(dVal) + '.00</td></tr>' : '') +
+    (sVal > 0 ? '<tr><td>' + labels.sc + '</td><td style="text-align:right">+' + Math.round(sVal) + '.00</td></tr>' : '') +
+    '<tr><td>' + labels.vat + '</td><td style="text-align:right">' + Math.round(vat) + '.00</td></tr>' +
+    '<tr style="color:#2563eb;font-size:13px;background:#f0f6ff"><td>' + labels.total + '</td><td style="text-align:right">' + Math.round(total) + '.00</td></tr>' +
+    '</table><br><div style="font-size:11px"><strong>' + labels.payment + '</strong> ' + document.getElementById("pm").value + '</div></body></html>';
+    document.querySelector("iframe").srcdoc = docContent;
 }
-fb();add();loadLiveMenu();
+fb(); add();
 </script>
 </body>
 </html>
