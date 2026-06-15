@@ -50,7 +50,7 @@
     </div>
 </div>
 <script>
-    let l="EN", f="ALL", dataset = [
+let l="EN", f="ALL", dataset = [
     {
         "id": "m1",
         "nameEN": "Chang beer S",
@@ -87,61 +87,59 @@
         "category": "Shots/ยิง"
     }
 ], values = { items:[], sub:0, dVal:0, sVal:0, vat:0, total:0 };
-    const dict = {
-        EN: { title: "RECEIPT / GUEST CHECK", tax: "Tax ID:", sub: "Subtotal", vat: "VAT (7%)", sc: "Service Charge", disc: "Discount", total: "Total Due (฿)", payment: "Payment Route:" },
-        TH: { title: "ใบเสร็จรับเงิน / เช็คบิล", tax: "เลขประจำตัวผู้เสียภาษี:", sub: "รวมยอดอาหาร", vat: "ภาษี (7%)", sc: "ค่าบริการ", disc: "ส่วนลด", total: "ยอดเงินรวมทั้งสิ้นสุทธิ (฿)", payment: "ช่องทางชำระเงิน:" }
-    };
-    function m(p){ document.getElementById("pCalc").className=p==="calc"?"panel active":"panel"; document.getElementById("pDoc").className=p==="doc"?"panel active":"panel"; document.getElementById("b1").className=p==="calc"?"active":""; document.getElementById("b2").className=p==="doc"?"active":""; }
-    function sl(lang){ l=lang; document.getElementById("lEN").className=l==="EN"?"btn btn-primary":"btn"; document.getElementById("lTH").className=l==="TH"?"btn btn-primary":"btn"; up(); calc(); }
-    function fb() {
-        const bar = document.getElementById("fBar"); const cats = ["ALL", ...new Set(dataset.map(d => d.category).filter(Boolean))]; bar.innerHTML = "";
-        cats.forEach(c => { const b = document.createElement("button"); b.className = "chip " + (f === c ? "active" : ""); b.innerText = c; b.onclick = () => { f = c; fb(); up(); }; bar.appendChild(b); });
-    }
-    function up() {
-        document.querySelectorAll(".row select").forEach(s => {
-            const cur = s.value; s.innerHTML = "<option value="">-- Item --</option>";
-            dataset.forEach(d => { if(f==="ALL" || d.category===f) { const o = document.createElement("option"); o.value=d.id; o.innerText= (l==="EN"?d.nameEN:d.nameTH) + " (" + d.price + ")"; s.appendChild(o); }}); s.value = cur;
-        });
-    }
-    function add() {
-        const id = "r_"+Math.random().toString(36).substr(2,5);
-        const d = document.createElement("div"); d.className="row"; d.id=id;
-        
-        const sel = document.createElement("select"); sel.onchange = function() { hc(id); };
-        const qIn = document.createElement("input"); qIn.type="number"; qIn.className="q"; qIn.value="1"; qIn.min="1"; qIn.oninput = calc;
-        const pIn = document.createElement("input"); pIn.type="number"; pIn.className="p"; pIn.value="0"; pIn.readOnly=true; pIn.style.opacity="0.6";
-        const del = document.createElement("button"); del.innerText="✕"; del.onclick = function() { d.remove(); calc(); };
-        
-        d.appendChild(sel); d.appendChild(qIn); d.appendChild(pIn); d.appendChild(del);
-        document.getElementById("lines").appendChild(d); up();
-    }
-    function hc(id) { const r = document.getElementById(id); const m = dataset.find(d => d.id === r.querySelector("select").value); r.querySelector(".p").value = m ? m.price : 0; calc(); }
-    function calc() {
-        let sub = 0; const items = [];
-        document.querySelectorAll(".row").forEach(r => {
-            const id = r.querySelector("select").value; const qty = parseFloat(r.querySelector(".q").value)||0; const pr = parseFloat(r.querySelector(".p").value)||0;
-            if (id && qty > 0) { const m = dataset.find(d => d.id===id); sub += (qty*pr); items.push({ nEN: m.nameEN, nTH: m.nameTH, q: qty, p: pr, t: (qty*pr) }); }
-        });
-        const dVal = sub * (parseFloat(document.getElementById("disc").value)/100);
-        const sVal = (sub - dVal) * (parseFloat(document.getElementById("sc").value)/100);
-        const vat = (sub - dVal + sVal) * 0.07; const total = (sub - dVal + sVal + vat);
-        document.getElementById("totalBox").innerText = Math.round(total).toLocaleString() + ".00 ฿";
-        values = { items, sub, dVal, sVal, vat, total }; const dStr = new Date().toLocaleString("en-GB"); const labels = dict[l];
-        let rHTML = ""; items.forEach(i => { rHTML += "<tr><td>" + (l==="EN"?i.nEN:i.nTH) + "</td><td style="text-align:right;">" + i.q + "</td><td style="text-align:right;">" + Math.round(i.p) + ".00</td><td style="text-align:right;">" + Math.round(i.t) + ".00</td></tr>"; });
-        let docContent = "<html><body style="font-family:sans-serif;font-size:12px;padding:10px;color:#333;">" +
-        "<table><tr><td><strong>wassana minimart</strong><br>" + labels.tax + " DBD 085567012791<br>Moo 4, Khanom Beach, Nakhon Si Thammarat, Thailand<br>Tel:  833972 285</td><td style="text-align:right;vertical-align:top;"><strong>" + labels.title + "</strong><br>Ref: REC-CF<br>" + dStr + "</td></tr></table><br>" +
-        "<div style="display:flex;justify-content:between;"><span>Loc: " + document.getElementById("tab").value + "</span> <span style="margin-left:auto;">Note: " + document.getElementById("note").value + "</span></div><br>" +
-        "<table style="width:100%;border-collapse:collapse;"><thead style="background:#2563eb;color:white;"><tr><th style="text-align:left;padding:4px;">Item</th><th style="text-align:right;padding:4px;">Qty</th><th style="text-align:right;padding:4px;">Unit</th><th style="text-align:right;padding:4px;">Total</th></tr></thead><tbody>" + (rHTML || "<tr><td colspan="4" style="text-align:center;padding:10px;">Empty Ticket</td></tr>") + "</tbody></table>" +
-        "<table style="width:45%; margin-left:auto; margin-top:10px; font-weight:bold; line-height:1.6;">" +
-        "<tr><td>" + labels.sub + "</td><td style="text-align:right;">" + Math.round(sub) + ".00</td></tr>" +
-        (dVal > 0 ? "<tr><td style="color:#ef4444;">" + labels.disc + "</td><td style="text-align:right;color:#ef4444;">-" + Math.round(dVal) + ".00</td></tr>" : "") +
-        (sVal > 0 ? "<tr><td>" + labels.sc + "</td><td style="text-align:right;">+" + Math.round(sVal) + ".00</td></tr>" : "") +
-        "<tr><td>" + labels.vat + "</td><td style="text-align:right;">" + Math.round(vat) + ".00</td></tr>" +
-        "<tr style="color:#2563eb;font-size:13px;background:#f0f6ff;"><td>" + labels.total + "</td><td style="text-align:right;">" + Math.round(total) + ".00</td></tr>" +
-        "</table><br><div style="font-size:11px;"><strong>" + labels.payment + "</strong> " + document.getElementById("pm").value + "</div></body></html>";
-        document.querySelector("iframe").srcdoc = docContent;
-    }
-    fb(); add();
+const dict = {
+    EN: { title: "RECEIPT / GUEST CHECK", tax: "Tax ID:", sub: "Subtotal", vat: "VAT (7%)", sc: "Service Charge", disc: "Discount", total: "Total Due (฿)", payment: "Payment Route:" },
+    TH: { title: "ใบเสร็จรับเงิน / เช็คบิล", tax: "เลขประจำตัวผู้เสียภาษี:", sub: "รวมยอดอาหาร", vat: "ภาษี (7%)", sc: "ค่าบริการ", disc: "ส่วนลด", total: "ยอดเงินรวมทั้งสิ้นสุทธิ (฿)", payment: "ช่องทางชำระเงิน:" }
+};
+function m(p){ document.getElementById("pCalc").className=p==="calc"?"panel active":"panel"; document.getElementById("pDoc").className=p==="doc"?"panel active":"panel"; document.getElementById("b1").className=p==="calc"?"active":""; document.getElementById("b2").className=p==="doc"?"active":""; }
+function sl(lang){ l=lang; document.getElementById("lEN").className=l==="EN"?"btn btn-primary":"btn"; document.getElementById("lTH").className=l==="TH"?"btn btn-primary":"btn"; up(); calc(); }
+function fb() {
+    const bar = document.getElementById("fBar"); const cats = ["ALL", ...new Set(dataset.map(d => d.category).filter(Boolean))]; bar.innerHTML = "";
+    cats.forEach(c => { const b = document.createElement("button"); b.className = "chip " + (f === c ? "active" : ""); b.innerText = c; b.onclick = () => { f = c; fb(); up(); }; bar.appendChild(b); });
+}
+function up() {
+    document.querySelectorAll(".row select").forEach(s => {
+        const cur = s.value; s.innerHTML = "<option value="">-- Item --</option>";
+        dataset.forEach(d => { if(f==="ALL" || d.category===f) { const o = document.createElement("option"); o.value=d.id; o.innerText= (l==="EN"?d.nameEN:d.nameTH) + " (" + d.price + ")"; s.appendChild(o); }}); s.value = cur;
+    });
+}
+function add() {
+    const id = "r_"+Math.random().toString(36).substr(2,5);
+    const d = document.createElement("div"); d.className="row"; d.id=id;
+    const sel = document.createElement("select"); sel.onchange = function() { hc(id); };
+    const qIn = document.createElement("input"); qIn.type="number"; qIn.className="q"; qIn.value="1"; qIn.min="1"; qIn.oninput = calc;
+    const pIn = document.createElement("input"); pIn.type="number"; pIn.className="p"; pIn.value="0"; pIn.readOnly=true; pIn.style.opacity="0.6";
+    const del = document.createElement("button"); del.innerText="✕"; del.onclick = function() { d.remove(); calc(); };
+    d.appendChild(sel); d.appendChild(qIn); d.appendChild(pIn); d.appendChild(del);
+    document.getElementById("lines").appendChild(d); up();
+}
+function hc(id) { const r = document.getElementById(id); const m = dataset.find(d => d.id === r.querySelector("select").value); r.querySelector(".p").value = m ? m.price : 0; calc(); }
+function calc() {
+    let sub = 0; const items = [];
+    document.querySelectorAll(".row").forEach(r => {
+        const id = r.querySelector("select").value; const qty = parseFloat(r.querySelector(".q").value)||0; const pr = parseFloat(r.querySelector(".p").value)||0;
+        if (id && qty > 0) { const m = dataset.find(d => d.id===id); sub += (qty*pr); items.push({ nEN: m.nameEN, nTH: m.nameTH, q: qty, p: pr, t: (qty*pr) }); }
+    });
+    const dVal = sub * (parseFloat(document.getElementById("disc").value)/100);
+    const sVal = (sub - dVal) * (parseFloat(document.getElementById("sc").value)/100);
+    const vat = (sub - dVal + sVal) * 0.07; const total = (sub - dVal + sVal + vat);
+    document.getElementById("totalBox").innerText = Math.round(total).toLocaleString() + ".00 ฿";
+    values = { items, sub, dVal, sVal, vat, total }; const dStr = new Date().toLocaleString("en-GB"); const labels = dict[l];
+    let rHTML = ""; items.forEach(i => { rHTML += "<tr><td>" + (l==="EN"?i.nEN:i.nTH) + "</td><td style="text-align:right;">" + i.q + "</td><td style="text-align:right;">" + Math.round(i.p) + ".00</td><td style="text-align:right;">" + Math.round(i.t) + ".00</td></tr>"; });
+    let docContent = "<html><body style="font-family:sans-serif;font-size:12px;padding:10px;color:#333;">" +
+    "<table><tr><td><strong>wassana minimart</strong><br>" + labels.tax + " DBD 085567012791<br>Moo 4, Khanom Beach, Nakhon Si Thammarat, Thailand<br>Tel:  833972 285</td><td style="text-align:right;vertical-align:top;"><strong>" + labels.title + "</strong><br>Ref: REC-CF<br>" + dStr + "</td></tr></table><br>" +
+    "<div style="display:flex;justify-content:between;"><span>Loc: " + document.getElementById("tab").value + "</span> <span style="margin-left:auto;">Note: " + document.getElementById("note").value + "</span></div><br>" +
+    "<table style="width:100%;border-collapse:collapse;"><thead style="background:#2563eb;color:white;"><tr><th style="text-align:left;padding:4px;">Item</th><th style="text-align:right;padding:4px;">Qty</th><th style="text-align:right;padding:4px;">Unit</th><th style="text-align:right;padding:4px;">Total</th></tr></thead><tbody>" + (rHTML || "<tr><td colspan="4" style="text-align:center;padding:10px;">Empty Ticket</td></tr>") + "</tbody></table>" +
+    "<table style="width:45%; margin-left:auto; margin-top:10px; font-weight:bold; line-height:1.6;">" +
+    "<tr><td>" + labels.sub + "</td><td style="text-align:right;">" + Math.round(sub) + ".00</td></tr>" +
+    (dVal > 0 ? "<tr><td style="color:#ef4444;">" + labels.disc + "</td><td style="text-align:right;color:#ef4444;">-" + Math.round(dVal) + ".00</td></tr>" : "") +
+    (sVal > 0 ? "<tr><td>" + labels.sc + "</td><td style="text-align:right;">+" + Math.round(sVal) + ".00</td></tr>" : "") +
+    "<tr><td>" + labels.vat + "</td><td style="text-align:right;">" + Math.round(vat) + ".00</td></tr>" +
+    "<tr style="color:#2563eb;font-size:13px;background:#f0f6ff;"><td>" + labels.total + "</td><td style="text-align:right;">" + Math.round(total) + ".00</td></tr>" +
+    "</table><br><div style="font-size:11px;"><strong>" + labels.payment + "</strong> " + document.getElementById("pm").value + "</div></body></html>";
+    document.querySelector("iframe").srcdoc = docContent;
+}
+fb(); add();
 </script>
 </body>
 </html>
