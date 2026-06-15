@@ -6,42 +6,31 @@
     <title>Cloudflare Secure POS Studio</title>
     <style>
         :root {
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --primary: #2563eb;
-            --border: #e2e8f0;
-            --success: #10b981;
-            --danger: #ef4444;
-            --accent: #475569;
+            --bg-color: #f8fafc; --card-bg: #ffffff; --text-main: #0f172a;
+            --text-muted: #64748b; --primary: #2563eb; --border: #e2e8f0;
+            --success: #10b981; --danger: #ef4444; --accent: #475569;
         }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 24px;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 24px; }
         .container { max-width: 1300px; margin: 0 auto; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 24px; }
         header { grid-column: span 2; text-align: center; margin-bottom: 12px; }
         h1 { margin: 0; color: var(--primary); font-size: 1.8rem; }
         .subtitle { color: var(--text-muted); margin: 4px 0 0 0; font-size: 0.95rem; }
-        .card { background: var(--card-bg); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); height: fit-content; margin-bottom: 20px; }
-        h2 { font-size: 1.1rem; margin-top: 0; margin-bottom: 16px; border-bottom: 2px solid var(--bg-color); padding-bottom: 8px; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .card { background: var(--card-bg); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,.05); height: fit-content; margin-bottom: 20px; }
+        h2 { font-size: 1.1rem; margin-top: 0; margin-bottom: 16px; border-bottom: 2px solid var(--bg-color); padding-bottom: 8px; color: var(--primary); text-transform: uppercase; letter-spacing: .5px; }
         .form-group { margin-bottom: 12px; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-main); }
-        input, select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.9rem; box-sizing: border-box; background: var(--bg-color); color: var(--text-main); }
-        .btn { padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; width: 100%; justify-content: center; margin-bottom: 8px;}
+        label { display: block; font-weight: 600; font-size: .85rem; margin-bottom: 4px; color: var(--text-main); }
+        input, select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); font-size: .9rem; box-sizing: border-box; background: var(--bg-color); color: var(--text-main); }
+        .hint { font-size: .75rem; color: var(--text-muted); margin-top: 3px; }
+        .btn { padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: .9rem; width: 100%; justify-content: center; margin-bottom: 8px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
-        .btn-accent { background: var(--accent); color: white; }
-        .btn-danger { background: var(--danger); color: white; padding: 6px 10px; width: auto;}
+        .btn-accent  { background: var(--accent); color: white; }
+        .btn-danger  { background: var(--danger); color: white; padding: 6px 10px; width: auto; }
         .item-row { display: grid; grid-template-columns: 1.5fr 1.5fr 1fr auto; gap: 8px; margin-bottom: 8px; align-items: center; }
         .category-block { border: 1px dashed var(--primary); padding: 14px; border-radius: 8px; margin-bottom: 16px; background: #fcfdf2; }
         .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        pre { background: #0f172a; color: #38bdf8; padding: 14px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; max-height: 200px; }
+        pre { background: #0f172a; color: #38bdf8; padding: 14px; border-radius: 8px; overflow-x: auto; font-size: .85rem; max-height: 200px; }
     </style>
 </head>
 <body>
@@ -53,15 +42,17 @@
 
 <div class="container">
     <div>
-        <div class="card" style="border-left: 5px solid var(--primary);">
+        <!-- ── Section 1: Target ─────────────────────────────── -->
+        <div class="card" style="border-left:5px solid var(--primary)">
             <h2>1. Choose / Recall Workspace Target</h2>
             <div class="form-group">
-                <label>Unique Shop ID Slug (Determines live URL path)</label>
+                <label>Unique Shop ID Slug</label>
                 <input type="text" id="shopSlug" value="banyan-tree-bistro" placeholder="e.g., banyan-tree-bistro" oninput="saveToLocalStorage()">
             </div>
             <button class="btn btn-primary" onclick="recallShopFromGitSecure()">📥 Pull Context Records From Server Vault</button>
         </div>
 
+        <!-- ── Section 2: Profile ────────────────────────────── -->
         <div class="card">
             <h2>2. Shop Profile Specifications</h2>
             <div class="form-group">
@@ -70,50 +61,62 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Tax Identification Registry ID</label>
+                    <label>Tax ID</label>
                     <input type="text" id="bizTax" value="DBD 085567012791" oninput="saveToLocalStorage()">
                 </div>
                 <div class="form-group">
-                    <label>Currency ISO / Symbol</label>
+                    <label>Currency Symbol</label>
                     <input type="text" id="bizCurrency" value="฿" oninput="saveToLocalStorage()">
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Telephone Connection Line</label>
+                    <label>Telephone</label>
                     <input type="text" id="bizTel" value="Tel: 064 193 7470" oninput="saveToLocalStorage()">
                 </div>
                 <div class="form-group">
-                    <label>Physical Address Location</label>
-                    <input type="text" id="bizAddress" value="Moo 4, Khanom Beach, Nakhon Si Thammarat, Thailand" oninput="saveToLocalStorage()">
+                    <label>Address</label>
+                    <input type="text" id="bizAddress" value="Moo 4, Khanom Beach, Nakhon Si Thammarat" oninput="saveToLocalStorage()">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Logo Image URL</label>
+                    <input type="url" id="bizLogo" placeholder="https://example.com/logo.png" oninput="saveToLocalStorage()">
+                    <p class="hint">Shown in POS header and printed receipt</p>
+                </div>
+                <div class="form-group">
+                    <label>PromptPay ID</label>
+                    <input type="text" id="bizPromptpay" placeholder="Phone (08x) or Citizen ID (13 digits)" oninput="saveToLocalStorage()">
+                    <p class="hint">QR code with amount appears on each receipt</p>
                 </div>
             </div>
         </div>
 
+        <!-- ── Section 3: Menu ───────────────────────────────── -->
         <div class="card">
             <h2>3. Menu Structural Configuration</h2>
             <div id="categoryContainer"></div>
-            <button class="btn btn-accent" style="width: auto;" onclick="createNewCategory()">📂 Create New Category Group</button>
+            <button class="btn btn-accent" style="width:auto" onclick="createNewCategory()">📂 Create New Category Group</button>
         </div>
     </div>
 
-    <div style="position: sticky; top: 24px;">
-        <div class="card" style="border: 2px solid var(--success);">
+    <div style="position:sticky;top:24px">
+        <!-- ── Section 4: Deploy ─────────────────────────────── -->
+        <div class="card" style="border:2px solid var(--success)">
             <h2>4. Secure Deployment Terminal</h2>
-            <p class="subtitle" style="margin-bottom: 12px;">Transfers payload updates securely through Cloudflare Serverless Workers directly to GitHub.</p>
-
-            <button class="btn btn-success" style="padding: 14px; font-size: 1rem;" onclick="deployToCloudflarePagesSecure()">🚀 Push Changes & Trigger Build Pipeline</button>
-
-            <div id="deploymentLinks" style="display:none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
-                <label style="color: var(--success); text-transform: uppercase;">✔ Transmission Matrix Saved!</label>
-                <p class="subtitle" style="margin-bottom: 8px;">Your custom endpoints are calculating and will be visible under your Cloudflare custom domain routing:</p>
-                <div style="font-size: 0.85rem; background: var(--bg-color); padding: 10px; border-radius:6px; line-height: 1.6;">
-                    <strong>🖥️ Dynamic Interactive POS App:</strong> <br><span id="liveAppLink" style="color: var(--primary); font-family: monospace;"></span><br><br>
-                    <strong>📦 Dynamic Data Array Payload (JSON):</strong> <br><span id="liveJsonLink" style="color: var(--primary); font-family: monospace;"></span>
+            <p class="subtitle" style="margin-bottom:12px">Transfers payload updates through Cloudflare Workers directly to GitHub.</p>
+            <button class="btn btn-success" style="padding:14px;font-size:1rem" onclick="deployToCloudflarePagesSecure()">🚀 Push Changes &amp; Trigger Build Pipeline</button>
+            <div id="deploymentLinks" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+                <label style="color:var(--success);text-transform:uppercase">✔ Transmission Matrix Saved!</label>
+                <div style="font-size:.85rem;background:var(--bg-color);padding:10px;border-radius:6px;line-height:1.6;margin-top:8px">
+                    <strong>🖥️ POS App:</strong><br><span id="liveAppLink" style="color:var(--primary);font-family:monospace"></span><br><br>
+                    <strong>📦 Menu JSON:</strong><br><span id="liveJsonLink" style="color:var(--primary);font-family:monospace"></span>
                 </div>
             </div>
         </div>
 
+        <!-- ── Section 5: Preview ────────────────────────────── -->
         <div class="card">
             <h2>5. System JSON Structural Manifest</h2>
             <pre id="jsonPreview">[]</pre>
@@ -122,488 +125,508 @@
 </div>
 
 <script>
-    let menuStructure = [
-        {
-            id: "cat_1",
-            categoryName: "Main Dishes",
-            visible: true,
-            items: [
-                { id: "m1", nameEN: "Tom Yum Goong", nameTH: "ต้มยำกุ้ง", price: 320 }
-            ]
-        }
-    ];
+let menuStructure = [
+    { id:"cat_1", categoryName:"Main Dishes", visible:true,
+      items:[{ id:"m1", nameEN:"Tom Yum Goong", nameTH:"ต้มยำกุ้ง", price:320 }] }
+];
 
-    function saveToLocalStorage() {
-        const payload = {
-            shopSlug: document.getElementById('shopSlug').value,
-            bizName: document.getElementById('bizName').value,
-            bizTax: document.getElementById('bizTax').value,
-            bizCurrency: document.getElementById('bizCurrency').value,
-            bizTel: document.getElementById('bizTel').value,
-            bizAddress: document.getElementById('bizAddress').value,
-            menu: menuStructure
-        };
-        localStorage.setItem('cf_secure_pos_data', JSON.stringify(payload));
-        updateOutputs();
+/* ── Local storage ──────────────────────────────────────────── */
+function saveToLocalStorage() {
+    localStorage.setItem('cf_secure_pos_data', JSON.stringify({
+        shopSlug:    document.getElementById('shopSlug').value,
+        bizName:     document.getElementById('bizName').value,
+        bizTax:      document.getElementById('bizTax').value,
+        bizCurrency: document.getElementById('bizCurrency').value,
+        bizTel:      document.getElementById('bizTel').value,
+        bizAddress:  document.getElementById('bizAddress').value,
+        bizLogo:     document.getElementById('bizLogo').value,
+        bizPromptpay:document.getElementById('bizPromptpay').value,
+        menu: menuStructure
+    }));
+    updateOutputs();
+}
+
+function loadFromLocalStorage() {
+    const raw = localStorage.getItem('cf_secure_pos_data');
+    if (raw) {
+        try {
+            const d = JSON.parse(raw);
+            document.getElementById('shopSlug').value     = d.shopSlug     || 'banyan-tree-bistro';
+            document.getElementById('bizName').value      = d.bizName      || '';
+            document.getElementById('bizTax').value       = d.bizTax       || '';
+            document.getElementById('bizCurrency').value  = d.bizCurrency  || '฿';
+            document.getElementById('bizTel').value       = d.bizTel       || '';
+            document.getElementById('bizAddress').value   = d.bizAddress   || '';
+            document.getElementById('bizLogo').value      = d.bizLogo      || '';
+            document.getElementById('bizPromptpay').value = d.bizPromptpay || '';
+            if (d.menu) menuStructure = d.menu;
+        } catch(e) { console.error(e); }
     }
+    renderStudio();
+}
 
-    function loadFromLocalStorage() {
-        const raw = localStorage.getItem('cf_secure_pos_data');
-        if (raw) {
-            try {
-                const data = JSON.parse(raw);
-                document.getElementById('shopSlug').value = data.shopSlug || 'banyan-tree-bistro';
-                document.getElementById('bizName').value = data.bizName || '';
-                document.getElementById('bizTax').value = data.bizTax || '';
-                document.getElementById('bizCurrency').value = data.bizCurrency || '฿';
-                document.getElementById('bizTel').value = data.bizTel || '';
-                document.getElementById('bizAddress').value = data.bizAddress || '';
-                if(data.menu) menuStructure = data.menu;
-            } catch(e) { console.error(e); }
-        }
-        renderStudio();
-    }
-
-    function renderStudio() {
-        const container = document.getElementById('categoryContainer');
-        container.innerHTML = '';
-
-        menuStructure.forEach((cat, catIdx) => {
-            const catDiv = document.createElement('div');
-            catDiv.className = 'category-block';
-            catDiv.innerHTML = `
-                <div class="category-header">
-                    <input type="text" value="${cat.categoryName}" style="font-weight:bold; width:55%;" oninput="menuStructure[${catIdx}].categoryName = this.value; saveToLocalStorage();">
-                    <div style="display:flex; gap:12px; align-items:center;">
-                        <label style="margin:0; display:flex; align-items:center; gap:4px; font-size:0.8rem;">
-                            <input type="checkbox" ${cat.visible ? 'checked' : ''} style="width:auto; height:auto; margin:0;" onchange="menuStructure[${catIdx}].visible = this.checked; saveToLocalStorage();"> Show/Active
-                        </label>
-                        <button class="btn-danger" onclick="menuStructure.splice(${catIdx}, 1); renderStudio(); saveToLocalStorage();">✕</button>
-                    </div>
+/* ── Studio renderer ────────────────────────────────────────── */
+function renderStudio() {
+    const container = document.getElementById('categoryContainer');
+    container.innerHTML = '';
+    menuStructure.forEach((cat, ci) => {
+        const catDiv = document.createElement('div');
+        catDiv.className = 'category-block';
+        catDiv.innerHTML = `
+            <div class="category-header">
+                <input type="text" value="${cat.categoryName}" style="font-weight:bold;width:55%"
+                    oninput="menuStructure[${ci}].categoryName=this.value;saveToLocalStorage()">
+                <div style="display:flex;gap:12px;align-items:center">
+                    <label style="margin:0;display:flex;align-items:center;gap:4px;font-size:.8rem">
+                        <input type="checkbox" ${cat.visible?'checked':''} style="width:auto;height:auto;margin:0"
+                            onchange="menuStructure[${ci}].visible=this.checked;saveToLocalStorage()"> Visible
+                    </label>
+                    <button class="btn-danger" onclick="menuStructure.splice(${ci},1);renderStudio();saveToLocalStorage()">✕</button>
                 </div>
-                <div id="items-for-${cat.id}"></div>
-                <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem; margin-top:8px; width:auto;" onclick="addItemToCategory(${catIdx})">➕ Add Item Line</button>
+            </div>
+            <div id="items-for-${cat.id}"></div>
+            <button class="btn btn-primary" style="padding:4px 8px;font-size:.75rem;margin-top:8px;width:auto"
+                onclick="addItemToCategory(${ci})">➕ Add Item</button>
+        `;
+        container.appendChild(catDiv);
+        const box = catDiv.querySelector(`#items-for-${cat.id}`);
+        cat.items.forEach((item, ii) => {
+            const row = document.createElement('div');
+            row.className = 'item-row';
+            row.innerHTML = `
+                <input type="text" placeholder="English" value="${item.nameEN||''}"
+                    oninput="menuStructure[${ci}].items[${ii}].nameEN=this.value;saveToLocalStorage()">
+                <input type="text" placeholder="ภาษาไทย" value="${item.nameTH||''}"
+                    oninput="menuStructure[${ci}].items[${ii}].nameTH=this.value;saveToLocalStorage()">
+                <input type="number" placeholder="Price" value="${item.price}"
+                    oninput="menuStructure[${ci}].items[${ii}].price=parseFloat(this.value)||0;saveToLocalStorage()">
+                <button class="btn-danger"
+                    onclick="menuStructure[${ci}].items.splice(${ii},1);renderStudio();saveToLocalStorage()">✕</button>
             `;
-            container.appendChild(catDiv);
-
-            const itemsContainer = catDiv.querySelector(`#items-for-${cat.id}`);
-            cat.items.forEach((item, itemIdx) => {
-                const row = document.createElement('div');
-                row.className = 'item-row';
-                row.innerHTML = `
-                    <input type="text" placeholder="English Label" value="${item.nameEN || ''}" oninput="menuStructure[${catIdx}].items[${itemIdx}].nameEN = this.value; saveToLocalStorage();">
-                    <input type="text" placeholder="ภาษาไทย" value="${item.nameTH || ''}" oninput="menuStructure[${catIdx}].items[${itemIdx}].nameTH = this.value; saveToLocalStorage();">
-                    <input type="number" placeholder="Price" value="${item.price}" oninput="menuStructure[${catIdx}].items[${itemIdx}].price = parseFloat(this.value) || 0; saveToLocalStorage();">
-                    <button class="btn-danger" onclick="menuStructure[${catIdx}].items.splice(${itemIdx}, 1); renderStudio(); saveToLocalStorage();">✕</button>
-                `;
-                itemsContainer.appendChild(row);
-            });
+            box.appendChild(row);
         });
-        updateOutputs();
-    }
+    });
+    updateOutputs();
+}
 
-    function createNewCategory() {
-        menuStructure.push({ id: 'cat_' + Date.now(), categoryName: "New Category", visible: true, items: [] });
-        renderStudio(); saveToLocalStorage();
-    }
+function createNewCategory() {
+    menuStructure.push({ id:'cat_'+Date.now(), categoryName:"New Category", visible:true, items:[] });
+    renderStudio(); saveToLocalStorage();
+}
+function addItemToCategory(ci) {
+    menuStructure[ci].items.push({ id:'item_'+Math.random().toString(36).substr(2,5), nameEN:"", nameTH:"", price:0 });
+    renderStudio(); saveToLocalStorage();
+}
 
-    function addItemToCategory(catIdx) {
-        menuStructure[catIdx].items.push({ id: 'item_' + Math.random().toString(36).substr(2, 5), nameEN: "", nameTH: "", price: 0 });
-        renderStudio(); saveToLocalStorage();
-    }
-
-    function generateCleanJsonArray() {
-        let flatMenuArray = [];
-        menuStructure.forEach(cat => {
-            if (cat.visible) {
-                cat.items.forEach(item => {
-                    flatMenuArray.push({ id: item.id, nameEN: item.nameEN, nameTH: item.nameTH, price: item.price, category: cat.categoryName });
-                });
-            }
+function generateCleanJsonArray() {
+    const arr = [];
+    menuStructure.forEach(cat => {
+        if (cat.visible) cat.items.forEach(item => {
+            arr.push({ id:item.id, nameEN:item.nameEN, nameTH:item.nameTH, price:item.price, category:cat.categoryName });
         });
-        return flatMenuArray;
-    }
+    });
+    return arr;
+}
+function updateOutputs() {
+    document.getElementById('jsonPreview').innerText = JSON.stringify(generateCleanJsonArray(), null, 2);
+}
 
-    function updateOutputs() {
-        document.getElementById('jsonPreview').innerText = JSON.stringify(generateCleanJsonArray(), null, 2);
-    }
+/* ── API helpers ────────────────────────────────────────────── */
+async function secureApiPost(endpoint, body) {
+    return fetch(endpoint, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
+}
 
-    async function secureApiPost(endpoint, body) {
-        const res = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body)
-        });
-        return res;
-    }
+/* ── Deploy ─────────────────────────────────────────────────── */
+async function deployToCloudflarePagesSecure() {
+    const slug = document.getElementById('shopSlug').value;
+    if (!slug) return alert("⚠️ Enter a valid Shop ID Slug first.");
 
-    async function deployToCloudflarePagesSecure() {
-        const slug = document.getElementById('shopSlug').value;
-        if (!slug) return alert("⚠️ Enter a valid Shop ID Slug identifier first.");
+    const manifest = {
+        bizName:      document.getElementById('bizName').value,
+        bizTax:       document.getElementById('bizTax').value,
+        bizCurrency:  document.getElementById('bizCurrency').value,
+        bizTel:       document.getElementById('bizTel').value,
+        bizAddress:   document.getElementById('bizAddress').value,
+        bizLogo:      document.getElementById('bizLogo').value,
+        bizPromptpay: document.getElementById('bizPromptpay').value,
+        menuStructure
+    };
+    const menuJson = JSON.stringify(generateCleanJsonArray(), null, 4);
+    const appHtml  = buildStandaloneAppHtml(manifest, menuJson);
 
-        const systemManifest = {
-            bizName: document.getElementById('bizName').value,
-            bizTax: document.getElementById('bizTax').value,
-            bizCurrency: document.getElementById('bizCurrency').value,
-            bizTel: document.getElementById('bizTel').value,
-            bizAddress: document.getElementById('bizAddress').value,
-            menuStructure: menuStructure
-        };
-
-        const liveMenuJson = JSON.stringify(generateCleanJsonArray(), null, 4);
-        const compiledHtmlApp = buildStandaloneAppHtml(
-            systemManifest.bizName,
-            systemManifest.bizTax,
-            systemManifest.bizAddress,
-            systemManifest.bizTel,
-            systemManifest.bizCurrency,
-            liveMenuJson
-        );
-
-        try {
-            const r1 = await secureApiPost("/api/deploy", { shopSlug: slug, path: "data/" + slug + "-manifest.json", content: JSON.stringify(systemManifest, null, 2), message: "pos(sys): save state for " + slug });
-            const r2 = await secureApiPost("/api/deploy", { shopSlug: slug, path: "data/" + slug + "-menu.json", content: liveMenuJson, message: "pos(data): sync raw items for " + slug });
-            const r3 = await secureApiPost("/api/deploy", { shopSlug: slug, path: "shops/" + slug + ".html", content: compiledHtmlApp, message: "pos(app): compile master template for " + slug });
-
-            if (r1.ok && r2.ok && r3.ok) {
-                const currentDomain = window.location.hostname;
-                document.getElementById('liveAppLink').innerText = "https://" + currentDomain + "/shops/" + slug + ".html";
-                document.getElementById('liveJsonLink').innerText = "https://" + currentDomain + "/data/" + slug + "-menu.json";
-                document.getElementById('deploymentLinks').style.display = 'block';
-                alert("🚀 Secure transmission completed successfully! Cloudflare Pages has queued your production updates.");
-            } else {
-                const errData = await r1.json().catch(() => ({ error: "Unknown routing mismatch" }));
-                alert("❌ Server rejected your request. Details: " + (errData.error || "Check Cloudflare environment keys"));
-            }
-        } catch(e) {
-            alert("❌ API Execution failure: " + e.message);
+    try {
+        const [r1, r2, r3] = await Promise.all([
+            secureApiPost("/api/deploy", { shopSlug:slug, path:`data/${slug}-manifest.json`, content:JSON.stringify(manifest,null,2), message:`pos(sys): save state for ${slug}` }),
+            secureApiPost("/api/deploy", { shopSlug:slug, path:`data/${slug}-menu.json`,     content:menuJson,                         message:`pos(data): sync items for ${slug}` }),
+            secureApiPost("/api/deploy", { shopSlug:slug, path:`shops/${slug}.html`,          content:appHtml,                          message:`pos(app): compile template for ${slug}` })
+        ]);
+        if (r1.ok && r2.ok && r3.ok) {
+            const host = window.location.hostname;
+            document.getElementById('liveAppLink').innerText  = `https://${host}/shops/${slug}.html`;
+            document.getElementById('liveJsonLink').innerText = `https://${host}/data/${slug}-menu.json`;
+            document.getElementById('deploymentLinks').style.display = 'block';
+            alert("🚀 Deployed successfully! Cloudflare Pages is rebuilding.");
+        } else {
+            const err = await r1.json().catch(()=>({error:"Unknown error"}));
+            alert("❌ Deploy failed: " + (err.error || "Check Cloudflare env keys"));
         }
-    }
+    } catch(e) { alert("❌ " + e.message); }
+}
 
-    async function recallShopFromGitSecure() {
-        const slug = document.getElementById('shopSlug').value;
-        if (!slug) return alert("⚠️ Enter a valid Shop ID Slug identifier.");
+/* ── Recall ─────────────────────────────────────────────────── */
+async function recallShopFromGitSecure() {
+    const slug = document.getElementById('shopSlug').value;
+    if (!slug) return alert("⚠️ Enter a Shop ID Slug.");
+    try {
+        const res = await secureApiPost("/api/recall", { shopSlug:slug });
+        if (!res.ok) return alert("📂 No configuration found for this slug.");
+        const fileData = await res.json();
+        const manifest = JSON.parse(decodeURIComponent(escape(atob(fileData.content))));
+        document.getElementById('bizName').value      = manifest.bizName      || '';
+        document.getElementById('bizTax').value       = manifest.bizTax       || '';
+        document.getElementById('bizCurrency').value  = manifest.bizCurrency  || '฿';
+        document.getElementById('bizTel').value       = manifest.bizTel       || '';
+        document.getElementById('bizAddress').value   = manifest.bizAddress   || '';
+        document.getElementById('bizLogo').value      = manifest.bizLogo      || '';
+        document.getElementById('bizPromptpay').value = manifest.bizPromptpay || '';
+        if (manifest.menuStructure) menuStructure = manifest.menuStructure;
+        renderStudio(); saveToLocalStorage();
+        alert(`📥 [${manifest.bizName}] recalled successfully.`);
+    } catch(e) { alert("❌ " + e.message); }
+}
 
-        try {
-            const res = await secureApiPost("/api/recall", { shopSlug: slug });
-            if (!res.ok) {
-                alert("📂 No configuration history found for this specific Shop ID Slug on the repository target.");
-                return;
-            }
+/* ═══════════════════════════════════════════════════════════════
+   POS HTML GENERATOR
+   ─────────────────────────────────────────────────────────────
+   Generated script uses backtick template literals for all HTML
+   string building — no double-quote escaping issues ever again.
+   Backtick characters inside single-quoted JS strings here are
+   just regular characters; they only become template literal
+   delimiters inside the generated file.
+   ═══════════════════════════════════════════════════════════════ */
+function buildStandaloneAppHtml(m, menuJson) {
+    // Sanitise user values that land inside template literals in generated code
+    const safe = s => (s||'').replace(/`/g,"'").replace(/\\/g,'\\\\');
+    const n  = safe(m.bizName);
+    const tx = safe(m.bizTax);
+    const ad = safe(m.bizAddress);
+    const ph = safe(m.bizTel);
+    const c  = safe(m.bizCurrency) || '฿';
+    const logo = safe(m.bizLogo);
+    const pp   = safe(m.bizPromptpay).replace(/[^0-9]/g,'');
 
-            const fileData = await res.json();
-            const decodedContent = decodeURIComponent(escape(atob(fileData.content)));
-            const manifest = JSON.parse(decodedContent);
+    /* ── CSS ─────────────────────────────────────────────────── */
+    const css = `
+:root{--bg:#f7fafc;--card:#fff;--text:#1a202c;--muted:#718096;--primary:#2563eb;--pl:#eff6ff;--bdr:#e2e8f0;--danger:#ef4444;}
+@media(prefers-color-scheme:dark){:root{--bg:#121620;--card:#1a202c;--text:#edf2f7;--muted:#a0aec0;--primary:#3b82f6;--pl:rgba(59,130,246,.12);--bdr:#2d3748;}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);margin:0;}
+.app{max-width:600px;margin:0 auto;padding:12px 14px 40px;}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 0 14px;gap:10px;}
+.hdr-left{display:flex;align-items:center;gap:10px;min-width:0;}
+.logo-img{height:52px;width:auto;border-radius:8px;flex-shrink:0;object-fit:contain;}
+.shop-name{font-size:1.2rem;font-weight:800;color:var(--primary);margin:0;line-height:1.25;word-break:break-word;}
+.lang-toggle{display:flex;gap:3px;background:var(--bdr);border-radius:22px;padding:3px;flex-shrink:0;}
+.lang-btn{background:none;border:none;padding:7px 14px;border-radius:18px;font-weight:700;font-size:.85rem;cursor:pointer;color:var(--muted);min-height:36px;}
+.lang-btn.active{background:var(--primary);color:#fff;}
+.nav{display:flex;gap:4px;background:var(--bdr);border-radius:12px;padding:4px;margin-bottom:14px;}
+.nav button{flex:1;background:none;border:none;padding:0;min-height:52px;font-weight:700;font-size:.95rem;color:var(--muted);cursor:pointer;border-radius:9px;}
+.nav button.active{background:var(--card);color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.panel{display:none;}.panel.active{display:block;}
+.hero{background:var(--card);border:2px solid var(--primary);padding:18px 16px;border-radius:14px;text-align:center;font-size:2rem;font-weight:800;color:var(--primary);margin-bottom:14px;}
+.card{background:var(--card);padding:14px;border-radius:14px;border:1px solid var(--bdr);margin-bottom:12px;}
+.filter-bar{display:flex;gap:8px;overflow-x:auto;margin-bottom:14px;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.filter-bar::-webkit-scrollbar{display:none;}
+.chip{background:var(--bdr);border:none;padding:0 18px;border-radius:22px;font-size:.9rem;font-weight:600;cursor:pointer;white-space:nowrap;min-height:44px;display:flex;align-items:center;color:var(--text);}
+.chip.active{background:var(--primary);color:#fff;}
+.item-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-bottom:10px;align-items:center;}
+.item-row select{width:100%;padding:12px 10px;border-radius:9px;border:1px solid var(--bdr);font-size:.95rem;background:var(--bg);color:var(--text);min-height:52px;}
+.qty-stepper{display:flex;align-items:center;border:1px solid var(--bdr);border-radius:9px;overflow:hidden;flex-shrink:0;}
+.qty-stepper button{background:var(--bdr);border:none;width:42px;height:52px;font-size:1.4rem;font-weight:700;cursor:pointer;color:var(--text);flex-shrink:0;}
+.qty-stepper input{width:46px;text-align:center;border:none;border-left:1px solid var(--bdr);border-right:1px solid var(--bdr);font-size:1rem;font-weight:700;height:52px;background:var(--card);color:var(--text);-moz-appearance:textfield;}
+.qty-stepper input::-webkit-inner-spin-button,.qty-stepper input::-webkit-outer-spin-button{-webkit-appearance:none;}
+.del-btn{background:var(--danger);color:#fff;border:none;border-radius:9px;width:46px;height:52px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.add-btn{width:100%;min-height:52px;background:var(--pl);color:var(--primary);border:2px dashed var(--primary);border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;}
+.opts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.opt-group label{display:block;font-size:.7rem;font-weight:700;margin-bottom:6px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.opt-group select{width:100%;padding:10px 8px;border-radius:8px;border:1px solid var(--bdr);font-size:.9rem;background:var(--bg);color:var(--text);min-height:48px;}
+.btn{width:100%;min-height:52px;border:none;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-primary{background:var(--primary);color:#fff;}
+.meta-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.meta-row input{width:100%;padding:12px;border-radius:8px;border:1px solid var(--bdr);font-size:.95rem;background:var(--bg);color:var(--text);min-height:48px;box-sizing:border-box;}
+iframe{width:100%;height:500px;border:1px solid var(--bdr);border-radius:12px;background:white;margin-top:12px;}`;
 
-            document.getElementById('bizName').value = manifest.bizName || '';
-            document.getElementById('bizTax').value = manifest.bizTax || '';
-            document.getElementById('bizCurrency').value = manifest.bizCurrency || '฿';
-            document.getElementById('bizTel').value = manifest.bizTel || '';
-            document.getElementById('bizAddress').value = manifest.bizAddress || '';
-            if (manifest.menuStructure) menuStructure = manifest.menuStructure;
+    /* ── HTML shell ──────────────────────────────────────────── */
+    const logoTag = logo ? `<img src="${logo}" class="logo-img" alt="logo">` : '';
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>${n} - POS</title>
+<style>${css}</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="hdr-left">${logoTag}<h1 class="shop-name">${n}</h1></div>
+  <div class="lang-toggle">
+    <button id="lEN" class="lang-btn active" onclick="sl('EN')">EN</button>
+    <button id="lTH" class="lang-btn" onclick="sl('TH')">ไทย</button>
+  </div>
+</header>
+<div class="nav">
+  <button id="b1" class="active" onclick="m('calc')">🧾 Order</button>
+  <button id="b2" onclick="m('doc')">🖨️ Invoice</button>
+</div>
+<div class="hero" id="totalBox">0.00 ${c}</div>
+<div id="pCalc" class="panel active">
+  <div class="filter-bar" id="fBar"></div>
+  <div class="card">
+    <div id="lines"></div>
+    <button class="add-btn" id="addBtn" onclick="add()">➕ Add Item</button>
+  </div>
+  <div class="card">
+    <div class="opts">
+      <div class="opt-group"><label id="lDisc">Discount</label><select id="disc" onchange="calc()"><option value="0">None</option><option value="5">5%</option><option value="10">10%</option></select></div>
+      <div class="opt-group"><label id="lSc">Service</label><select id="sc" onchange="calc()"><option value="0">0%</option><option value="10">10%</option></select></div>
+      <div class="opt-group"><label id="lPm">Payment</label><select id="pm" onchange="calc()"><option value="Cash / เงินสด">Cash</option><option value="Credit Card">Card</option><option value="PromptPay / พร้อมเพย์">PromptPay</option></select></div>
+    </div>
+  </div>
+</div>
+<div id="pDoc" class="panel">
+  <div class="card meta-row">
+    <input type="text" id="tab" value="Table 01" oninput="calc()">
+    <input type="text" id="note" value="2 Guests" oninput="calc()">
+  </div>
+  <button class="btn btn-primary" id="printBtn" onclick="window.frames[0].focus();window.frames[0].print();">🖨️ Print Receipt</button>
+  <iframe></iframe>
+</div>
+</div>`;
 
-            renderStudio();
-            saveToLocalStorage();
-            alert("📥 [" + manifest.bizName + "] workspace model settings retrieved and applied securely.");
-        } catch(e) {
-            alert("❌ Secure pull routine threw exception: " + e.message);
-        }
-    }
+    /* ── Generated script ────────────────────────────────────── */
+    // backtick template literals are safe in single-quoted strings below
+    const script = [
+        // Constants injected at build time
+        'const LOGO_URL="'+logo+'";',
+        'const PP_ID="'+pp+'";',
+        'const CURRENCY="'+c+'";',
 
-    // ─── POS HTML Generator ────────────────────────────────────────────────────
-    // Uses template literals (backticks) in the GENERATED script so no quote
-    // escaping is ever needed for HTML attributes. Backticks are safe inside the
-    // single-quoted JS strings used here in the outer generator function.
-    function buildStandaloneAppHtml(name, tax, address, tel, currency, menuJson) {
-        // Escape backticks in user-supplied data so they don't break template
-        // literals in the generated code.
-        const c  = currency;
-        const n  = name.replace(/`/g, "'");
-        const tx = tax.replace(/`/g, "'");
-        const ad = address.replace(/`/g, "'");
-        const ph = tel.replace(/`/g, "'");
+        // Dataset
+        'let l="EN",f="ALL",dataset='+menuJson+';',
 
-        const css = [
-            ':root{--bg:#f7fafc;--card:#ffffff;--text:#1a202c;--muted:#718096;--primary:#2563eb;--pl:#eff6ff;--border:#e2e8f0;--danger:#ef4444;}',
-            '@media(prefers-color-scheme:dark){:root{--bg:#121620;--card:#1a202c;--text:#edf2f7;--muted:#a0aec0;--primary:#3b82f6;--pl:rgba(59,130,246,.12);--border:#2d3748;}}',
-            '*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}',
-            'body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);margin:0;padding:0;}',
-            '.app{max-width:600px;margin:0 auto;padding:12px 14px 32px;}',
+        // Receipt label dictionaries
+        'const dict={',
+        '  EN:{title:"RECEIPT / GUEST CHECK",tax:"Tax ID:",sub:"Subtotal",vat:"VAT (7%)",sc:"Service Charge",disc:"Discount",total:"TOTAL ('+c+')",payment:"Payment:"},',
+        '  TH:{title:"ใบเสร็จรับเงิน",tax:"เลขประจำตัวผู้เสียภาษี:",sub:"รวมยอด",vat:"ภาษีมูลค่าเพิ่ม (7%)",sc:"ค่าบริการ",disc:"ส่วนลด",total:"ยอดรวมสุทธิ ('+c+')",payment:"ช่องทางชำระ:"}',
+        '};',
 
-            /* Header */
-            'header{display:flex;align-items:center;justify-content:space-between;padding:10px 0 14px;}',
-            '.shop-name{font-size:1.25rem;font-weight:800;color:var(--primary);margin:0;line-height:1.2;}',
-            '.lang-toggle{display:flex;gap:3px;background:var(--border);border-radius:22px;padding:3px;}',
-            '.lang-btn{background:none;border:none;padding:7px 16px;border-radius:18px;font-weight:700;font-size:0.85rem;cursor:pointer;color:var(--muted);min-height:36px;}',
-            '.lang-btn.active{background:var(--primary);color:#fff;}',
+        // UI label dictionaries (controls the Order-tab labels that change with language)
+        'const uiDict={',
+        '  EN:{orderTab:"🧾 Order",invoiceTab:"🖨️ Invoice",addItem:"➕ Add Item",disc:"Discount",sc:"Service",pm:"Payment",print:"🖨️ Print Receipt"},',
+        '  TH:{orderTab:"🧾 คำสั่งซื้อ",invoiceTab:"🖨️ ใบแจ้งหนี้",addItem:"➕ เพิ่มรายการ",disc:"ส่วนลด",sc:"ค่าบริการ",pm:"ชำระเงิน",print:"🖨️ พิมพ์ใบเสร็จ"}',
+        '};',
 
-            /* Nav */
-            '.nav{display:flex;gap:4px;background:var(--border);border-radius:12px;padding:4px;margin-bottom:14px;}',
-            '.nav button{flex:1;background:none;border:none;padding:0;min-height:52px;font-weight:700;font-size:0.95rem;color:var(--muted);cursor:pointer;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:6px;}',
-            '.nav button.active{background:var(--card);color:var(--primary);box-shadow:0 1px 4px rgba(0,0,0,.08);}',
+        // Tab switcher
+        'function m(p){',
+        '  document.getElementById("pCalc").className=p==="calc"?"panel active":"panel";',
+        '  document.getElementById("pDoc").className=p==="doc"?"panel active":"panel";',
+        '  document.getElementById("b1").className=p==="calc"?"active":"";',
+        '  document.getElementById("b2").className=p==="doc"?"active":"";',
+        '  if(p==="doc")calc();',
+        '}',
 
-            '.panel{display:none;}.panel.active{display:block;}',
+        // Language switcher — updates EVERY visible UI string immediately
+        'function sl(lang){',
+        '  l=lang;',
+        '  document.getElementById("lEN").className=l==="EN"?"lang-btn active":"lang-btn";',
+        '  document.getElementById("lTH").className=l==="TH"?"lang-btn active":"lang-btn";',
+        '  const ui=uiDict[l];',
+        '  document.getElementById("b1").textContent=ui.orderTab;',
+        '  document.getElementById("b2").textContent=ui.invoiceTab;',
+        '  document.getElementById("addBtn").textContent=ui.addItem;',
+        '  document.getElementById("lDisc").textContent=ui.disc;',
+        '  document.getElementById("lSc").textContent=ui.sc;',
+        '  document.getElementById("lPm").textContent=ui.pm;',
+        '  document.getElementById("printBtn").textContent=ui.print;',
+        '  up();calc();',
+        '}',
 
-            /* Total hero */
-            '.hero{background:var(--card);border:2px solid var(--primary);padding:18px 16px;border-radius:14px;text-align:center;font-size:2rem;font-weight:800;color:var(--primary);margin-bottom:14px;letter-spacing:0.5px;}',
+        // Category filter bar
+        'function fb(){',
+        '  const bar=document.getElementById("fBar");',
+        '  const cats=["ALL",...new Set(dataset.map(d=>d.category).filter(Boolean))];',
+        '  bar.innerHTML="";',
+        '  cats.forEach(c=>{',
+        '    const b=document.createElement("button");',
+        '    b.type="button";b.className="chip"+(f===c?" active":"");b.textContent=c;',
+        '    b.onclick=()=>{f=c;fb();up();};',
+        '    bar.appendChild(b);',
+        '  });',
+        '}',
 
-            /* Card */
-            '.card{background:var(--card);padding:14px;border-radius:14px;border:1px solid var(--border);margin-bottom:12px;}',
+        // Rebuild item dropdown options in the current language
+        'function up(){',
+        '  document.querySelectorAll(".item-row select").forEach(s=>{',
+        '    const cur=s.value;',
+        '    s.innerHTML=`<option value="">-- ${l==="EN"?"Select item":"เลือกรายการ"} --</option>`;',
+        '    dataset.forEach(d=>{',
+        '      if(f==="ALL"||d.category===f){',
+        '        const o=document.createElement("option");',
+        '        o.value=d.id;',
+        '        o.text=(l==="EN"?d.nameEN:d.nameTH)+` (${CURRENCY}${d.price})`;',
+        '        s.appendChild(o);',
+        '      }',
+        '    });',
+        '    s.value=cur;',
+        '  });',
+        '}',
 
-            /* Category chips */
-            '.filter-bar{display:flex;gap:8px;overflow-x:auto;margin-bottom:14px;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}',
-            '.filter-bar::-webkit-scrollbar{display:none;}',
-            '.chip{background:var(--border);border:none;padding:0 18px;border-radius:22px;font-size:0.9rem;font-weight:600;cursor:pointer;white-space:nowrap;min-height:44px;display:flex;align-items:center;color:var(--text);}',
-            '.chip.active{background:var(--primary);color:#fff;}',
+        // Add a new item row with qty stepper
+        'function add(){',
+        '  const id="r_"+Math.random().toString(36).substr(2,5);',
+        '  const row=document.createElement("div");row.className="item-row";row.id=id;',
+        '  const sel=document.createElement("select");sel.onchange=()=>hc(id);',
+        '  const step=document.createElement("div");step.className="qty-stepper";',
+        '  const bM=document.createElement("button");bM.type="button";bM.textContent="−";',
+        '  bM.onclick=()=>{const q=row.querySelector(".q");q.value=Math.max(1,(parseInt(q.value)||1)-1);calc();};',
+        '  const qIn=document.createElement("input");qIn.type="number";qIn.className="q";qIn.value="1";qIn.min="1";qIn.oninput=calc;',
+        '  const bP=document.createElement("button");bP.type="button";bP.textContent="+";',
+        '  bP.onclick=()=>{const q=row.querySelector(".q");q.value=(parseInt(q.value)||0)+1;calc();};',
+        '  step.append(bM,qIn,bP);',
+        '  const del=document.createElement("button");del.type="button";del.className="del-btn";del.textContent="✕";',
+        '  del.onclick=()=>{row.remove();calc();};',
+        '  row.append(sel,step,del);',
+        '  document.getElementById("lines").appendChild(row);up();',
+        '}',
 
-            /* Item rows */
-            '.item-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-bottom:10px;align-items:center;}',
-            '.item-row select{width:100%;padding:12px 10px;border-radius:9px;border:1px solid var(--border);font-size:0.95rem;background:var(--bg);color:var(--text);min-height:52px;}',
+        // Store price on select when item changes
+        'function hc(id){',
+        '  const sel=document.getElementById(id).querySelector("select");',
+        '  const item=dataset.find(d=>d.id===sel.value);',
+        '  sel.dataset.price=item?item.price:0;calc();',
+        '}',
 
-            /* Qty stepper */
-            '.qty-stepper{display:flex;align-items:center;border:1px solid var(--border);border-radius:9px;overflow:hidden;flex-shrink:0;}',
-            '.qty-stepper button{background:var(--border);border:none;width:42px;height:52px;font-size:1.4rem;font-weight:700;cursor:pointer;color:var(--text);flex-shrink:0;display:flex;align-items:center;justify-content:center;}',
-            '.qty-stepper input{width:46px;text-align:center;border:none;border-left:1px solid var(--border);border-right:1px solid var(--border);font-size:1rem;font-weight:700;height:52px;background:var(--card);color:var(--text);-moz-appearance:textfield;}',
-            '.qty-stepper input::-webkit-inner-spin-button,.qty-stepper input::-webkit-outer-spin-button{-webkit-appearance:none;}',
+        // PromptPay EMV payload builder
+        'function ppPayload(rawId,amount){',
+        '  const id=rawId.replace(/\\D/g,"");if(!id)return"";',
+        '  let acc=id,tag="02";',
+        '  if(id.length===10){acc="0066"+id.slice(1);tag="01";}',
+        '  const aid="0016A000000677010111";',
+        '  const af=tag+String(acc.length).padStart(2,"0")+acc;',
+        '  const mi="29"+String((aid+af).length).padStart(2,"0")+aid+af;',
+        '  const amt=amount>0?"54"+String(amount.toFixed(2).length).padStart(2,"0")+amount.toFixed(2):"";',
+        '  const raw="000201"+"010212"+mi+"5802TH"+"5303764"+amt+"6304";',
+        '  return raw+crc16(raw);',
+        '}',
+        'function crc16(str){',
+        '  let c=0xFFFF;',
+        '  for(let i=0;i<str.length;i++){c^=str.charCodeAt(i)<<8;for(let j=0;j<8;j++)c=(c&0x8000)?((c<<1)^0x1021)&0xFFFF:(c<<1)&0xFFFF;}',
+        '  return c.toString(16).toUpperCase().padStart(4,"0");',
+        '}',
 
-            /* Delete */
-            '.del-btn{background:var(--danger);color:#fff;border:none;border-radius:9px;width:46px;height:52px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}',
+        // Main calc: update total + rebuild receipt iframe
+        'function calc(){',
+        '  let sub=0;const items=[];',
+        '  document.querySelectorAll(".item-row").forEach(row=>{',
+        '    const sel=row.querySelector("select");',
+        '    const qty=parseInt(row.querySelector(".q").value)||0;',
+        '    const pr=parseFloat(sel.dataset.price)||0;',
+        '    if(sel.value&&qty>0){',
+        '      const item=dataset.find(d=>d.id===sel.value);',
+        '      if(item){sub+=qty*pr;items.push({nEN:item.nameEN,nTH:item.nameTH,q:qty,p:pr,t:qty*pr});}',
+        '    }',
+        '  });',
+        '  const disc=parseFloat(document.getElementById("disc").value)||0;',
+        '  const scPct=parseFloat(document.getElementById("sc").value)||0;',
+        '  const dVal=sub*disc/100;',
+        '  const sVal=(sub-dVal)*scPct/100;',
+        '  const vat=(sub-dVal+sVal)*0.07;',
+        '  const total=sub-dVal+sVal+vat;',
+        '  document.getElementById("totalBox").textContent=Math.round(total).toLocaleString()+".00 "+CURRENCY;',
 
-            /* Add button */
-            '.add-btn{width:100%;min-height:52px;background:var(--pl);color:var(--primary);border:2px dashed var(--primary);border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;}',
+        '  const labels=dict[l];',
+        '  const dStr=new Date().toLocaleString("en-GB");',
+        '  const tab=document.getElementById("tab").value;',
+        '  const note=document.getElementById("note").value;',
+        '  const pm=document.getElementById("pm").value;',
 
-            /* Options row */
-            '.opts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}',
-            '.opt-group label{display:block;font-size:0.7rem;font-weight:700;margin-bottom:6px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}',
-            '.opt-group select{width:100%;padding:10px 8px;border-radius:8px;border:1px solid var(--border);font-size:0.9rem;background:var(--bg);color:var(--text);min-height:48px;}',
+        // Build receipt rows using template literals — no quote hell
+        '  let rows="";',
+        '  items.forEach(i=>{',
+        '    rows+=`<tr>',
+        '      <td style="padding:5px 6px">${l==="EN"?i.nEN:i.nTH}</td>',
+        '      <td style="text-align:right;padding:5px 6px">${i.q}</td>',
+        '      <td style="text-align:right;padding:5px 6px">${Math.round(i.p)}.00</td>',
+        '      <td style="text-align:right;padding:5px 6px;font-weight:600">${Math.round(i.t)}.00</td>',
+        '    </tr>`;',
+        '  });',
 
-            /* Buttons */
-            '.btn{width:100%;min-height:52px;border:none;border-radius:10px;font-weight:700;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}',
-            '.btn-primary{background:var(--primary);color:#fff;}',
+        // PromptPay QR section
+        '  const ppData=PP_ID?ppPayload(PP_ID,total):"";',
+        '  const ppSection=ppData?`',
+        '    <div style="text-align:center;margin:14px 0;padding:12px;border:1px solid #e2e8f0;border-radius:8px">',
+        '      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=10&data=${encodeURIComponent(ppData)}"',
+        '           width="200" height="200" alt="PromptPay QR" style="display:block;margin:0 auto">',
+        '      <div style="font-size:11px;color:#555;margin-top:6px;font-weight:600">พร้อมเพย์ · PromptPay</div>',
+        '      <div style="font-size:12px;color:#333;margin-top:2px">${PP_ID}</div>',
+        '      <div style="font-size:13px;color:#2563eb;font-weight:800;margin-top:4px">${CURRENCY}${Math.round(total)}.00</div>',
+        '    </div>`:"";',
 
-            /* Invoice tab */
-            '.meta-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}',
-            '.meta-row input{width:100%;padding:12px;border-radius:8px;border:1px solid var(--border);font-size:0.95rem;background:var(--bg);color:var(--text);min-height:48px;box-sizing:border-box;}',
+        // Logo in receipt
+        '  const logoHtml=LOGO_URL?`<div style="text-align:center;margin-bottom:10px"><img src="${LOGO_URL}" style="max-height:56px;width:auto" alt="logo"></div>`:"";',
 
-            'iframe{width:100%;height:480px;border:1px solid var(--border);border-radius:12px;background:white;margin-top:12px;}'
-        ].join('\n');
+        // Full receipt document
+        '  const empty=`<tr><td colspan="4" style="text-align:center;padding:14px;color:#aaa">-- '+
+            (c==='฿' ? 'ยังไม่มีรายการ / Empty' : 'Empty') +
+            ' --</td></tr>`;',
+        '  const doc=`<!DOCTYPE html><html><body style="font-family:sans-serif;font-size:13px;padding:14px;color:#222;margin:0">',
+        '  ${logoHtml}',
+        '  <table style="width:100%;margin-bottom:10px;border-collapse:collapse"><tr>',
+        '    <td style="vertical-align:top;padding-right:10px">',
+        '      <strong style="font-size:15px">${"'+n+'"}</strong><br>',
+        '      <span style="color:#666">${"'+tx+'"}</span><br>',
+        '      <span style="color:#666">${"'+ad+'"}</span><br>',
+        '      <span style="color:#666">${"'+ph+'"}</span>',
+        '    </td>',
+        '    <td style="text-align:right;vertical-align:top">',
+        '      <strong style="font-size:14px">${labels.title}</strong><br>',
+        '      <span style="color:#666;font-size:11px">Ref: REC-CF · ${dStr}</span>',
+        '    </td>',
+        '  </tr></table>',
+        '  <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:12px;color:#555">',
+        '    <span>📍 ${tab}</span><span>👥 ${note}</span>',
+        '  </div>',
+        '  <table style="width:100%;border-collapse:collapse;margin-bottom:12px">',
+        '    <thead><tr style="background:#2563eb;color:#fff">',
+        '      <th style="text-align:left;padding:6px">Item</th>',
+        '      <th style="text-align:right;padding:6px">Qty</th>',
+        '      <th style="text-align:right;padding:6px">Unit</th>',
+        '      <th style="text-align:right;padding:6px">Total</th>',
+        '    </tr></thead>',
+        '    <tbody>${rows||empty}</tbody>',
+        '  </table>',
+        '  <table style="width:46%;margin-left:auto;border-collapse:collapse;line-height:2">',
+        '    <tr><td style="color:#555">${labels.sub}</td><td style="text-align:right;font-weight:600">${Math.round(sub)}.00</td></tr>',
+        '    ${dVal>0?`<tr><td style="color:#ef4444">${labels.disc}</td><td style="text-align:right;color:#ef4444;font-weight:600">-${Math.round(dVal)}.00</td></tr>`:""}',
+        '    ${sVal>0?`<tr><td style="color:#555">${labels.sc}</td><td style="text-align:right;font-weight:600">+${Math.round(sVal)}.00</td></tr>`:""}',
+        '    <tr><td style="color:#555">${labels.vat}</td><td style="text-align:right;font-weight:600">${Math.round(vat)}.00</td></tr>',
+        '    <tr style="background:#eff6ff"><td style="color:#2563eb;font-weight:800;font-size:15px;padding:4px 6px">${labels.total}</td>',
+        '      <td style="text-align:right;color:#2563eb;font-weight:800;font-size:15px;padding:4px 6px">${Math.round(total)}.00</td></tr>',
+        '  </table>',
+        '  <div style="margin-top:10px;font-size:12px;color:#555"><strong>${labels.payment}</strong> ${pm}</div>',
+        '  ${ppSection}',
+        '  </body></html>`;',
+        '  document.querySelector("iframe").srcdoc=doc;',
+        '}',
 
-        const html = [
-            '<!DOCTYPE html>',
-            '<html lang="en">',
-            '<head>',
-            '<meta charset="UTF-8">',
-            '<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">',
-            '<title>' + n + ' - POS</title>',
-            '<style>' + css + '</style>',
-            '</head>',
-            '<body>',
-            '<div class="app">',
+        'fb();add();'
+    ].join('\n');
 
-            '<header>',
-            '  <h1 class="shop-name">' + n + '</h1>',
-            '  <div class="lang-toggle">',
-            '    <button id="lEN" class="lang-btn active" onclick="sl(\'EN\')">EN</button>',
-            '    <button id="lTH" class="lang-btn" onclick="sl(\'TH\')">ไทย</button>',
-            '  </div>',
-            '</header>',
+    return html + '\n<script>\n' + script + '\n<\/script>\n</body>\n</html>';
+}
 
-            '<div class="nav">',
-            '  <button id="b1" class="active" onclick="m(\'calc\')">🧾 Order</button>',
-            '  <button id="b2" onclick="m(\'doc\')">🖨️ Invoice</button>',
-            '</div>',
-
-            '<div class="hero" id="totalBox">0.00 ' + c + '</div>',
-
-            '<div id="pCalc" class="panel active">',
-            '  <div class="filter-bar" id="fBar"></div>',
-            '  <div class="card">',
-            '    <div id="lines"></div>',
-            '    <button class="add-btn" onclick="add()">➕ Add Item</button>',
-            '  </div>',
-            '  <div class="card">',
-            '    <div class="opts">',
-            '      <div class="opt-group"><label>Discount</label><select id="disc" onchange="calc()"><option value="0">None</option><option value="5">5%</option><option value="10">10%</option></select></div>',
-            '      <div class="opt-group"><label>Service</label><select id="sc" onchange="calc()"><option value="0">0%</option><option value="10">10%</option></select></div>',
-            '      <div class="opt-group"><label>Payment</label><select id="pm" onchange="calc()"><option value="Cash / เงินสด">Cash</option><option value="Credit Card">Card</option><option value="PromptPay / พร้อมเพย์">PromptPay</option></select></div>',
-            '    </div>',
-            '  </div>',
-            '</div>',
-
-            '<div id="pDoc" class="panel">',
-            '  <div class="card meta-row">',
-            '    <input type="text" id="tab" value="Table 01" oninput="calc()">',
-            '    <input type="text" id="note" value="2 Guests" oninput="calc()">',
-            '  </div>',
-            '  <button class="btn btn-primary" onclick="window.frames[0].focus();window.frames[0].print();">🖨️ Print Receipt</button>',
-            '  <iframe></iframe>',
-            '</div>',
-
-            '</div>'
-        ].join('\n');
-
-        // The generated script uses backtick template literals for HTML building.
-        // Since this outer function uses single-quoted strings, backticks here are
-        // just regular characters — no escaping needed.
-        const script = [
-            'let l="EN",f="ALL",dataset='+menuJson+',values={items:[],sub:0,dVal:0,sVal:0,vat:0,total:0};',
-            'const dict={',
-            '  EN:{title:"RECEIPT / GUEST CHECK",tax:"Tax ID:",sub:"Subtotal",vat:"VAT (7%)",sc:"Service Charge",disc:"Discount",total:"Total Due ('+c+')",payment:"Payment:"},',
-            '  TH:{title:"ใบเสร็จรับเงิน / เช็คบิล",tax:"เลขประจำตัวผู้เสียภาษี:",sub:"รวมยอด",vat:"ภาษี (7%)",sc:"ค่าบริการ",disc:"ส่วนลด",total:"ยอดรวมสุทธิ ('+c+')",payment:"ชำระเงิน:"}',
-            '};',
-
-            'function m(p){',
-            '  document.getElementById("pCalc").className=p==="calc"?"panel active":"panel";',
-            '  document.getElementById("pDoc").className=p==="doc"?"panel active":"panel";',
-            '  document.getElementById("b1").className=p==="calc"?"active":"";',
-            '  document.getElementById("b2").className=p==="doc"?"active":"";',
-            '  if(p==="doc")calc();',
-            '}',
-
-            'function sl(lang){',
-            '  l=lang;',
-            '  document.getElementById("lEN").className=l==="EN"?"lang-btn active":"lang-btn";',
-            '  document.getElementById("lTH").className=l==="TH"?"lang-btn active":"lang-btn";',
-            '  up();calc();',
-            '}',
-
-            'function fb(){',
-            '  const bar=document.getElementById("fBar");',
-            '  const cats=["ALL",...new Set(dataset.map(d=>d.category).filter(Boolean))];',
-            '  bar.innerHTML="";',
-            '  cats.forEach(c=>{',
-            '    const b=document.createElement("button");',
-            '    b.type="button";',
-            '    b.className="chip"+(f===c?" active":"");',
-            '    b.textContent=c;',
-            '    b.onclick=()=>{f=c;fb();up();};',
-            '    bar.appendChild(b);',
-            '  });',
-            '}',
-
-            'function up(){',
-            '  document.querySelectorAll(".item-row select").forEach(s=>{',
-            '    const cur=s.value;',
-            '    s.innerHTML=`<option value="">-- เลือกรายการ / Item --</option>`;',
-            '    dataset.forEach(d=>{',
-            '      if(f==="ALL"||d.category===f){',
-            '        const o=document.createElement("option");',
-            '        o.value=d.id;',
-            '        o.text=(l==="EN"?d.nameEN:d.nameTH)+" ('+c+'"+d.price+")";',
-            '        s.appendChild(o);',
-            '      }',
-            '    });',
-            '    s.value=cur;',
-            '  });',
-            '}',
-
-            'function add(){',
-            '  const id="r_"+Math.random().toString(36).substr(2,5);',
-            '  const row=document.createElement("div");',
-            '  row.className="item-row";row.id=id;',
-            '',
-            '  const sel=document.createElement("select");',
-            '  sel.onchange=()=>hc(id);',
-            '',
-            '  const stepper=document.createElement("div");',
-            '  stepper.className="qty-stepper";',
-            '  const bM=document.createElement("button");',
-            '  bM.type="button";bM.textContent="−";',
-            '  bM.onclick=()=>{const q=row.querySelector(".q");q.value=Math.max(1,(parseInt(q.value)||1)-1);calc();};',
-            '  const qIn=document.createElement("input");',
-            '  qIn.type="number";qIn.className="q";qIn.value="1";qIn.min="1";qIn.oninput=calc;',
-            '  const bP=document.createElement("button");',
-            '  bP.type="button";bP.textContent="+";',
-            '  bP.onclick=()=>{const q=row.querySelector(".q");q.value=(parseInt(q.value)||0)+1;calc();};',
-            '  stepper.append(bM,qIn,bP);',
-            '',
-            '  const del=document.createElement("button");',
-            '  del.type="button";del.className="del-btn";del.textContent="✕";',
-            '  del.onclick=()=>{row.remove();calc();};',
-            '',
-            '  row.append(sel,stepper,del);',
-            '  document.getElementById("lines").appendChild(row);',
-            '  up();',
-            '}',
-
-            'function hc(id){',
-            '  const row=document.getElementById(id);',
-            '  const sel=row.querySelector("select");',
-            '  const item=dataset.find(d=>d.id===sel.value);',
-            '  sel.dataset.price=item?item.price:0;',
-            '  calc();',
-            '}',
-
-            'function calc(){',
-            '  let sub=0;const items=[];',
-            '  document.querySelectorAll(".item-row").forEach(row=>{',
-            '    const sel=row.querySelector("select");',
-            '    const id=sel.value;',
-            '    const qty=parseInt(row.querySelector(".q").value)||0;',
-            '    const pr=parseFloat(sel.dataset.price)||0;',
-            '    if(id&&qty>0){',
-            '      const item=dataset.find(d=>d.id===id);',
-            '      if(item){sub+=qty*pr;items.push({nEN:item.nameEN,nTH:item.nameTH,q:qty,p:pr,t:qty*pr});}',
-            '    }',
-            '  });',
-            '  const disc=parseFloat(document.getElementById("disc").value)||0;',
-            '  const scPct=parseFloat(document.getElementById("sc").value)||0;',
-            '  const dVal=sub*disc/100;',
-            '  const sVal=(sub-dVal)*scPct/100;',
-            '  const vat=(sub-dVal+sVal)*0.07;',
-            '  const total=sub-dVal+sVal+vat;',
-            '  document.getElementById("totalBox").textContent=Math.round(total).toLocaleString()+".00 '+c+'";',
-            '  values={items,sub,dVal,sVal,vat,total};',
-            '  const dStr=new Date().toLocaleString("en-GB");',
-            '  const labels=dict[l];',
-            '  let rHTML="";',
-            '  items.forEach(i=>{',
-            '    rHTML+=`<tr>',
-            '      <td style="padding:4px 6px">${l==="EN"?i.nEN:i.nTH}</td>',
-            '      <td style="text-align:right;padding:4px 6px">${i.q}</td>',
-            '      <td style="text-align:right;padding:4px 6px">${Math.round(i.p)}.00</td>',
-            '      <td style="text-align:right;padding:4px 6px">${Math.round(i.t)}.00</td>',
-            '    </tr>`;',
-            '  });',
-            '  const tab=document.getElementById("tab").value;',
-            '  const note=document.getElementById("note").value;',
-            '  const pm=document.getElementById("pm").value;',
-            '  const empty=`<tr><td colspan="4" style="text-align:center;padding:12px;color:#aaa">-- Empty Ticket --</td></tr>`;',
-            '  const docContent=`<!DOCTYPE html><html><body style="font-family:sans-serif;font-size:13px;padding:12px;color:#222;margin:0">',
-            '    <table style="width:100%;margin-bottom:10px;border-collapse:collapse"><tr>',
-            '      <td style="vertical-align:top;padding-right:10px"><strong>'+n+'</strong><br><span style="color:#666">'+tx+'</span><br><span style="color:#666">'+ad+'</span><br><span style="color:#666">'+ph+'</span></td>',
-            '      <td style="text-align:right;vertical-align:top"><strong style="font-size:14px">${labels.title}</strong><br><span style="color:#666">Ref: REC-CF</span><br><span style="color:#666">${dStr}</span></td>',
-            '    </tr></table>',
-            '    <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:12px;color:#555">',
-            '      <span>Loc: ${tab}</span><span>Note: ${note}</span>',
-            '    </div>',
-            '    <table style="width:100%;border-collapse:collapse;margin-bottom:12px">',
-            '      <thead><tr style="background:#2563eb;color:#fff">',
-            '        <th style="text-align:left;padding:6px 6px">Item</th>',
-            '        <th style="text-align:right;padding:6px 6px">Qty</th>',
-            '        <th style="text-align:right;padding:6px 6px">Unit</th>',
-            '        <th style="text-align:right;padding:6px 6px">Total</th>',
-            '      </tr></thead>',
-            '      <tbody style="border:1px solid #e2e8f0">${rHTML||empty}</tbody>',
-            '    </table>',
-            '    <table style="width:46%;margin-left:auto;border-collapse:collapse;line-height:1.9">',
-            '      <tr><td style="color:#555">${labels.sub}</td><td style="text-align:right;font-weight:700">${Math.round(sub)}.00</td></tr>',
-            '      ${dVal>0?`<tr><td style="color:#ef4444">${labels.disc}</td><td style="text-align:right;color:#ef4444;font-weight:700">-${Math.round(dVal)}.00</td></tr>`:""}',
-            '      ${sVal>0?`<tr><td style="color:#555">${labels.sc}</td><td style="text-align:right;font-weight:700">+${Math.round(sVal)}.00</td></tr>`:""}',
-            '      <tr><td style="color:#555">${labels.vat}</td><td style="text-align:right;font-weight:700">${Math.round(vat)}.00</td></tr>',
-            '      <tr style="background:#eff6ff"><td style="color:#2563eb;font-weight:800;font-size:14px;padding:4px 6px">${labels.total}</td><td style="text-align:right;color:#2563eb;font-weight:800;font-size:14px;padding:4px 6px">${Math.round(total)}.00</td></tr>',
-            '    </table>',
-            '    <div style="margin-top:12px;font-size:12px;color:#555"><strong>${labels.payment}</strong> ${pm}</div>',
-            '  </body></html>`;',
-            '  document.querySelector("iframe").srcdoc=docContent;',
-            '}',
-            'fb();add();'
-        ].join('\n');
-
-        return html + '\n<script>\n' + script + '\n<\/script>\n</body>\n</html>';
-    }
-
-    window.onload = loadFromLocalStorage;
+window.onload = loadFromLocalStorage;
 </script>
 </body>
 </html>
