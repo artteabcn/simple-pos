@@ -228,8 +228,6 @@
         document.getElementById('jsonPreview').innerText = JSON.stringify(generateCleanJsonArray(), null, 2);
     }
 
-    // --- SECURE API CALL WRAPPER LOOPS ---
-
     async function secureApiPost(endpoint, body) {
         const res = await fetch(endpoint, {
             method: "POST",
@@ -256,28 +254,23 @@
         const compiledHtmlApp = buildStandaloneAppHtml(systemManifest.bizName, systemManifest.bizTax, systemManifest.bizAddress, systemManifest.bizTel, systemManifest.bizCurrency, liveMenuJson);
 
         try {
-            // Save manifest metadata model mapping context state
-            const r1 = await secureApiPost("/api/deploy", { shopSlug: slug, path: `data/${slug}-manifest.json`, content: JSON.stringify(systemManifest, null, 2), message: `pos(sys): save state for ${slug}` });
-            
-            // Save flat clean production items arrays
-            const r2 = await secureApiPost("/api/deploy", { shopSlug: slug, path: `data/${slug}-menu.json`, content: liveMenuJson, message: `pos(data): sync raw items for ${slug}` });
-            
-            // Save fully bundled runtime views template modules
-            const r3 = await secureApiPost("/api/deploy", { shopSlug: slug, path: `shops/${slug}.html`, content: compiledHtmlApp, message: `pos(app): compile master template for ${slug}` });
+            const r1 = await secureApiPost("/api/deploy", { shopSlug: slug, path: "data/" + slug + "-manifest.json", content: JSON.stringify(systemManifest, null, 2), message: "pos(sys): save state for " + slug });
+            const r2 = await secureApiPost("/api/deploy", { shopSlug: slug, path: "data/" + slug + "-menu.json", content: liveMenuJson, message: "pos(data): sync raw items for " + slug });
+            const r3 = await secureApiPost("/api/deploy", { shopSlug: slug, path: "shops/" + slug + ".html", content: compiledHtmlApp, message: "pos(app): compile master template for " + slug });
 
             if (r1.ok && r2.ok && r3.ok) {
                 const resData = await r1.json();
                 const domainSegment = resData.repo.split('/')[1];
                 
-                document.getElementById('liveAppLink').innerText = `https://${domainSegment}.pages.dev/shops/${slug}.html`;
-                document.getElementById('liveJsonLink').innerText = `https://${domainSegment}.pages.dev/data/${slug}-menu.json`;
+                document.getElementById('liveAppLink').innerText = "https://" + domainSegment + ".pages.dev/shops/" + slug + ".html";
+                document.getElementById('liveJsonLink').innerText = "https://" + domainSegment + ".pages.dev/data/" + slug + "-menu.json";
                 document.getElementById('deploymentLinks').style.display = 'block';
                 alert("🚀 Secure transmission completed successfully! Cloudflare Pages has queued your production updates.");
             } else {
                 alert("❌ One or more files failed to save. Verify your environment variables inside Cloudflare.");
             }
         } catch(e) {
-            alert(`❌ API Execution failure string token parsing constraint: ${e.message}`);
+            alert("❌ API Execution failure: " + e.message);
         }
     }
 
@@ -305,115 +298,117 @@
 
             renderStudio();
             saveToLocalStorage();
-            alert(`📥 [${manifest.bizName}] workspace model settings retrieved and applied securely.`);
+            alert("📥 [" + manifest.bizName + "] workspace model settings retrieved and applied securely.");
         } catch(e) {
-            alert(`❌ Secure pull routine threw exception: ${e.message}`);
+            alert("❌ Secure pull routine threw exception: " + e.message);
         }
     }
 
     function buildStandaloneAppHtml(name, tax, address, tel, currency, menuJson) {
-        return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>\${name} - POS Terminal</title>
-    <style>
-        :root { --bg-color: #f7fafc; --card-bg: #ffffff; --text-main: #1a202c; --text-muted: #718096; --primary: #2563eb; --primary-light: #eff6ff; --border: #e2e8f0; --danger: #ef4444; }
-        @media (prefers-color-scheme: dark) { :root { --bg-color: #121620; --card-bg: #1a202c; --text-main: #edf2f7; --text-muted: #a0aec0; --primary: #3b82f6; --primary-light: rgba(59, 130, 246, 0.1); --border: #2d3748; } }
-        * { box-sizing: border-box; }
-        body { font-family: system-ui, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 12px; }
-        .app { max-width: 750px; margin: 0 auto; }
-        header { text-align: center; margin-bottom: 16px; }
-        .nav { display: flex; background: var(--border); border-radius: 8px; padding: 4px; margin-bottom: 16px; }
-        .nav button { flex:1; background:none; border:none; padding:10px; font-weight:700; color:var(--text-muted); cursor:pointer; border-radius:6px; }
-        .nav button.active { background:var(--card-bg); color:var(--primary); }
-        .panel { display:none; } .panel.active { display:block; }
-        .hero { background:var(--card-bg); border: 2px solid var(--primary); padding:16px; border-radius:12px; text-align:center; font-size:1.8rem; font-weight:800; color:var(--primary); margin-bottom:16px; }
-        .card { background:var(--card-bg); padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:12px; }
-        .filter-bar { display:flex; gap:8px; overflow-x:auto; margin-bottom:12px; }
-        .chip { background:var(--border); border:none; padding:6px 12px; border-radius:20px; font-size:0.85rem; font-weight:600; cursor:pointer; }
-        .chip.active { background:var(--primary); color:white; }
-        .row { display:grid; grid-template-columns: 2.5fr 1fr 1fr 0.4fr; gap:8px; margin-bottom:8px; align-items:center; }
-        .btn { width:100%; height:42px; border:none; border-radius:6px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-        .btn-primary { background:var(--primary); color:white; }
-        iframe { width:100%; height:500px; border:1px solid var(--border); border-radius:12px; background:white; margin-top:12px; }
-    </style>
-</head>
-<body>
-<div class="app">
-    <header><h1>${name}</h1><p style="color:var(--text-muted); margin:4px 0 0 0;">POS Client Node</p></header>
-    <div class="nav"><button id="b1" class="active" onclick="m('calc')">1. Order Intake</button><button id="b2" onclick="m('doc')">2. Invoice Preview</button></div>
-    <div class="hero" id="totalBox">0.00 ${currency}</div>
-    <div id="pCalc" class="panel active">
-        <div class="filter-bar" id="fBar"></div>
-        <div class="card"><div id="lines"></div><button class="btn" style="background:var(--primary-light); color:var(--primary);" onclick="add()">➕ Add New Line Item</button></div>
-        <div class="card"><div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
-            <div><label style="font-size:0.75rem; font-weight:700;">Discount</label><select id="disc" onchange="calc()"><option value="0">None</option><option value="5">5%</option><option value="10">10%</option></select></div>
-            <div><label style="font-size:0.75rem; font-weight:700;">Service Charge</label><select id="sc" onchange="calc()"><option value="0">0%</option><option value="10">10%</option></select></div>
-            <div><label style="font-size:0.75rem; font-weight:700;">Payment Route</label><select id="pm" onchange="calc()"><option value="Cash / เงินสด">Cash</option><option value="Credit Card">Card</option><option value="PromptPay / พร้อมเพย์">PromptPay</option></select></div>
-        </div></div>
-    </div>
-    <div id="pDoc" class="panel">
-        <div class="card" style="display:flex; gap:8px;"><button class="btn btn-primary" id="lEN" onclick="sl('EN')">English Layout</button><button class="btn" style="background:var(--border);" id="lTH" onclick="sl('TH')">ภาษาไทย</button></div>
-        <div class="card" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <input type="text" id="tab" value="Table 01" oninput="calc()"><input type="text" id="note" value="2 Guests" oninput="calc()">
-        </div>
-        <button class="btn btn-primary" onclick="window.frames[0].focus(); window.frames[0].print();">🖨️ Print Receipt Document</button>
-        <iframe></iframe>
-    </div>
-</div>
-<script>
-    let l='EN', f='ALL', dataset = ${menuJson}, values = { items:[], sub:0, dVal:0, sVal:0, vat:0, total:0 };
-    const dict = {
-        EN: { title: "RECEIPT / GUEST CHECK", tax: "Tax ID:", sub: "Subtotal", vat: "VAT (7%)", sc: "Service Charge", disc: "Discount", total: "Total Due (${currency})", payment: "Payment Route:" },
-        TH: { title: "ใบเสร็จรับเงิน / เช็คบิล", tax: "เลขประจำตัวผู้เสียภาษี:", sub: "รวมยอดอาหาร", vat: "ภาษี (7%)", sc: "ค่าบริการ", disc: "ส่วนลด", total: "ยอดเงินรวมทั้งสิ้นสุทธิ (${currency})", payment: "ช่องทางชำระเงิน:" }
-    };
-    function m(p){ document.getElementById('pCalc').className=p==='calc'?'panel active':'panel'; document.getElementById('pDoc').className=p==='doc'?'panel active':'panel'; document.getElementById('b1').className=p==='calc'?'active':''; document.getElementById('b2').className=p==='doc'?'active':''; }
-    function sl(lang){ l=lang; document.getElementById('lEN').className=l==='EN'?'btn btn-primary':'btn'; document.getElementById('lTH').className=l==='TH'?'btn btn-primary':'btn'; up(); calc(); }
-    function fb() {
-        const bar = document.getElementById('fBar'); const cats = ['ALL', ...new Set(dataset.map(d => d.category).filter(Boolean))]; bar.innerHTML = '';
-        cats.forEach(c => { const b = document.createElement('button'); b.className = \`chip \${f === c ? 'active' : ''}\`; b.innerText = c; b.onclick = () => { f = c; fb(); up(); }; bar.appendChild(b); });
-    }
-    function up() {
-        document.querySelectorAll('.row').forEach(r => {
-            const s = r.querySelector('select'); const cur = s.value; s.innerHTML = '<option value="">-- Item --</option>';
-            dataset.forEach(d => { if(f==='ALL' || d.category===f) { const o = document.createElement('option'); o.value=d.id; o.innerText=\`\${l==='EN'?d.nameEN:d.nameTH} (\${d.price})\`; s.appendChild(o); }}); s.value = cur;
-        });
-    }
-    function add() {
-        const id = 'r_'+Math.random().toString(36).substr(2,5); const d = document.createElement('div'); d.className='row'; d.id=id;
-        d.innerHTML = \`<select onchange="hc('\${id}')"></select><input type="number" class="q" value="1" min="1" oninput="calc()"><input type="number" class="p" value="0" readonly style="opacity:0.6;"><button onclick="document.getElementById('\${id}').remove(); calc();">✕</button>\`;
-        document.getElementById('lines').appendChild(d); up();
-    }
-    function hc(id) { const r = document.getElementById(id); const m = dataset.find(d => d.id === r.querySelector('select').value); r.querySelector('.p').value = m ? m.price : 0; calc(); }
-    function calc() {
-        let sub = 0; const items = [];
-        document.querySelectorAll('.row').forEach(r => {
-            const id = r.querySelector('select').value; const qty = parseFloat(r.querySelector('.q').value)||0; const pr = parseFloat(r.querySelector('.p').value)||0;
-            if (id && qty > 0) { const m = dataset.find(d => d.id===id); sub += (qty*pr); items.push({ nEN: m.nameEN, nTH: m.nameTH, q: qty, p: pr, t: (qty*pr) }); }
-        });
-        const dVal = sub * (parseFloat(document.getElementById('disc').value)/100); const sVal = (sub - dVal) * (parseFloat(document.getElementById('sc').value)/100);
-        const vat = (sub - dVal + sVal) * 0.07; const total = (sub - dVal + sVal + vat);
-        document.getElementById('totalBox').innerText = \`\${Math.round(total).toLocaleString()}.00 ${currency}\`;
-        values = { items, sub, dVal, sVal, vat, total }; const dStr = new Date().toLocaleString('en-GB'); const labels = dict[l];
-        let rHTML = ''; items.forEach(i => { rHTML += \`<tr><td>\${l==='EN'?i.nEN:i.nTH}</td><td style="text-align:right;">\${i.q}</td><td style="text-align:right;">\${Math.round(i.p)}.00</td><td style="text-align:right;">\th\${Math.round(i.t)}.00</td></tr>\`; });
-        document.querySelector('iframe').srcdoc = \`<html><body style="font-family:sans-serif;font-size:12px;padding:10px;color:#333;">
-        <table><tr><td><strong>${name}</strong><br>\th\${labels.tax} ${tax}<br>${address}<br>${tel}</td><td style="text-align:right;vertical-align:top;"><strong>\th\${labels.title}</strong><br>Ref: REC-CF<br>\th\${dStr}</td></tr></table><br>
-        <div style="display:flex;justify-content:between;"><span>Loc: \th\${document.getElementById('tab').value}</span> <span style="margin-left:auto;">Note: \th\${document.getElementById('note').value}</span></div><br>
-        <table style="width:100%;border-collapse:collapse;"><thead style="background:#2563eb;color:white;"><tr><th style="text-align:left;padding:4px;">Item</th><th style="text-align:right;padding:4px;">Qty</th><th style="text-align:right;padding:4px;">Unit</th><th style="text-align:right;padding:4px;">Total</th></tr></thead><tbody>\${rHTML || '<tr><td colspan="4" style="text-align:center;padding:10px;">Empty Ticket</td></tr>'}</tbody></table>
-        <table style="width:45%; margin-left:auto; margin-top:10px; font-weight:bold; line-height:1.6;">
-        <tr><td>\th\th\${labels.sub}</td><td style="text-align:right;">\th\th\${Math.round(sub)}.00</td></tr>
-        \th\${dVal>0?\`<tr><td style="color:#ef4444;">\th\${labels.disc}</td><td style="text-align:right;color:#ef4444;">-\th\${Math.round(dVal)}.00</td></tr>\`:''}
-        \th\${sVal>0?\`<tr><td>\th\${labels.sc}</td><td style="text-align:right;">+\th\th\${Math.round(sVal)}.00</td></tr>\`:''}
-        <tr><td>\th\th\${labels.vat}</td><td style="text-align:right;">\th\th\${Math.round(vat)}.00</td></tr>
-        <tr style="color:#2563eb;font-size:13px;background:#f0f6ff;"><td>\th\th\th\${labels.total}</td><td style="text-align:right;">\th\th\th\${Math.round(total)}.00</td></tr>
-        </table><br><div style="font-size:11px;"><strong>\th\th\${labels.payment}</strong> \th\${document.getElementById('pm').value}</div></body></html>\`;
-    }
-    fb(); add();
-</script>
-</body>
-</html>`;
+        return '<!DOCTYPE html>\n' +
+        '<html lang="en">\n' +
+        '<head>\n' +
+        '    <meta charset="UTF-8">\n' +
+        '    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">\n' +
+        '    <title>' + name + ' - POS Terminal</title>\n' +
+        '    <style>\n' +
+        '        :root { --bg-color: #f7fafc; --card-bg: #ffffff; --text-main: #1a202c; --text-muted: #718096; --primary: #2563eb; --primary-light: #eff6ff; --border: #e2e8f0; --danger: #ef4444; }\n' +
+        '        @media (prefers-color-scheme: dark) { :root { --bg-color: #121620; --card-bg: #1a202c; --text-main: #edf2f7; --text-muted: #a0aec0; --primary: #3b82f6; --primary-light: rgba(59, 130, 246, 0.1); --border: #2d3748; } }\n' +
+        '        * { box-sizing: border-box; }\n' +
+        '        body { font-family: system-ui, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 12px; }\n' +
+        '        .app { max-width: 750px; margin: 0 auto; }\n' +
+        '        header { text-align: center; margin-bottom: 16px; }\n' +
+        '        .nav { display: flex; background: var(--border); border-radius: 8px; padding: 4px; margin-bottom: 16px; }\n' +
+        '        .nav button { flex:1; background:none; border:none; padding:10px; font-weight:700; color:var(--text-muted); cursor:pointer; border-radius:6px; }\n' +
+        '        .nav button.active { background:var(--card-bg); color:var(--primary); }\n' +
+        '        .panel { display:none; } .panel.active { display:block; }\n' +
+        '        .hero { background:var(--card-bg); border: 2px solid var(--primary); padding:16px; border-radius:12px; text-align:center; font-size:1.8rem; font-weight:800; color:var(--primary); margin-bottom:16px; }\n' +
+        '        .card { background:var(--card-bg); padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:12px; }\n' +
+        '        .filter-bar { display:flex; gap:8px; overflow-x:auto; margin-bottom:12px; }\n' +
+        '        .chip { background:var(--border); border:none; padding:6px 12px; border-radius:20px; font-size:0.85rem; font-weight:600; cursor:pointer; }\n' +
+        '        .chip.active { background:var(--primary); color:white; }\n' +
+        '        .row { display:grid; grid-template-columns: 2.5fr 1fr 1fr 0.4fr; gap:8px; margin-bottom:8px; align-items:center; }\n' +
+        '        .btn { width:100%; height:42px; border:none; border-radius:6px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; }\n' +
+        '        .btn-primary { background:var(--primary); color:white; }\n' +
+        '        iframe { width:100%; height:500px; border:1px solid var(--border); border-radius:12px; background:white; margin-top:12px; }\n' +
+        '    </style>\n' +
+        '</head>\n' +
+        '<body>\n' +
+        '<div class="app">\n' +
+        '    <header><h1>' + name + '</h1><p style="color:var(--text-muted); margin:4px 0 0 0;">POS Client Node</p></header>\n' +
+        '    <div class="nav"><button id="b1" class="active" onclick="m(\'calc\')">1. Order Intake</button><button id="b2" onclick="m(\'doc\')">2. Invoice Preview</button></div>\n' +
+        '    <div class="hero" id="totalBox">0.00 ' + currency + '</div>\n' +
+        '    <div id="pCalc" class="panel active">\n' +
+        '        <div class="filter-bar" id="fBar"></div>\n' +
+        '        <div class="card"><div id="lines"></div><button class="btn" style="background:var(--primary-light); color:var(--primary);" onclick="add()">➕ Add New Line Item</button></div>\n' +
+        '        <div class="card"><div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">\n' +
+        '            <div><label style="font-size:0.75rem; font-weight:700;">Discount</label><select id="disc" onchange="calc()"><option value="0">None</option><option value="5">5%</option><option value="10">10%</option></select></div>\n' +
+        '            <div><label style="font-size:0.75rem; font-weight:700;">Service Charge</label><select id="sc" onchange="calc()"><option value="0">0%</option><option value="10">10%</option></select></div>\n' +
+        '            <div><label style="font-size:0.75rem; font-weight:700;">Payment Route</label><select id="pm" onchange="calc()"><option value="Cash / เงินสด">Cash</option><option value="Credit Card">Card</option><option value="PromptPay / พร้อมเพย์">PromptPay</option></select></div>\n' +
+        '        </div></div>\n' +
+        '    </div>\n' +
+        '    <div id="pDoc" class="panel">\n' +
+        '        <div class="card" style="display:flex; gap:8px;"><button class="btn btn-primary" id="lEN" onclick="sl(\'EN\')">English Layout</button><button class="btn" style="background:var(--border);" id="lTH" onclick="sl(\'TH\')">ภาษาไทย</button></div>\n' +
+        '        <div class="card" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">\n' +
+        '            <input type="text" id="tab" value="Table 01" oninput="calc()"><input type="text" id="note" value="2 Guests" oninput="calc()">\n' +
+        '        </div>\n' +
+        '        <button class="btn btn-primary" onclick="window.frames[0].focus(); window.frames[0].print();">🖨️ Print Receipt Document</button>\n' +
+        '        <iframe></iframe>\n' +
+        '    </div>\n' +
+        '</div>\n' +
+        '<script>\n' +
+        '    let l="EN", f="ALL", dataset = ' + menuJson + ', values = { items:[], sub:0, dVal:0, sVal:0, vat:0, total:0 };\n' +
+        '    const dict = {\n' +
+        '        EN: { title: "RECEIPT / GUEST CHECK", tax: "Tax ID:", sub: "Subtotal", vat: "VAT (7%)", sc: "Service Charge", disc: "Discount", total: "Total Due (' + currency + ')", payment: "Payment Route:" },\n' +
+        '        TH: { title: "ใบเสร็จรับเงิน / เช็คบิล", tax: "เลขประจำตัวผู้เสียภาษี:", sub: "รวมยอดอาหาร", vat: "ภาษี (7%)", sc: "ค่าบริการ", disc: "ส่วนลด", total: "ยอดเงินรวมทั้งสิ้นสุทธิ (' + currency + ')", payment: "ช่องทางชำระเงิน:" }\n' +
+        '    };\n' +
+        '    function m(p){ document.getElementById("pCalc").className=p==="calc"?"panel active":"panel"; document.getElementById("pDoc").className=p==="doc"?"panel active":"panel"; document.getElementById("b1").className=p==="calc"?"active":""; document.getElementById("b2").className=p==="doc"?"active":""; }\n' +
+        '    function sl(lang){ l=lang; document.getElementById("lEN").className=l==="EN"?"btn btn-primary":"btn"; document.getElementById("lTH").className=l==="TH"?"btn btn-primary":"btn"; up(); calc(); }\n' +
+        '    function fb() {\n' +
+        '        const bar = document.getElementById("fBar"); const cats = ["ALL", ...new Set(dataset.map(d => d.category).filter(Boolean))]; bar.innerHTML = "";\n' +
+        '        cats.forEach(c => { const b = document.createElement("button"); b.className = "chip " + (f === c ? "active" : ""); b.innerText = c; b.onclick = () => { f = c; fb(); up(); }; bar.appendChild(b); });\n' +
+        '    }\n' +
+        '    function up() {\n' +
+        '        document.querySelectorAll(".row").forEach(r => {\n' +
+        '            const s = r.querySelector("select"); const cur = s.value; s.innerHTML = "<option value=\\"\\">-- Item --</option>";\n' +
+        '            dataset.forEach(d => { if(f==="ALL" || d.category===f) { const o = document.createElement("option"); o.value=d.id; o.innerText= (l==="EN"?d.nameEN:d.nameTH) + " (" + d.price + ")"; s.appendChild(o); }}); s.value = cur;\n' +
+        '        });\n' +
+        '    }\n' +
+        '    function add() {\n' +
+        '        const id = "r_"+Math.random().toString(36).substr(2,5); const d = document.createElement("div"); d.className="row"; d.id=id;\n' +
+        '        d.innerHTML = "<select onchange=\\"hc(\'" + id + "\')\\"></select><input type=\\"number\\" class=\\"q\\" value=\\"1\\" min=\\"1\\" oninput=\\"calc()\\"><input type=\\"number\\" class=\\"p\\" value=\\"0\\" readonly style=\\"opacity:0.6;\\"><button onclick=\\"document.getElementById(\'" + id + "\').remove(); calc();\\">✕</button>";\n' +
+        '        document.getElementById("lines").appendChild(d); up();\n' +
+        '    }\n' +
+        '    function hc(id) { const r = document.getElementById(id); const m = dataset.find(d => d.id === r.querySelector("select").value); r.querySelector(".p").value = m ? m.price : 0; calc(); }\n' +
+        '    function calc() {\n' +
+        '        let sub = 0; const items = [];\n' +
+        '        document.querySelectorAll(".row").forEach(r => {\n' +
+        '            const id = r.querySelector("select").value; const qty = parseFloat(r.querySelector(".q").value)||0; const pr = parseFloat(r.querySelector(".p").value)||0;\n' +
+        '            if (id && qty > 0) { const m = dataset.find(d => d.id===id); sub += (qty*pr); items.push({ nEN: m.nameEN, nTH: m.nameTH, q: qty, p: pr, t: (qty*pr) }); }\n' +
+        '        });\n' +
+        '        const dVal = sub * (parseFloat(document.getElementById("disc").value)/100);\n' +
+        '        const sVal = (sub - dVal) * (parseFloat(document.getElementById("sc").value)/100);\n' +
+        '        const vat = (sub - dVal + sVal) * 0.07; const total = (sub - dVal + sVal + vat);\n' +
+        '        document.getElementById("totalBox").innerText = Math.round(total).toLocaleString() + ".00 ' + currency + '";\n' +
+        '        values = { items, sub, dVal, sVal, vat, total }; const dStr = new Date().toLocaleString("en-GB"); const labels = dict[l];\n' +
+        '        let rHTML = ""; items.forEach(i => { rHTML += "<tr><td>" + (l==="EN"?i.nEN:i.nTH) + "</td><td style=\\"text-align:right;\\">" + i.q + "</td><td style=\\"text-align:right;\\">" + Math.round(i.p) + ".00</td><td style=\\"text-align:right;\\">" + Math.round(i.t) + ".00</td></tr>"; });\n' +
+        '        let docContent = "<html><body style=\\"font-family:sans-serif;font-size:12px;padding:10px;color:#333;\\">" +\n' +
+        '        "<table><tr><td><strong>' + name + '</strong><br>" + labels.tax + " ' + tax + '<br>' + address + '<br>' + tel + '</td><td style=\\"text-align:right;vertical-align:top;\\"><strong>" + labels.title + "</strong><br>Ref: REC-CF<br>" + dStr + "</td></tr></table><br>" +\n' +
+        '        "<div style=\\"display:flex;justify-content:between;\\"><span>Loc: " + document.getElementById("tab").value + "</span> <span style=\\"margin-left:auto;\\">Note: " + document.getElementById("note").value + "</span></div><br>" +\n' +
+        '        \\"<table style=\\\\\\"width:100%;border-collapse:collapse;\\\\\\"><thead style=\\\\\\"background:#2563eb;color:white;\\\\\\"><tr><th style=\\\\\\"text-align:left;padding:4px;\\\\\\">Item</th><th style=\\\\\\"text-align:right;padding:4px;\\\\\\">Qty</th><th style=\\\\\\"text-align:right;padding:4px;\\\\\\">Unit</th><th style=\\\\\\"text-align:right;padding:4px;\\\\\\">Total</th></tr></thead><tbody>\\" + (rHTML || "<tr><td colspan=\\\\\\"4\\\\\\" style=\\\\\\"text-align:center;padding:10px;\\\\\\">Empty Ticket</td></tr>") + \\"</tbody></table>\\" +\n' +
+        '        "<table style=\\"width:45%; margin-left:auto; margin-top:10px; font-weight:bold; line-height:1.6;\\">" +\n' +
+        '        "<tr><td>" + labels.sub + "</td><td style=\\"text-align:right;\\">" + Math.round(sub) + ".00</td></tr>" +\n' +
+        '        (dVal > 0 ? "<tr><td style=\\"color:#ef4444;\\">" + labels.disc + "</td><td style=\\"text-align:right;color:#ef4444;\\">-" + Math.round(dVal) + ".00</td></tr>" : "") +\n' +
+        '        (sVal > 0 ? "<tr><td>" + labels.sc + "</td><td style=\\"text-align:right;\\">+" + Math.round(sVal) + ".00</td></tr>" : "") +\n' +
+        '        "<tr><td>" + labels.vat + "</td><td style=\\"text-align:right;\\">" + Math.round(vat) + ".00</td></tr>" +\n' +
+        '        "<tr style=\\"color:#2563eb;font-size:13px;background:#f0f6ff;\\"><td>" + labels.total + "</td><td style=\\"text-align:right;\\">" + Math.round(total) + ".00</td></tr>" +\n' +
+        '        "</table><br><div style=\\"font-size:11px;\\"><strong>" + labels.payment + "</strong> " + document.getElementById("pm").value + "</div></body></html>";\n' +
+        '        document.querySelector("iframe").srcdoc = docContent;\n' +
+        '    }\n' +
+        '    fb(); add();\n' +
+        '<\/script>\n' +
+        '</body>\n' +
+        '</html>';
     }
 
     window.onload = loadFromLocalStorage;
