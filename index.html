@@ -305,8 +305,65 @@
             alert("❌ Secure pull routine threw exception: " + e.message);
         }
     }
+function buildStandaloneAppHtml(name, tax, address, tel, currency, menuJson) {
+    // Array of plain strings to completely isolate lines from quote-collapsing bugs
+    const scriptLines = [
+        'let l="EN", f="ALL", dataset = ' + menuJson + ', values = { items:[], sub:0, dVal:0, sVal:0, vat:0, total:0 };',
+        'const dict = {',
+        '    EN: { title: "RECEIPT / GUEST CHECK", tax: "Tax ID:", sub: "Subtotal", vat: "VAT (7%)", sc: "Service Charge", disc: "Discount", total: "Total Due (' + currency + ')", payment: "Payment Route:" },',
+        '    TH: { title: "ใบเสร็จรับเงิน / เช็คบิล", tax: "เลขประจำตัวผู้เสียภาษี:", sub: "รวมยอดอาหาร", vat: "ภาษี (7%)", sc: "ค่าบริการ", disc: "ส่วนลด", total: "ยอดเงินรวมทั้งสิ้นสุทธิ (' + currency + ')", payment: "ช่องทางชำระเงิน:" }',
+        '};',
+        'function m(p){ document.getElementById("pCalc").className=p==="calc"?"panel active":"panel"; document.getElementById("pDoc").className=p==="doc"?"panel active":"panel"; document.getElementById("b1").className=p==="calc"?"active":""; document.getElementById("b2").className=p==="doc"?"active":""; }',
+        'function sl(lang){ l=lang; document.getElementById("lEN").className=l==="EN"?"btn btn-primary":"btn"; document.getElementById("lTH").className=l==="TH"?"btn btn-primary":"btn"; up(); calc(); }',
+        'function fb() {',
+        '    const bar = document.getElementById("fBar"); const cats = ["ALL", ...new Set(dataset.map(d => d.category).filter(Boolean))]; bar.innerHTML = "";',
+        '    cats.forEach(c => { const b = document.createElement("button"); b.className = "chip " + (f === c ? "active" : ""); b.innerText = c; b.onclick = () => { f = c; fb(); up(); }; bar.appendChild(b); });',
+        '}',
+        'function up() {',
+        '    document.querySelectorAll(".row select").forEach(s => {',
+        '        const cur = s.value; s.innerHTML = "<option value=\x22\x22>-- Item --</option>";',
+        '        dataset.forEach(d => { if(f==="ALL" || d.category===f) { const o = document.createElement("option"); o.value=d.id; o.innerText= (l==="EN"?d.nameEN:d.nameTH) + " (" + d.price + ")"; s.appendChild(o); }}); s.value = cur;',
+        '    });',
+        '}',
+        'function add() {',
+        '    const id = "r_"+Math.random().toString(36).substr(2,5);',
+        '    const d = document.createElement("div"); d.className="row"; d.id=id;',
+        '    const sel = document.createElement("select"); sel.onchange = function() { hc(id); };',
+        '    const qIn = document.createElement("input"); qIn.type="number"; qIn.className="q"; qIn.value="1"; qIn.min="1"; qIn.oninput = calc;',
+        '    const pIn = document.createElement("input"); pIn.type="number"; pIn.className="p"; pIn.value="0"; pIn.readOnly=true; pIn.style.opacity="0.6";',
+        '    const del = document.createElement("button"); del.innerText="✕"; del.onclick = function() { d.remove(); calc(); };',
+        '    d.appendChild(sel); d.appendChild(qIn); d.appendChild(pIn); d.appendChild(del);',
+        '    document.getElementById("lines").appendChild(d); up();',
+        '}',
+        'function hc(id) { const r = document.getElementById(id); const m = dataset.find(d => d.id === r.querySelector("select").value); r.querySelector(".p").value = m ? m.price : 0; calc(); }',
+        'function calc() {',
+        '    let sub = 0; const items = [];',
+        '    document.querySelectorAll(".row").forEach(r => {',
+        '        const id = r.querySelector("select").value; const qty = parseFloat(r.querySelector(".q").value)||0; const pr = parseFloat(r.querySelector(".p").value)||0;',
+        '        if (id && qty > 0) { const m = dataset.find(d => d.id===id); sub += (qty*pr); items.push({ nEN: m.nameEN, nTH: m.nameTH, q: qty, p: pr, t: (qty*pr) }); }',
+        '    });',
+        '    const dVal = sub * (parseFloat(document.getElementById("disc").value)/100);',
+        '    const sVal = (sub - dVal) * (parseFloat(document.getElementById("sc").value)/100);',
+        '    const vat = (sub - dVal + sVal) * 0.07; const total = (sub - dVal + sVal + vat);',
+        '    document.getElementById("totalBox").innerText = Math.round(total).toLocaleString() + ".00 ' + currency + '";',
+        '    values = { items, sub, dVal, sVal, vat, total }; const dStr = new Date().toLocaleString("en-GB"); const labels = dict[l];',
+        '    let rHTML = ""; items.forEach(i => { rHTML += "<tr><td>" + (l==="EN"?i.nEN:i.nTH) + "</td><td style=\x22text-align:right;\x22>" + i.q + "</td><td style=\x22text-align:right;\x22>" + Math.round(i.p) + ".00</td><td style=\x22text-align:right;\x22>" + Math.round(i.t) + ".00</td></tr>"; });',
+        '    let docContent = "<html><body style=\x22font-family:sans-serif;font-size:12px;padding:10px;color:#333;\x22>" +',
+        '    "<table><tr><td><strong>' + name + '</strong><br>" + labels.tax + " ' + tax + '<br>' + address + '<br>' + tel + '</td><td style=\x22text-align:right;vertical-align:top;\x22><strong>" + labels.title + "</strong><br>Ref: REC-CF<br>" + dStr + "</td></tr></table><br>" +',
+        '    "<div style=\x22display:flex;justify-content:between;\x22><span>Loc: " + document.getElementById("tab").value + "</span> <span style=\x22margin-left:auto;\x22>Note: " + document.getElementById("note").value + "</span></div><br>" +',
+        '    "<table style=\x22width:100%;border-collapse:collapse;\x22><thead style=\x22background:#2563eb;color:white;\x22><tr><th style=\x22text-align:left;padding:4px;\x22>Item</th><th style=\x22text-align:right;padding:4px;\x22>Qty</th><th style=\x22text-align:right;padding:4px;\x22>Unit</th><th style=\x22text-align:right;padding:4px;\x22>Total</th></tr></thead><tbody>" + (rHTML || "<tr><td colspan=\x224\x22 style=\x22text-align:center;padding:10px;\x22>Empty Ticket</td></tr>") + "</tbody></table>" +',
+        '    "<table style=\x22width:45%; margin-left:auto; margin-top:10px; font-weight:bold; line-height:1.6;\x22>" +',
+        '    "<tr><td>" + labels.sub + "</td><td style=\x22text-align:right;\x22>" + Math.round(sub) + ".00</td></tr>" +',
+        '    (dVal > 0 ? "<tr><td style=\x22color:#ef4444;\x22>" + labels.disc + "</td><td style=\x22text-align:right;color:#ef4444;\x22>-" + Math.round(dVal) + ".00</td></tr>" : "") +',
+        '    (sVal > 0 ? "<tr><td>" + labels.sc + "</td><td style=\x22text-align:right;\x22>+" + Math.round(sVal) + ".00</td></tr>" : "") +',
+        '    "<tr><td>" + labels.vat + "</td><td style=\x22text-align:right;\x22>" + Math.round(vat) + ".00</td></tr>" +',
+        '    "<tr style=\x22color:#2563eb;font-size:13px;background:#f0f6ff;\x22><td>" + labels.total + "</td><td style=\x22text-align:right;\x22>" + Math.round(total) + ".00</td></tr>" +',
+        '    "</table><br><div style=\x22font-size:11px;\x22><strong>" + labels.payment + "</strong> " + document.getElementById("pm").value + "</div></body></html>";',
+        '    document.querySelector("iframe").srcdoc = docContent;',
+        '}',
+        'fb(); add();'
+    ].join('\n');
 
-  function buildStandaloneAppHtml(name, tax, address, tel, currency, menuJson) {
     return '<!DOCTYPE html>\n' +
     '<html lang="en">\n' +
     '<head>\n' +
@@ -358,64 +415,7 @@
     '        <iframe></iframe>\n' +
     '    </div>\n' +
     '</div>\n' +
-    '<script>\n' +
-    '    let l="EN", f="ALL", dataset = ' + menuJson + ', values = { items:[], sub:0, dVal:0, sVal:0, vat:0, total:0 };\n' +
-    '    const dict = {\n' +
-    '        EN: { title: "RECEIPT / GUEST CHECK", tax: "Tax ID:", sub: "Subtotal", vat: "VAT (7%)", sc: "Service Charge", disc: "Discount", total: "Total Due (' + currency + ')", payment: "Payment Route:" },\n' +
-    '        TH: { title: "ใบเสร็จรับเงิน / เช็คบิล", tax: "เลขประจำตัวผู้เสียภาษี:", sub: "รวมยอดอาหาร", vat: "ภาษี (7%)", sc: "ค่าบริการ", disc: "ส่วนลด", total: "ยอดเงินรวมทั้งสิ้นสุทธิ (' + currency + ')", payment: "ช่องทางชำระเงิน:" }\n' +
-    '    };\n' +
-    '    function m(p){ document.getElementById("pCalc").className=p==="calc"?"panel active":"panel"; document.getElementById("pDoc").className=p==="doc"?"panel active":"panel"; document.getElementById("b1").className=p==="calc"?"active":""; document.getElementById("b2").className=p==="doc"?"active":""; }\n' +
-    '    function sl(lang){ l=lang; document.getElementById("lEN").className=l==="EN"?"btn btn-primary":"btn"; document.getElementById("lTH").className=l==="TH"?"btn btn-primary":"btn"; up(); calc(); }\n' +
-    '    function fb() {\n' +
-    '        const bar = document.getElementById("fBar"); const cats = ["ALL", ...new Set(dataset.map(d => d.category).filter(Boolean))]; bar.innerHTML = "";\n' +
-    '        cats.forEach(c => { const b = document.createElement("button"); b.className = "chip " + (f === c ? "active" : ""); b.innerText = c; b.onclick = () => { f = c; fb(); up(); }; bar.appendChild(b); });\n' +
-    '    }\n' +
-    '    function up() {\n' +
-    '        document.querySelectorAll(".row select").forEach(s => {\n' +
-    '            const cur = s.value; s.innerHTML = "<option value=\x22\x22>-- Item --</option>";\n' +
-    '            dataset.forEach(d => { if(f==="ALL" || d.category===f) { const o = document.createElement("option"); o.value=d.id; o.innerText= (l==="\x45\x4e"?d.nameEN:d.nameTH) + " (" + d.price + ")"; s.appendChild(o); }}); s.value = cur;\n' +
-    '        });\n' +
-    '    }\n' +
-    '    function add() {\n' +
-    '        const id = "r_"+Math.random().toString(36).substr(2,5);\n' +
-    '        const d = document.createElement("div"); d.className="row"; d.id=id;\n' +
-    '        \n' +
-    '        const sel = document.createElement("select"); sel.onchange = function() { hc(id); };\n' +
-    '        const qIn = document.createElement("input"); qIn.type="number"; qIn.className="q"; qIn.value="1"; qIn.min="1"; qIn.oninput = calc;\n' +
-    '        const pIn = document.createElement("input"); pIn.type="number"; pIn.className="p"; pIn.value="0"; pIn.readOnly=true; pIn.style.opacity="0.6";\n' +
-    '        const del = document.createElement("button"); del.innerText="✕"; del.onclick = function() { d.remove(); calc(); };\n' +
-    '        \n' +
-    '        d.appendChild(sel); d.appendChild(qIn); d.appendChild(pIn); d.appendChild(del);\n' +
-    '        document.getElementById("lines").appendChild(d); up();\n' +
-    '    }\n' +
-    '    function hc(id) { const r = document.getElementById(id); const m = dataset.find(d => d.id === r.querySelector("select").value); r.querySelector(".p").value = m ? m.price : 0; calc(); }\n' +
-    '    function calc() {\n' +
-    '        let sub = 0; const items = [];\n' +
-    '        document.querySelectorAll(".row").forEach(r => {\n' +
-    '            const id = r.querySelector("select").value; const qty = parseFloat(r.querySelector(".q").value)||0; const pr = parseFloat(r.querySelector(".p").value)||0;\n' +
-    '            if (id && qty > 0) { const m = dataset.find(d => d.id===id); sub += (qty*pr); items.push({ nEN: m.nameEN, nTH: m.nameTH, q: qty, p: pr, t: (qty*pr) }); }\n' +
-    '        });\n' +
-    '        const dVal = sub * (parseFloat(document.getElementById("disc").value)/100);\n' +
-    '        const sVal = (sub - dVal) * (parseFloat(document.getElementById("sc").value)/100);\n' +
-    '        const vat = (sub - dVal + sVal) * 0.07; const total = (sub - dVal + sVal + vat);\n' +
-    '        document.getElementById("totalBox").innerText = Math.round(total).toLocaleString() + ".00 ' + currency + '";\n' +
-    '        values = { items, sub, dVal, sVal, vat, total }; const dStr = new Date().toLocaleString("en-GB"); const labels = dict[l];\n' +
-    '        let rHTML = ""; items.forEach(i => { rHTML += "<tr><td>" + (l==="\x45\x4e"?i.nEN:i.nTH) + "</td><td style=\x22text-align:right;\x22>" + i.q + "</td><td style=\x22text-align:right;\x22>" + Math.round(i.p) + ".00</td><td style=\x22text-align:right;\x22>" + Math.round(i.t) + ".00</td></tr>"; });\n' +
-    '        let docContent = "<html><body style=\x22font-family:sans-serif;font-size:12px;padding:10px;color:#333;\x22>" +\n' +
-    '        "<table><tr><td><strong>' + name + '</strong><br>" + labels.tax + " ' + tax + '<br>' + address + '<br>' + tel + '</td><td style=\x22text-align:right;vertical-align:top;\x22><strong>" + labels.title + "</strong><br>Ref: REC-CF<br>" + dStr + "</td></tr></table><br>" +\n' +
-    '        "<div style=\x22display:flex;justify-content:between;\x22><span>Loc: " + document.getElementById("tab").value + "</span> <span style=\x22margin-left:auto;\x22>Note: " + document.getElementById("note").value + "</span></div><br>" +\n' +
-    '        "<table style=\x22width:100%;border-collapse:collapse;\x22><thead style=\x22background:#2563eb;color:white;\x22><tr><th style=\x22text-align:left;padding:4px;\x22>Item</th><th style=\x22text-align:right;padding:4px;\x22>Qty</th><th style=\x22text-align:right;padding:4px;\x22>Unit</th><th style=\x22text-align:right;padding:4px;\x22>Total</th></tr></thead><tbody>" + (rHTML || "<tr><td colspan=\x224\x22 style=\x22text-align:center;padding:10px;\x22>Empty Ticket</td></tr>") + "</tbody></table>" +\n' +
-    '        "<table style=\x22width:45%; margin-left:auto; margin-top:10px; font-weight:bold; line-height:1.6;\x22>" +\n' +
-    '        "<tr><td>" + labels.sub + "</td><td style=\x22text-align:right;\x22>" + Math.round(sub) + ".00</td></tr>" +\n' +
-    '        (dVal > 0 ? "<tr><td style=\x22color:#ef4444;\x22>" + labels.disc + "</td><td style=\x22text-align:right;color:#ef4444;\x22>-" + Math.round(dVal) + ".00</td></tr>" : "") +\n' +
-    '        (sVal > 0 ? "<tr><td>" + labels.sc + "</td><td style=\x22text-align:right;\x22>+" + Math.round(sVal) + ".00</td></tr>" : "") +\n' +
-    '        "<tr><td>" + labels.vat + "</td><td style=\x22text-align:right;\x22>" + Math.round(vat) + ".00</td></tr>" +\n' +
-    '        "<tr style=\x22color:#2563eb;font-size:13px;background:#f0f6ff;\x22><td>" + labels.total + "</td><td style=\x22text-align:right;\x22>" + Math.round(total) + ".00</td></tr>" +\n' +
-    '        "</table><br><div style=\x22font-size:11px;\x22><strong>" + labels.payment + "</strong> " + document.getElementById("pm").value + "</div></body></html>";\n' +
-    '        document.querySelector("iframe").srcdoc = docContent;\n' +
-    '    }\n' +
-    '    fb(); add();\n' +
-    '<\/script>\n' +
+    '<script>\n' + scriptLines + '\n<\/script>\n' +
     '</body>\n' +
     '</html>';
 }
