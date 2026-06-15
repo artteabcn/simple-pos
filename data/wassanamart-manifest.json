@@ -6,6 +6,8 @@
   "bizAddress": "Moo 4, Khanom Beach, Nakhon Si Thammarat, Thailand",
   "bizLogo": "",
   "bizPromptpay": "",
+  "bizPin": "1234",
+  "bizVatMode": "inclusive",
   "menuStructure": [
     {
       "id": "cat_1",
