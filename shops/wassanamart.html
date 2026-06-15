@@ -98,14 +98,21 @@
         cats.forEach(c => { const b = document.createElement("button"); b.className = "chip " + (f === c ? "active" : ""); b.innerText = c; b.onclick = () => { f = c; fb(); up(); }; bar.appendChild(b); });
     }
     function up() {
-        document.querySelectorAll(".row").forEach(r => {
-            const s = r.querySelector("select"); const cur = s.value; s.innerHTML = "<option value=&quot;&quot;>-- Item --</option>";
+        document.querySelectorAll(".row select").forEach(s => {
+            const cur = s.value; s.innerHTML = "<option value="">-- Item --</option>";
             dataset.forEach(d => { if(f==="ALL" || d.category===f) { const o = document.createElement("option"); o.value=d.id; o.innerText= (l==="EN"?d.nameEN:d.nameTH) + " (" + d.price + ")"; s.appendChild(o); }}); s.value = cur;
         });
     }
     function add() {
-        const id = "r_"+Math.random().toString(36).substr(2,5); const d = document.createElement("div"); d.className="row"; d.id=id;
-        d.innerHTML = "<select onchange='hc("" + id + "")'></select><input type="number" class="q" value="1" min="1" oninput="calc()"><input type="number" class="p" value="0" readonly style="opacity:0.6;"><button onclick='document.getElementById("" + id + "").remove(); calc();'>✕</button>";
+        const id = "r_"+Math.random().toString(36).substr(2,5);
+        const d = document.createElement("div"); d.className="row"; d.id=id;
+        
+        const sel = document.createElement("select"); sel.onchange = function() { hc(id); };
+        const qIn = document.createElement("input"); qIn.type="number"; qIn.className="q"; qIn.value="1"; qIn.min="1"; qIn.oninput = calc;
+        const pIn = document.createElement("input"); pIn.type="number"; pIn.className="p"; pIn.value="0"; pIn.readOnly=true; pIn.style.opacity="0.6";
+        const del = document.createElement("button"); del.innerText="✕"; del.onclick = function() { d.remove(); calc(); };
+        
+        d.appendChild(sel); d.appendChild(qIn); d.appendChild(pIn); d.appendChild(del);
         document.getElementById("lines").appendChild(d); up();
     }
     function hc(id) { const r = document.getElementById(id); const m = dataset.find(d => d.id === r.querySelector("select").value); r.querySelector(".p").value = m ? m.price : 0; calc(); }
