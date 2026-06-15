@@ -1,0 +1,53 @@
+{
+  "bizName": "wassana minimart",
+  "bizTax": "DBD 085567012791",
+  "bizCurrency": "฿",
+  "bizTel": "Tel:  833972 285",
+  "bizAddress": "Moo 4, Khanom Beach, Nakhon Si Thammarat, Thailand",
+  "menuStructure": [
+    {
+      "id": "cat_1",
+      "categoryName": "Beers/เบียร์",
+      "visible": true,
+      "items": [
+        {
+          "id": "m1",
+          "nameEN": "Chang beer S",
+          "nameTH": "เบียร์ชาง S",
+          "price": 60
+        },
+        {
+          "id": "item_c5v45",
+          "nameEN": "Leo Beer S",
+          "nameTH": "ลีโอ เบียร์ S",
+          "price": 60
+        },
+        {
+          "id": "item_e4otb",
+          "nameEN": "Chang Beer B",
+          "nameTH": "เบียร์ชาง B",
+          "price": 80
+        },
+        {
+          "id": "item_k3iav",
+          "nameEN": "Leo Beer B",
+          "nameTH": "ลีโอ เบียร์ B",
+          "price": 80
+        }
+      ]
+    },
+    {
+      "id": "cat_1781508527210",
+      "categoryName": "Shots/ยิง",
+      "visible": true,
+      "items": [
+        {
+          "id": "item_mce0i",
+          "nameEN": "Sambucca",
+          "nameTH": "แซมบูคา",
+          "price": 100
+        }
+      ]
+    }
+  ]
+}
