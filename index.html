@@ -560,7 +560,7 @@ footer{text-align:center;padding:12px 0 4px;}
         '    const cur=s.value;',
         '    s.innerHTML=`<option value="">-- ${l==="EN"?"Select item":"เลือกรายการ"} --</option>`;',
         '    dataset.forEach(d=>{',
-        '      if(f==="ALL"||d.category===f){',
+        '      if(f==="ALL"||d.category===f||d.id===cur){',
         '        const o=document.createElement("option");o.value=d.id;',
         '        o.text=(l==="EN"?d.nameEN:d.nameTH)+` (${CURRENCY}${d.price})`;',
         '        s.appendChild(o);',
