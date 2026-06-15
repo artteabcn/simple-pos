@@ -4,6 +4,8 @@
   "bizCurrency": "฿",
   "bizTel": "Tel:  833972 285",
   "bizAddress": "Moo 4, Khanom Beach, Nakhon Si Thammarat, Thailand",
+  "bizLogo": "",
+  "bizPromptpay": "",
   "menuStructure": [
     {
       "id": "cat_1",
