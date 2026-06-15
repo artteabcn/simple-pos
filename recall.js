@@ -1,14 +1,8 @@
-export async function onRequest(context) {
-    // Only allow POST requests
-    if (context.request.method !== "POST") {
-        return new Response("Method Not Allowed", { status: 405 });
-    }
-
+export async function onRequestPost(context) {
     try {
         const { shopSlug } = await context.request.json();
         if (!shopSlug) return new Response("Missing Shop Slug", { status: 400 });
 
-        // Safely extract secure credentials from the Cloudflare Environment context
         const token = context.env.GITHUB_TOKEN;
         const repo = context.env.GITHUB_REPO;
 
@@ -34,6 +28,9 @@ export async function onRequest(context) {
         });
 
     } catch (err) {
-        return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+        return new Response(JSON.stringify({ error: err.message }), { 
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+        });
     }
 }
