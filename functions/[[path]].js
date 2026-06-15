@@ -8,8 +8,7 @@ export async function onRequest(context) {
         "User-Agent": "Cloudflare-Pages-POS-Studio"
     };
 
-    // ── LIST: GET /api/list ──────────────────────────────────────
-    // Returns array of shop slugs derived from shops/*.html filenames
+    // -- LIST: GET /api/list --
     if (urlPath === "/api/list" && method === "GET") {
         try {
             const res = await fetch(`https://api.github.com/repos/${repo}/contents/shops`, { headers: ghHeaders });
@@ -24,7 +23,7 @@ export async function onRequest(context) {
         }
     }
 
-    // ── RECALL: POST /api/recall ─────────────────────────────────
+    // -- RECALL: POST /api/recall --
     if (urlPath === "/api/recall" && method === "POST") {
         try {
             const { shopSlug } = await context.request.json();
@@ -41,9 +40,8 @@ export async function onRequest(context) {
         }
     }
 
-    // ── DEPLOY: POST /api/deploy ─────────────────────────────────
-    // Supports text files and binary (pre-encoded base64) files.
-    // Send `isBase64: true` to skip text encoding and use content directly.
+    // -- DEPLOY: POST /api/deploy --
+    // isBase64: true skips re-encoding (for binary files like logos)
     if (urlPath === "/api/deploy" && method === "POST") {
         try {
             const { shopSlug, path, content, message, isBase64 } = await context.request.json();
@@ -51,7 +49,6 @@ export async function onRequest(context) {
 
             const url = `https://api.github.com/repos/${repo}/contents/${path}`;
 
-            // Fetch existing SHA (required by GitHub API to update existing files)
             let sha = "";
             const checkRes = await fetch(url, { headers: ghHeaders });
             if (checkRes.ok) {
@@ -59,7 +56,6 @@ export async function onRequest(context) {
                 sha = fileData.sha;
             }
 
-            // Text files: encode to base64. Binary files: content is already base64.
             const base64Content = isBase64 ? content : btoa(unescape(encodeURIComponent(content)));
 
             const body = { message, content: base64Content };
@@ -82,7 +78,8 @@ export async function onRequest(context) {
         }
     }
 
-    return jsonResp({ error: "Route not found" }, 404);
+    // Not an API route — pass through to static file serving
+    return context.next();
 }
 
 function jsonResp(data, status) {
