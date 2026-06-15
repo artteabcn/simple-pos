@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloudflare Secure POS Studio</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --primary: #2563eb;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --accent: #475569;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 24px;
+        }
+        .container { max-width: 1300px; margin: 0 auto; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 24px; }
+        header { grid-column: span 2; text-align: center; margin-bottom: 12px; }
+        h1 { margin: 0; color: var(--primary); font-size: 1.8rem; }
+        .subtitle { color: var(--text-muted); margin: 4px 0 0 0; font-size: 0.95rem; }
+        .card { background: var(--card-bg); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); height: fit-content; margin-bottom: 20px; }
+        h2 { font-size: 1.1rem; margin-top: 0; margin-bottom: 16px; border-bottom: 2px solid var(--bg-color); padding-bottom: 8px; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group { margin-bottom: 12px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: var(--text-main); }
+        input, select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.9rem; box-sizing: border-box; background: var(--bg-color); color: var(--text-main); }
+        .btn { padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; width: 100%; justify-content: center; margin-bottom: 8px;}
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-accent { background: var(--accent); color: white; }
+        .btn-danger { background: var(--danger); color: white; padding: 6px 10px; width: auto;}
+        .item-row { display: grid; grid-template-columns: 1.5fr 1.5fr 1fr auto; gap: 8px; margin-bottom: 8px; align-items: center; }
+        .category-block { border: 1px dashed var(--primary); padding: 14px; border-radius: 8px; margin-bottom: 16px; background: #fcfdf2; }
+        .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        pre { background: #0f172a; color: #38bdf8; padding: 14px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; max-height: 200px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Secure Cloudflare POS Workspace Studio</h1>
+    <p class="subtitle">Bilingual management with zero credentials exposed inside client views</p>
+</header>
+
+<div class="container">
+    <div>
+        <div class="card" style="border-left: 5px solid var(--primary);">
+            <h2>1. Choose / Recall Workspace Target</h2>
+            <div class="form-group">
+                <label>Unique Shop ID Slug (Determines live URL path)</label>
+                <input type="text" id="shopSlug" value="banyan-tree-bistro" placeholder="e.g., banyan-tree-bistro" oninput="saveToLocalStorage()">
+            </div>
+            <button class="btn btn-primary" onclick="recallShopFromGitSecure()">📥 Pull Context Records From Server Vault</button>
+        </div>
+
+        <div class="card">
+            <h2>2. Shop Profile Specifications</h2>
+            <div class="form-group">
+                <label>Restaurant Display Name</label>
+                <input type="text" id="bizName" value="Banyan Tree Bistro Group" oninput="saveToLocalStorage()">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tax Identification Registry ID</label>
+                    <input type="text" id="bizTax" value="DBD 085567012791" oninput="saveToLocalStorage()">
+                </div>
+                <div class="form-group">
+                    <label>Currency ISO / Symbol</label>
+                    <input type="text" id="bizCurrency" value="฿" oninput="saveToLocalStorage()">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Telephone Connection Line</label>
+                    <input type="text" id="bizTel" value="Tel: 064 193 7470" oninput="saveToLocalStorage()">
+                </div>
+                <div class="form-group">
+                    <label>Physical Address Location</label>
+                    <input type="text" id="bizAddress" value="Moo 4, Khanom Beach, Nakhon Si Thammarat, Thailand" oninput="saveToLocalStorage()">
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>3. Menu Structural Configuration</h2>
+            <div id="categoryContainer"></div>
+            <button class="btn btn-accent" style="width: auto;" onclick="createNewCategory()">📂 Create New Category Group</button>
+        </div>
+    </div>
+
+    <div style="position: sticky; top: 24px;">
+        <div class="card" style="border: 2px solid var(--success);">
+            <h2>4. Secure Deployment Terminal</h2>
+            <p class="subtitle" style="margin-bottom: 12px;">Transfers payload updates securely through Cloudflare Serverless Workers directly to GitHub.</p>
+            
+            <button class="btn btn-success" style="padding: 14px; font-size: 1rem;" onclick="deployToCloudflarePagesSecure()">🚀 Push Changes & Trigger Build Pipeline</button>
+            
+            <div id="deploymentLinks" style="display:none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                <label style="color: var(--success); text-transform: uppercase;">✔ Transmission Matrix Saved!</label>
+                <p class="subtitle" style="margin-bottom: 8px;">Your custom endpoints are calculating and will be visible under your Cloudflare custom domain routing:</p>
+                <div style="font-size: 0.85rem; background: var(--bg-color); padding: 10px; border-radius:6px; line-height: 1.6;">
+                    <strong>🖥️ Dynamic Interactive POS App:</strong> <br><span id="liveAppLink" style="color: var(--primary); font-family: monospace;"></span><br><br>
+                    <strong>📦 Dynamic Data Array Payload (JSON):</strong> <br><span id="liveJsonLink" style="color: var(--primary); font-family: monospace;"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>5. System JSON Structural Manifest</h2>
+            <pre id="jsonPreview">[]</pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    let menuStructure = [
+        {
+            id: "cat_1",
+            categoryName: "Main Dishes",
+            visible: true,
+            items: [
+                { id: "m1", nameEN: "Tom Yum Goong", nameTH: "ต้มยำกุ้ง", price: 320 }
+            ]
+        }
+    ];
+
+    function saveToLocalStorage() {
+        const payload = {
+            shopSlug: document.getElementById('shopSlug').value,
+            bizName: document.getElementById('bizName').value,
+            bizTax: document.getElementById('bizTax').value,
+            bizCurrency: document.getElementById('bizCurrency').value,
+            bizTel: document.getElementById('bizTel').value,
+            bizAddress: document.getElementById('bizAddress').value,
+            menu: menuStructure
+        };
+        localStorage.setItem('cf_secure_pos_data', JSON.stringify(payload));
+        updateOutputs();
+    }
+
+    function loadFromLocalStorage() {
+        const raw = localStorage.getItem('cf_secure_pos_data');
+        if (raw) {
+            try {
+                const data = JSON.parse(raw);
+                document.getElementById('shopSlug').value = data.shopSlug || 'banyan-tree-bistro';
+                document.getElementById('bizName').value = data.bizName || '';
+                document.getElementById('bizTax').value = data.bizTax || '';
+                document.getElementById('bizCurrency').value = data.bizCurrency || '฿';
+                document.getElementById('bizTel').value = data.bizTel || '';
+                document.getElementById('bizAddress').value = data.bizAddress || '';
+                if(data.menu) menuStructure = data.menu;
+            } catch(e) { console.error(e); }
+        }
+        renderStudio();
+    }
+
+    function renderStudio() {
+        const container = document.getElementById('categoryContainer');
+        container.innerHTML = '';
+
+        menuStructure.forEach((cat, catIdx) => {
+            const catDiv = document.createElement('div');
+            catDiv.className = 'category-block';
+            catDiv.innerHTML = `
+                <div class="category-header">
+                    <input type="text" value="${cat.categoryName}" style="font-weight:bold; width:55%;" oninput="menuStructure[${catIdx}].categoryName = this.value; saveToLocalStorage();">
+                    <div style="display:flex; gap:12px; align-items:center;">
+                        <label style="margin:0; display:flex; align-items:center; gap:4px; font-size:0.8rem;">
+                            <input type="checkbox" ${cat.visible ? 'checked' : ''} style="width:auto; height:auto; margin:0;" onchange="menuStructure[${catIdx}].visible = this.checked; saveToLocalStorage();"> Show/Active
+                        </label>
+                        <button class="btn-danger" onclick="menuStructure.splice(${catIdx}, 1); renderStudio(); saveToLocalStorage();">✕</button>
+                    </div>
+                </div>
+                <div id="items-for-${cat.id}"></div>
+                <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem; margin-top:8px; width:auto;" onclick="addItemToCategory(${catIdx})">➕ Add Item Line</button>
+            `;
+            container.appendChild(catDiv);
+
+            const itemsContainer = catDiv.querySelector(`#items-for-${cat.id}`);
+            cat.items.forEach((item, itemIdx) => {
+                const row = document.createElement('div');
+                row.className = 'item-row';
+                row.innerHTML = `
+                    <input type="text" placeholder="English Label" value="${item.nameEN || ''}" oninput="menuStructure[${catIdx}].items[${itemIdx}].nameEN = this.value; saveToLocalStorage();">
+                    <input type="text" placeholder="ภาษาไทย" value="${item.nameTH || ''}" oninput="menuStructure[${catIdx}].items[${itemIdx}].nameTH = this.value; saveToLocalStorage();">
+                    <input type="number" placeholder="Price" value="${item.price}" oninput="menuStructure[${catIdx}].items[${itemIdx}].price = parseFloat(this.value) || 0; saveToLocalStorage();">
+                    <button class="btn-danger" onclick="menuStructure[${catIdx}].items.splice(${itemIdx}, 1); renderStudio(); saveToLocalStorage();">✕</button>
+                `;
+                itemsContainer.appendChild(row);
+            });
+        });
+        updateOutputs();
+    }
+
+    function createNewCategory() {
+        menuStructure.push({ id: 'cat_' + Date.now(), categoryName: "New Category", visible: true, items: [] });
+        renderStudio(); saveToLocalStorage();
+    }
+
+    function addItemToCategory(catIdx) {
+        menuStructure[catIdx].items.push({ id: 'item_' + Math.random().toString(36).substr(2, 5), nameEN: "", nameTH: "", price: 0 });
+        renderStudio(); saveToLocalStorage();
+    }
+
+    function generateCleanJsonArray() {
+        let flatMenuArray = [];
+        menuStructure.forEach(cat => {
+            if (cat.visible) {
+                cat.items.forEach(item => {
+                    flatMenuArray.push({ id: item.id, nameEN: item.nameEN, nameTH: item.nameTH, price: item.price, category: cat.categoryName });
+                });
+            }
+        });
+        return flatMenuArray;
+    }
+
+    function updateOutputs() {
+        document.getElementById('jsonPreview').innerText = JSON.stringify(generateCleanJsonArray(), null, 2);
+    }
+
+    // --- SECURE API CALL WRAPPER LOOPS ---
+
+    async function secureApiPost(endpoint, body) {
+        const res = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+        return res;
+    }
+
+    async function deployToCloudflarePagesSecure() {
+        const slug = document.getElementById('shopSlug').value;
+        if (!slug) return alert("⚠️ Enter a valid Shop ID Slug identifier first.");
+
+        const systemManifest = {
+            bizName: document.getElementById('bizName').value,
+            bizTax: document.getElementById('bizTax').value,
+            bizCurrency: document.getElementById('bizCurrency').value,
+            bizTel: document.getElementById('bizTel').value,
+            bizAddress: document.getElementById('bizAddress').value,
+            menuStructure: menuStructure 
+        };
+
+        const liveMenuJson = JSON.stringify(generateCleanJsonArray(), null, 4);
+        const compiledHtmlApp = buildStandaloneAppHtml(systemManifest.bizName, systemManifest.bizTax, systemManifest.bizAddress, systemManifest.bizTel, systemManifest.bizCurrency, liveMenuJson);
+
+        try {
+            // Save manifest metadata model mapping context state
+            const r1 = await secureApiPost("/api/deploy", { shopSlug: slug, path: `data/${slug}-manifest.json`, content: JSON.stringify(systemManifest, null, 2), message: `pos(sys): save state for ${slug}` });
+            
+            // Save flat clean production items arrays
+            const r2 = await secureApiPost("/api/deploy", { shopSlug: slug, path: `data/${slug}-menu.json`, content: liveMenuJson, message: `pos(data): sync raw items for ${slug}` });
+            
+            // Save fully bundled runtime views template modules
+            const r3 = await secureApiPost("/api/deploy", { shopSlug: slug, path: `shops/${slug}.html`, content: compiledHtmlApp, message: `pos(app): compile master template for ${slug}` });
+
+            if (r1.ok && r2.ok && r3.ok) {
+                const resData = await r1.json();
+                const domainSegment = resData.repo.split('/')[1];
+                
+                document.getElementById('liveAppLink').innerText = `https://${domainSegment}.pages.dev/shops/${slug}.html`;
+                document.getElementById('liveJsonLink').innerText = `https://${domainSegment}.pages.dev/data/${slug}-menu.json`;
+                document.getElementById('deploymentLinks').style.display = 'block';
+                alert("🚀 Secure transmission completed successfully! Cloudflare Pages has queued your production updates.");
+            } else {
+                alert("❌ One or more files failed to save. Verify your environment variables inside Cloudflare.");
+            }
+        } catch(e) {
+            alert(`❌ API Execution failure string token parsing constraint: ${e.message}`);
+        }
+    }
+
+    async function recallShopFromGitSecure() {
+        const slug = document.getElementById('shopSlug').value;
+        if (!slug) return alert("⚠️ Enter a valid Shop ID Slug identifier.");
+
+        try {
+            const res = await secureApiPost("/api/recall", { shopSlug: slug });
+            if (!res.ok) {
+                alert("📂 No configuration history found for this specific Shop ID Slug on the repository target.");
+                return;
+            }
+
+            const fileData = await res.json();
+            const decodedContent = decodeURIComponent(escape(atob(fileData.content)));
+            const manifest = JSON.parse(decodedContent);
+
+            document.getElementById('bizName').value = manifest.bizName || '';
+            document.getElementById('bizTax').value = manifest.bizTax || '';
+            document.getElementById('bizCurrency').value = manifest.bizCurrency || '฿';
+            document.getElementById('bizTel').value = manifest.bizTel || '';
+            document.getElementById('bizAddress').value = manifest.bizAddress || '';
+            if (manifest.menuStructure) menuStructure = manifest.menuStructure;
+
+            renderStudio();
+            saveToLocalStorage();
+            alert(`📥 [${manifest.bizName}] workspace model settings retrieved and applied securely.`);
+        } catch(e) {
+            alert(`❌ Secure pull routine threw exception: ${e.message}`);
+        }
+    }
+
+    function buildStandaloneAppHtml(name, tax, address, tel, currency, menuJson) {
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>\${name} - POS Terminal</title>
+    <style>
+        :root { --bg-color: #f7fafc; --card-bg: #ffffff; --text-main: #1a202c; --text-muted: #718096; --primary: #2563eb; --primary-light: #eff6ff; --border: #e2e8f0; --danger: #ef4444; }
+        @media (prefers-color-scheme: dark) { :root { --bg-color: #121620; --card-bg: #1a202c; --text-main: #edf2f7; --text-muted: #a0aec0; --primary: #3b82f6; --primary-light: rgba(59, 130, 246, 0.1); --border: #2d3748; } }
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 12px; }
+        .app { max-width: 750px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 16px; }
+        .nav { display: flex; background: var(--border); border-radius: 8px; padding: 4px; margin-bottom: 16px; }
+        .nav button { flex:1; background:none; border:none; padding:10px; font-weight:700; color:var(--text-muted); cursor:pointer; border-radius:6px; }
+        .nav button.active { background:var(--card-bg); color:var(--primary); }
+        .panel { display:none; } .panel.active { display:block; }
+        .hero { background:var(--card-bg); border: 2px solid var(--primary); padding:16px; border-radius:12px; text-align:center; font-size:1.8rem; font-weight:800; color:var(--primary); margin-bottom:16px; }
+        .card { background:var(--card-bg); padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:12px; }
+        .filter-bar { display:flex; gap:8px; overflow-x:auto; margin-bottom:12px; }
+        .chip { background:var(--border); border:none; padding:6px 12px; border-radius:20px; font-size:0.85rem; font-weight:600; cursor:pointer; }
+        .chip.active { background:var(--primary); color:white; }
+        .row { display:grid; grid-template-columns: 2.5fr 1fr 1fr 0.4fr; gap:8px; margin-bottom:8px; align-items:center; }
+        .btn { width:100%; height:42px; border:none; border-radius:6px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+        .btn-primary { background:var(--primary); color:white; }
+        iframe { width:100%; height:500px; border:1px solid var(--border); border-radius:12px; background:white; margin-top:12px; }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header><h1>${name}</h1><p style="color:var(--text-muted); margin:4px 0 0 0;">POS Client Node</p></header>
+    <div class="nav"><button id="b1" class="active" onclick="m('calc')">1. Order Intake</button><button id="b2" onclick="m('doc')">2. Invoice Preview</button></div>
+    <div class="hero" id="totalBox">0.00 ${currency}</div>
+    <div id="pCalc" class="panel active">
+        <div class="filter-bar" id="fBar"></div>
+        <div class="card"><div id="lines"></div><button class="btn" style="background:var(--primary-light); color:var(--primary);" onclick="add()">➕ Add New Line Item</button></div>
+        <div class="card"><div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+            <div><label style="font-size:0.75rem; font-weight:700;">Discount</label><select id="disc" onchange="calc()"><option value="0">None</option><option value="5">5%</option><option value="10">10%</option></select></div>
+            <div><label style="font-size:0.75rem; font-weight:700;">Service Charge</label><select id="sc" onchange="calc()"><option value="0">0%</option><option value="10">10%</option></select></div>
+            <div><label style="font-size:0.75rem; font-weight:700;">Payment Route</label><select id="pm" onchange="calc()"><option value="Cash / เงินสด">Cash</option><option value="Credit Card">Card</option><option value="PromptPay / พร้อมเพย์">PromptPay</option></select></div>
+        </div></div>
+    </div>
+    <div id="pDoc" class="panel">
+        <div class="card" style="display:flex; gap:8px;"><button class="btn btn-primary" id="lEN" onclick="sl('EN')">English Layout</button><button class="btn" style="background:var(--border);" id="lTH" onclick="sl('TH')">ภาษาไทย</button></div>
+        <div class="card" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <input type="text" id="tab" value="Table 01" oninput="calc()"><input type="text" id="note" value="2 Guests" oninput="calc()">
+        </div>
+        <button class="btn btn-primary" onclick="window.frames[0].focus(); window.frames[0].print();">🖨️ Print Receipt Document</button>
+        <iframe></iframe>
+    </div>
+</div>
+<script>
+    let l='EN', f='ALL', dataset = ${menuJson}, values = { items:[], sub:0, dVal:0, sVal:0, vat:0, total:0 };
+    const dict = {
+        EN: { title: "RECEIPT / GUEST CHECK", tax: "Tax ID:", sub: "Subtotal", vat: "VAT (7%)", sc: "Service Charge", disc: "Discount", total: "Total Due (${currency})", payment: "Payment Route:" },
+        TH: { title: "ใบเสร็จรับเงิน / เช็คบิล", tax: "เลขประจำตัวผู้เสียภาษี:", sub: "รวมยอดอาหาร", vat: "ภาษี (7%)", sc: "ค่าบริการ", disc: "ส่วนลด", total: "ยอดเงินรวมทั้งสิ้นสุทธิ (${currency})", payment: "ช่องทางชำระเงิน:" }
+    };
+    function m(p){ document.getElementById('pCalc').className=p==='calc'?'panel active':'panel'; document.getElementById('pDoc').className=p==='doc'?'panel active':'panel'; document.getElementById('b1').className=p==='calc'?'active':''; document.getElementById('b2').className=p==='doc'?'active':''; }
+    function sl(lang){ l=lang; document.getElementById('lEN').className=l==='EN'?'btn btn-primary':'btn'; document.getElementById('lTH').className=l==='TH'?'btn btn-primary':'btn'; up(); calc(); }
+    function fb() {
+        const bar = document.getElementById('fBar'); const cats = ['ALL', ...new Set(dataset.map(d => d.category).filter(Boolean))]; bar.innerHTML = '';
+        cats.forEach(c => { const b = document.createElement('button'); b.className = \`chip \${f === c ? 'active' : ''}\`; b.innerText = c; b.onclick = () => { f = c; fb(); up(); }; bar.appendChild(b); });
+    }
+    function up() {
+        document.querySelectorAll('.row').forEach(r => {
+            const s = r.querySelector('select'); const cur = s.value; s.innerHTML = '<option value="">-- Item --</option>';
+            dataset.forEach(d => { if(f==='ALL' || d.category===f) { const o = document.createElement('option'); o.value=d.id; o.innerText=\`\${l==='EN'?d.nameEN:d.nameTH} (\${d.price})\`; s.appendChild(o); }}); s.value = cur;
+        });
+    }
+    function add() {
+        const id = 'r_'+Math.random().toString(36).substr(2,5); const d = document.createElement('div'); d.className='row'; d.id=id;
+        d.innerHTML = \`<select onchange="hc('\${id}')"></select><input type="number" class="q" value="1" min="1" oninput="calc()"><input type="number" class="p" value="0" readonly style="opacity:0.6;"><button onclick="document.getElementById('\${id}').remove(); calc();">✕</button>\`;
+        document.getElementById('lines').appendChild(d); up();
+    }
+    function hc(id) { const r = document.getElementById(id); const m = dataset.find(d => d.id === r.querySelector('select').value); r.querySelector('.p').value = m ? m.price : 0; calc(); }
+    function calc() {
+        let sub = 0; const items = [];
+        document.querySelectorAll('.row').forEach(r => {
+            const id = r.querySelector('select').value; const qty = parseFloat(r.querySelector('.q').value)||0; const pr = parseFloat(r.querySelector('.p').value)||0;
+            if (id && qty > 0) { const m = dataset.find(d => d.id===id); sub += (qty*pr); items.push({ nEN: m.nameEN, nTH: m.nameTH, q: qty, p: pr, t: (qty*pr) }); }
+        });
+        const dVal = sub * (parseFloat(document.getElementById('disc').value)/100); const sVal = (sub - dVal) * (parseFloat(document.getElementById('sc').value)/100);
+        const vat = (sub - dVal + sVal) * 0.07; const total = (sub - dVal + sVal + vat);
+        document.getElementById('totalBox').innerText = \`\${Math.round(total).toLocaleString()}.00 ${currency}\`;
+        values = { items, sub, dVal, sVal, vat, total }; const dStr = new Date().toLocaleString('en-GB'); const labels = dict[l];
+        let rHTML = ''; items.forEach(i => { rHTML += \`<tr><td>\${l==='EN'?i.nEN:i.nTH}</td><td style="text-align:right;">\${i.q}</td><td style="text-align:right;">\${Math.round(i.p)}.00</td><td style="text-align:right;">\th\${Math.round(i.t)}.00</td></tr>\`; });
+        document.querySelector('iframe').srcdoc = \`<html><body style="font-family:sans-serif;font-size:12px;padding:10px;color:#333;">
+        <table><tr><td><strong>${name}</strong><br>\th\${labels.tax} ${tax}<br>${address}<br>${tel}</td><td style="text-align:right;vertical-align:top;"><strong>\th\${labels.title}</strong><br>Ref: REC-CF<br>\th\${dStr}</td></tr></table><br>
+        <div style="display:flex;justify-content:between;"><span>Loc: \th\${document.getElementById('tab').value}</span> <span style="margin-left:auto;">Note: \th\${document.getElementById('note').value}</span></div><br>
+        <table style="width:100%;border-collapse:collapse;"><thead style="background:#2563eb;color:white;"><tr><th style="text-align:left;padding:4px;">Item</th><th style="text-align:right;padding:4px;">Qty</th><th style="text-align:right;padding:4px;">Unit</th><th style="text-align:right;padding:4px;">Total</th></tr></thead><tbody>\${rHTML || '<tr><td colspan="4" style="text-align:center;padding:10px;">Empty Ticket</td></tr>'}</tbody></table>
+        <table style="width:45%; margin-left:auto; margin-top:10px; font-weight:bold; line-height:1.6;">
+        <tr><td>\th\th\${labels.sub}</td><td style="text-align:right;">\th\th\${Math.round(sub)}.00</td></tr>
+        \th\${dVal>0?\`<tr><td style="color:#ef4444;">\th\${labels.disc}</td><td style="text-align:right;color:#ef4444;">-\th\${Math.round(dVal)}.00</td></tr>\`:''}
+        \th\${sVal>0?\`<tr><td>\th\${labels.sc}</td><td style="text-align:right;">+\th\th\${Math.round(sVal)}.00</td></tr>\`:''}
+        <tr><td>\th\th\${labels.vat}</td><td style="text-align:right;">\th\th\${Math.round(vat)}.00</td></tr>
+        <tr style="color:#2563eb;font-size:13px;background:#f0f6ff;"><td>\th\th\th\${labels.total}</td><td style="text-align:right;">\th\th\th\${Math.round(total)}.00</td></tr>
+        </table><br><div style="font-size:11px;"><strong>\th\th\${labels.payment}</strong> \th\${document.getElementById('pm').value}</div></body></html>\`;
+    }
+    fb(); add();
+</script>
+</body>
+</html>`;
+    }
+
+    window.onload = loadFromLocalStorage;
+</script>
+</body>
+</html>
