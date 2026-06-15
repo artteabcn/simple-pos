@@ -24,10 +24,23 @@
         .btn-success { background:var(--success);color:white; }
         .btn-accent  { background:var(--accent);color:white; }
         .btn-danger  { background:var(--danger);color:white;padding:6px 10px;width:auto; }
+        .btn-sm      { padding:6px 12px;font-size:.8rem;width:auto;margin-bottom:0; }
         .item-row { display:grid;grid-template-columns:1.5fr 1.5fr 1fr auto;gap:8px;margin-bottom:8px;align-items:center; }
         .category-block { border:1px dashed var(--primary);padding:14px;border-radius:8px;margin-bottom:16px;background:#fcfdf2; }
         .category-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:10px; }
         pre { background:#0f172a;color:#38bdf8;padding:14px;border-radius:8px;overflow-x:auto;font-size:.85rem;max-height:200px; }
+        /* Logo uploader */
+        .logo-drop { border:2px dashed var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;transition:border-color .2s;position:relative;background:var(--bg-color); }
+        .logo-drop:hover,.logo-drop.drag-over { border-color:var(--primary); }
+        .logo-drop input[type=file] { position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%; }
+        .logo-drop img { max-height:56px;max-width:100%;border-radius:6px;display:block;margin:0 auto 6px; }
+        .logo-drop .drop-hint { font-size:.8rem;color:var(--text-muted); }
+        .logo-uploading { font-size:.78rem;color:var(--primary);margin-top:4px; }
+        /* Shop browser */
+        .shop-card { display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--bg-color); }
+        .shop-card-name { font-weight:600;font-size:.9rem; }
+        .shop-card-slug { font-size:.75rem;color:var(--text-muted);font-family:monospace; }
+        .shop-empty { text-align:center;color:var(--text-muted);font-size:.85rem;padding:20px 0; }
     </style>
 </head>
 <body>
@@ -76,9 +89,15 @@
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label>Logo Image URL</label>
-                <input type="url" id="bizLogo" placeholder="https://…/logo.png" oninput="saveToLocalStorage()">
-                <p class="hint">Shown in POS header and printed receipt</p>
+                <label>Logo</label>
+                <div class="logo-drop" id="logoDrop" ondragover="logoDragOver(event)" ondragleave="logoDragLeave()" ondrop="logoDrop(event)">
+                    <input type="file" accept="image/*" onchange="handleLogoFile(this.files[0])">
+                    <img id="logoPreviewImg" src="" style="display:none">
+                    <div class="drop-hint" id="logoDropHint">📷 Click or drag image to upload</div>
+                </div>
+                <div class="logo-uploading" id="logoUploadStatus" style="display:none"></div>
+                <input type="url" id="bizLogo" placeholder="or paste URL" oninput="onLogoUrlType()" style="margin-top:6px;font-size:.8rem;padding:7px 10px">
+                <p class="hint">Stored in repo · shown in POS header and receipt</p>
             </div>
             <div class="form-group">
                 <label>PromptPay ID</label>
@@ -113,6 +132,15 @@
   </div>
 
   <div style="position:sticky;top:24px">
+    <!-- 0. Shop Browser -->
+    <div class="card">
+        <h2>🏪 Deployed POS Shops</h2>
+        <button class="btn btn-accent btn-sm" onclick="loadShopList()" id="refreshBtn">🔄 Refresh List</button>
+        <div id="shopList" style="margin-top:12px">
+            <div class="shop-empty">Click Refresh to load deployed shops</div>
+        </div>
+    </div>
+
     <!-- 4. Deploy -->
     <div class="card" style="border:2px solid var(--success)">
         <h2>4. Secure Deployment Terminal</h2>
@@ -169,6 +197,7 @@ function loadFromLocalStorage() {
             document.getElementById('bizTel').value        = d.bizTel       || '';
             document.getElementById('bizAddress').value    = d.bizAddress   || '';
             document.getElementById('bizLogo').value       = d.bizLogo      || '';
+            showLogoPreview(d.bizLogo || '');
             document.getElementById('bizPromptpay').value  = d.bizPromptpay || '';
             document.getElementById('bizPin').value        = d.bizPin       || '1234';
             document.getElementById('bizVatMode').value    = d.bizVatMode   || 'inclusive';
@@ -261,6 +290,12 @@ async function deployToCloudflarePagesSecure() {
         bizVatMode:   document.getElementById('bizVatMode').value,
         menuStructure
     };
+    // Upload logo file first if one was staged via the file picker
+    if (pendingLogoBase64) {
+        const uploadedUrl = await uploadLogoIfPending(slug);
+        if (uploadedUrl) manifest.bizLogo = uploadedUrl;
+    }
+
     const menuJson = JSON.stringify(generateCleanJsonArray(), null, 4);
     const appHtml  = buildStandaloneAppHtml(manifest, menuJson, slug);
     try {
@@ -757,6 +792,117 @@ footer{text-align:center;padding:12px 0 4px;}
     ].join('\n');
 
     return html + '\n<script>\n' + script + '\n<\/script>\n</body>\n</html>';
+}
+
+/* ── Logo upload helpers ──────────────────────────────────────── */
+let pendingLogoBase64 = null;
+let pendingLogoExt    = null;
+
+function showLogoPreview(src) {
+    const img  = document.getElementById('logoPreviewImg');
+    const hint = document.getElementById('logoDropHint');
+    if (src) { img.src = src; img.style.display = 'block'; hint.style.display = 'none'; }
+    else      { img.src = ''; img.style.display = 'none'; hint.style.display = 'block'; }
+}
+
+function onLogoUrlType() {
+    pendingLogoBase64 = null; pendingLogoExt = null;
+    showLogoPreview(document.getElementById('bizLogo').value);
+    saveToLocalStorage();
+}
+
+function handleLogoFile(file) {
+    if (!file) return;
+    const ext = file.name.split('.').pop().toLowerCase();
+    const reader = new FileReader();
+    reader.onload = e => {
+        const dataUrl = e.target.result;
+        pendingLogoBase64 = dataUrl.split(',')[1]; // raw base64
+        pendingLogoExt    = ext;
+        showLogoPreview(dataUrl);
+        document.getElementById('bizLogo').value = '';
+        document.getElementById('logoUploadStatus').textContent = '⏳ Logo ready — will upload on Deploy';
+        document.getElementById('logoUploadStatus').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function logoDragOver(e) { e.preventDefault(); document.getElementById('logoDrop').classList.add('drag-over'); }
+function logoDragLeave()  { document.getElementById('logoDrop').classList.remove('drag-over'); }
+function logoDrop(e) {
+    e.preventDefault();
+    document.getElementById('logoDrop').classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) handleLogoFile(file);
+}
+
+async function uploadLogoIfPending(slug) {
+    if (!pendingLogoBase64 || !slug) return null;
+    const status = document.getElementById('logoUploadStatus');
+    status.textContent = '⬆️ Uploading logo…';
+    const path = `data/logos/${slug}.${pendingLogoExt}`;
+    const res  = await secureApiPost('/api/deploy', {
+        shopSlug: slug, path, isBase64: true,
+        content:  pendingLogoBase64,
+        message:  `pos(logo): upload logo for ${slug}`
+    });
+    if (res.ok) {
+        const url = `${window.location.origin}/${path}`;
+        document.getElementById('bizLogo').value = url;
+        pendingLogoBase64 = null; pendingLogoExt = null;
+        status.textContent = `✅ Logo saved at /${path}`;
+        saveToLocalStorage();
+        return url;
+    } else {
+        status.textContent = '❌ Logo upload failed';
+        return null;
+    }
+}
+
+/* ── Shop browser ─────────────────────────────────────────────── */
+async function loadShopList() {
+    const btn = document.getElementById('refreshBtn');
+    const box = document.getElementById('shopList');
+    btn.disabled = true; btn.textContent = '⏳ Loading…';
+    box.innerHTML = '';
+    try {
+        const res = await fetch('/api/list');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const { shops } = await res.json();
+        if (!shops || shops.length === 0) {
+            box.innerHTML = '<div class="shop-empty">No shops deployed yet.</div>';
+            return;
+        }
+        shops.forEach(shop => {
+            const card = document.createElement('div');
+            card.className = 'shop-card';
+            card.innerHTML = `
+                <div>
+                    <div class="shop-card-name">🏪 ${shop.slug}</div>
+                    <div class="shop-card-slug">/${shop.slug}.html</div>
+                </div>
+                <div style="display:flex;gap:6px">
+                    <button class="btn btn-primary btn-sm" onclick="recallShop('${shop.slug}')">📥 Load</button>
+                    <a href="/shops/${shop.slug}.html" target="_blank" class="btn btn-accent btn-sm" style="text-decoration:none">🖥️ Open</a>
+                </div>`;
+            box.appendChild(card);
+        });
+    } catch(e) {
+        box.innerHTML = `<div class="shop-empty" style="color:var(--danger)">Error: ${e.message}</div>`;
+    } finally {
+        btn.disabled = false; btn.textContent = '🔄 Refresh List';
+    }
+}
+
+async function recallShop(slug) {
+    document.getElementById('shopSlug').value = slug;
+    await recallShopFromGitSecure();
+    // Show logo preview from the recalled URL
+    const url = document.getElementById('bizLogo').value;
+    if (url) { showLogoPreview(url); }
+    else      { showLogoPreview(''); }
+    document.getElementById('logoUploadStatus').style.display = 'none';
+    pendingLogoBase64 = null; pendingLogoExt = null;
 }
 
 window.onload = loadFromLocalStorage;
