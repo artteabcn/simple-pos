@@ -1,87 +1,93 @@
-export async function onRequestPost(context) {
+export async function onRequest(context) {
     const urlPath = new URL(context.request.url).pathname;
+    const method  = context.request.method;
+    const token   = context.env.GITHUB_TOKEN;
+    const repo    = context.env.GITHUB_REPO;
+    const ghHeaders = {
+        "Authorization": `token ${token}`,
+        "User-Agent": "Cloudflare-Pages-POS-Studio"
+    };
 
-    // --- ROUTE 1: RECALL ENDPOINT ---
-    if (urlPath === "/api/recall") {
+    // ── LIST: GET /api/list ──────────────────────────────────────
+    // Returns array of shop slugs derived from shops/*.html filenames
+    if (urlPath === "/api/list" && method === "GET") {
         try {
-            const { shopSlug } = await context.request.json();
-            if (!shopSlug) return new Response("Missing Shop Slug", { status: 400 });
-
-            const token = context.env.GITHUB_TOKEN;
-            const repo = context.env.GITHUB_REPO;
-            const url = `https://api.github.com/repos/${repo}/contents/data/${shopSlug}-manifest.json`;
-
-            const res = await fetch(url, {
-                headers: {
-                    "Authorization": `token ${token}`,
-                    "User-Agent": "Cloudflare-Pages-POS-Studio"
-                }
-            });
-
-            if (!res.ok) {
-                return new Response(JSON.stringify({ error: "Configuration not found" }), { 
-                    status: 404, 
-                    headers: { "Content-Type": "application/json" } 
-                });
-            }
-
-            const fileData = await res.json();
-            return new Response(JSON.stringify(fileData), {
-                headers: { "Content-Type": "application/json" }
-            });
-        } catch (err) {
-            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { "Content-Type": "application/json" } });
+            const res = await fetch(`https://api.github.com/repos/${repo}/contents/shops`, { headers: ghHeaders });
+            if (!res.ok) return jsonResp({ shops: [] }, 200);
+            const files = await res.json();
+            const shops = files
+                .filter(f => f.name.endsWith(".html"))
+                .map(f => ({ slug: f.name.replace(".html",""), name: f.name }));
+            return jsonResp({ shops }, 200);
+        } catch(err) {
+            return jsonResp({ error: err.message }, 500);
         }
     }
 
-    // --- ROUTE 2: DEPLOY ENDPOINT ---
-    if (urlPath === "/api/deploy") {
+    // ── RECALL: POST /api/recall ─────────────────────────────────
+    if (urlPath === "/api/recall" && method === "POST") {
         try {
-            const { shopSlug, path, content, message } = await context.request.json();
-            if (!shopSlug || !path || !content) {
-                return new Response("Missing Required Fields", { status: 400 });
-            }
+            const { shopSlug } = await context.request.json();
+            if (!shopSlug) return new Response("Missing Shop Slug", { status: 400 });
+            const res = await fetch(
+                `https://api.github.com/repos/${repo}/contents/data/${shopSlug}-manifest.json`,
+                { headers: ghHeaders }
+            );
+            if (!res.ok) return jsonResp({ error: "Configuration not found" }, 404);
+            const fileData = await res.json();
+            return jsonResp(fileData, 200);
+        } catch(err) {
+            return jsonResp({ error: err.message }, 500);
+        }
+    }
 
-            const token = context.env.GITHUB_TOKEN;
-            const repo = context.env.GITHUB_REPO;
+    // ── DEPLOY: POST /api/deploy ─────────────────────────────────
+    // Supports text files and binary (pre-encoded base64) files.
+    // Send `isBase64: true` to skip text encoding and use content directly.
+    if (urlPath === "/api/deploy" && method === "POST") {
+        try {
+            const { shopSlug, path, content, message, isBase64 } = await context.request.json();
+            if (!shopSlug || !path || !content) return new Response("Missing Required Fields", { status: 400 });
+
             const url = `https://api.github.com/repos/${repo}/contents/${path}`;
 
+            // Fetch existing SHA (required by GitHub API to update existing files)
             let sha = "";
-            const checkRes = await fetch(url, {
-                headers: { "Authorization": `token ${token}`, "User-Agent": "Cloudflare-Pages-POS-Studio" }
-            });
+            const checkRes = await fetch(url, { headers: ghHeaders });
             if (checkRes.ok) {
                 const fileData = await checkRes.json();
                 sha = fileData.sha;
             }
 
-            const base64Content = btoa(unescape(encodeURIComponent(content)));
+            // Text files: encode to base64. Binary files: content is already base64.
+            const base64Content = isBase64 ? content : btoa(unescape(encodeURIComponent(content)));
+
             const body = { message, content: base64Content };
             if (sha) body.sha = sha;
 
             const putRes = await fetch(url, {
                 method: "PUT",
-                headers: {
-                    "Authorization": `token ${token}`,
-                    "Content-Type": "application/json",
-                    "User-Agent": "Cloudflare-Pages-POS-Studio"
-                },
+                headers: { ...ghHeaders, "Content-Type": "application/json" },
                 body: JSON.stringify(body)
             });
 
             if (putRes.ok) {
-                return new Response(JSON.stringify({ success: true, repo }), {
-                    headers: { "Content-Type": "application/json" }
-                });
+                return jsonResp({ success: true, repo }, 200);
             } else {
-                const errLog = await putRes.json();
-                return new Response(JSON.stringify({ error: errLog.message }), { status: putRes.status, headers: { "Content-Type": "application/json" } });
+                const errData = await putRes.json();
+                return jsonResp({ error: errData.message }, putRes.status);
             }
-        } catch (err) {
-            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { "Content-Type": "application/json" } });
+        } catch(err) {
+            return jsonResp({ error: err.message }, 500);
         }
     }
 
-    // Fallback error response for unsupported API routes
-    return new Response(JSON.stringify({ error: "Route not found" }), { status: 404, headers: { "Content-Type": "application/json" } });
+    return jsonResp({ error: "Route not found" }, 404);
+}
+
+function jsonResp(data, status) {
+    return new Response(JSON.stringify(data), {
+        status,
+        headers: { "Content-Type": "application/json" }
+    });
 }
