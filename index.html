@@ -264,11 +264,10 @@ async function deployToCloudflarePagesSecure() {
     const menuJson = JSON.stringify(generateCleanJsonArray(), null, 4);
     const appHtml  = buildStandaloneAppHtml(manifest, menuJson, slug);
     try {
-        const [r1, r2, r3] = await Promise.all([
-            secureApiPost("/api/deploy", { shopSlug:slug, path:`data/${slug}-manifest.json`, content:JSON.stringify(manifest,null,2), message:`pos(sys): save state for ${slug}` }),
-            secureApiPost("/api/deploy", { shopSlug:slug, path:`data/${slug}-menu.json`,     content:menuJson,                         message:`pos(data): sync items for ${slug}` }),
-            secureApiPost("/api/deploy", { shopSlug:slug, path:`shops/${slug}.html`,          content:appHtml,                          message:`pos(app): compile template for ${slug}` })
-        ]);
+        // Sequential — parallel SHA fetches to the same repo cause GitHub 409 Conflict
+        const r1 = await secureApiPost("/api/deploy", { shopSlug:slug, path:`data/${slug}-manifest.json`, content:JSON.stringify(manifest,null,2), message:`pos(sys): save state for ${slug}` });
+        const r2 = await secureApiPost("/api/deploy", { shopSlug:slug, path:`data/${slug}-menu.json`,     content:menuJson,                         message:`pos(data): sync items for ${slug}` });
+        const r3 = await secureApiPost("/api/deploy", { shopSlug:slug, path:`shops/${slug}.html`,          content:appHtml,                          message:`pos(app): compile template for ${slug}` });
         if (r1.ok && r2.ok && r3.ok) {
             const host = window.location.hostname;
             document.getElementById('liveAppLink').innerText  = `https://${host}/shops/${slug}.html`;
@@ -735,10 +734,9 @@ footer{text-align:center;padding:12px 0 4px;}
         '      catMap[item.category].items.push({id:item.id,nameEN:item.nameEN,nameTH:item.nameTH,price:item.price});',
         '    });',
         `    const manifest={bizName:"${n}",bizTax:"${tx}",bizAddress:"${ad}",bizTel:"${ph}",bizCurrency:CURRENCY,bizLogo:LOGO_URL,bizPromptpay:PP_ID,bizVatMode:VAT_MODE,menuStructure:Object.values(catMap)};`,
-        '    const [r1,r2]=await Promise.all([',
-        '      fetch("/api/deploy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,path:`data/${SLUG}-menu.json`,content:menuJson,message:"pos(edit): menu update from POS terminal"})}),',
-        '      fetch("/api/deploy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,path:`data/${SLUG}-manifest.json`,content:JSON.stringify(manifest,null,2),message:"pos(edit): manifest sync from POS terminal"})})',
-        '    ]);',
+        '    const apiPost=(path,content,msg)=>fetch("/api/deploy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,path,content,message:msg})});',
+        '    const r1=await apiPost(`data/${SLUG}-menu.json`,menuJson,"pos(edit): menu update from POS terminal");',
+        '    const r2=await apiPost(`data/${SLUG}-manifest.json`,JSON.stringify(manifest,null,2),"pos(edit): manifest sync from POS terminal");',
         '    if(r1.ok&&r2.ok){',
         '      dataset=editItems;fb();up();calc();',
         '      status.textContent="✅ Saved! Menu updated on server.";',
