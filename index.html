@@ -237,7 +237,7 @@
         return res;
     }
 
-   async function deployToCloudflarePagesSecure() {
+  async function deployToCloudflarePagesSecure() {
     const slug = document.getElementById('shopSlug').value;
     if (!slug) return alert("⚠️ Enter a valid Shop ID Slug identifier first.");
 
@@ -274,6 +274,7 @@
     } catch(e) {
         alert("❌ API Execution failure: " + e.message);
     }
+}
 
     async function recallShopFromGitSecure() {
         const slug = document.getElementById('shopSlug').value;
