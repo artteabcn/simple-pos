@@ -237,41 +237,42 @@
         return res;
     }
 
-    async function deployToCloudflarePagesSecure() {
-        const slug = document.getElementById('shopSlug').value;
-        if (!slug) return alert("⚠️ Enter a valid Shop ID Slug identifier first.");
+   async function deployToCloudflarePagesSecure() {
+    const slug = document.getElementById('shopSlug').value;
+    if (!slug) return alert("⚠️ Enter a valid Shop ID Slug identifier first.");
 
-        const systemManifest = {
-            bizName: document.getElementById('bizName').value,
-            bizTax: document.getElementById('bizTax').value,
-            bizCurrency: document.getElementById('bizCurrency').value,
-            bizTel: document.getElementById('bizTel').value,
-            bizAddress: document.getElementById('bizAddress').value,
-            menuStructure: menuStructure 
-        };
+    const systemManifest = {
+        bizName: document.getElementById('bizName').value,
+        bizTax: document.getElementById('bizTax').value,
+        bizCurrency: document.getElementById('bizCurrency').value,
+        bizTel: document.getElementById('bizTel').value,
+        bizAddress: document.getElementById('bizAddress').value,
+        menuStructure: menuStructure 
+    };
 
-        const liveMenuJson = JSON.stringify(generateCleanJsonArray(), null, 4);
-        const compiledHtmlApp = buildStandaloneAppHtml(systemManifest.bizName, systemManifest.bizTax, systemManifest.bizAddress, systemManifest.bizTel, systemManifest.bizCurrency, liveMenuJson);
+    const liveMenuJson = JSON.stringify(generateCleanJsonArray(), null, 4);
+    const compiledHtmlApp = buildStandaloneAppHtml(systemManifest.bizName, systemManifest.bizTax, systemManifest.bizAddress, systemManifest.bizTel, systemManifest.bizCurrency, liveMenuJson);
 
-        try {
-            const r1 = await secureApiPost("/api/deploy", { shopSlug: slug, path: "data/" + slug + "-manifest.json", content: JSON.stringify(systemManifest, null, 2), message: "pos(sys): save state for " + slug });
-            const r2 = await secureApiPost("/api/deploy", { shopSlug: slug, path: "data/" + slug + "-menu.json", content: liveMenuJson, message: "pos(data): sync raw items for " + slug });
-            const r3 = await secureApiPost("/api/deploy", { shopSlug: slug, path: "shops/" + slug + ".html", content: compiledHtmlApp, message: "pos(app): compile master template for " + slug });
+    try {
+        // FIX: Sending all requests to /api/deploy with the path inside the body payload
+        const r1 = await secureApiPost("/api/deploy", { shopSlug: slug, path: "data/" + slug + "-manifest.json", content: JSON.stringify(systemManifest, null, 2), message: "pos(sys): save state for " + slug });
+        const r2 = await secureApiPost("/api/deploy", { shopSlug: slug, path: "data/" + slug + "-menu.json", content: liveMenuJson, message: "pos(data): sync raw items for " + slug });
+        const r3 = await secureApiPost("/api/deploy", { shopSlug: slug, path: "shops/" + slug + ".html", content: compiledHtmlApp, message: "pos(app): compile master template for " + slug });
 
-            if (r1.ok && r2.ok && r3.ok) {
-                const resData = await r1.json();
-                const domainSegment = resData.repo.split('/')[1];
-                
-                document.getElementById('liveAppLink').innerText = "https://" + domainSegment + ".pages.dev/shops/" + slug + ".html";
-                document.getElementById('liveJsonLink').innerText = "https://" + domainSegment + ".pages.dev/data/" + slug + "-menu.json";
-                document.getElementById('deploymentLinks').style.display = 'block';
-                alert("🚀 Secure transmission completed successfully! Cloudflare Pages has queued your production updates.");
-            } else {
-                alert("❌ One or more files failed to save. Verify your environment variables inside Cloudflare.");
-            }
-        } catch(e) {
-            alert("❌ API Execution failure: " + e.message);
+        if (r1.ok && r2.ok && r3.ok) {
+            // Use your active deployment domain segment dynamically
+            const currentDomain = window.location.hostname;
+            
+            document.getElementById('liveAppLink').innerText = "https://" + currentDomain + "/shops/" + slug + ".html";
+            document.getElementById('liveJsonLink').innerText = "https://" + currentDomain + "/data/" + slug + "-menu.json";
+            document.getElementById('deploymentLinks').style.display = 'block';
+            alert("🚀 Secure transmission completed successfully! Cloudflare Pages has queued your production updates.");
+        } else {
+            const errData = await r1.json().catch(() => ({ error: "Unknown routing mismatch" }));
+            alert("❌ Server rejected your request. Details: " + (errData.error || "Check Cloudflare environment keys"));
         }
+    } catch(e) {
+        alert("❌ API Execution failure: " + e.message);
     }
 
     async function recallShopFromGitSecure() {
