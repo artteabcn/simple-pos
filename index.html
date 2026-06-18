@@ -415,7 +415,20 @@ footer{text-align:center;padding:12px 0 4px;}
 .del-item-btn{background:var(--danger);color:#fff;border:none;border-radius:7px;padding:8px;cursor:pointer;font-size:.95rem;width:100%;}
 .save-status{text-align:center;font-size:.85rem;padding:8px;border-radius:8px;margin-top:8px;display:none;}
 .save-status.ok{background:#d1fae5;color:#065f46;display:block;}
-.save-status.err{background:#fee2e2;color:#991b1b;display:block;}`;
+.save-status.err{background:#fee2e2;color:#991b1b;display:block;}
+/* Bill manager */
+.bill-save-row{display:flex;gap:8px;align-items:center;margin-bottom:12px;}
+.bill-save-row input{flex:1;padding:10px 12px;border-radius:8px;border:1px solid var(--bdr);font-size:.9rem;background:var(--bg);color:var(--text);min-height:44px;}
+.btn-sm{padding:0 14px;min-height:44px;border:none;border-radius:8px;font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap;}
+.btn-save{background:var(--primary);color:#fff;}
+.btn-new{background:var(--bdr);color:var(--text);}
+.bill-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--bdr);}
+.bill-row:last-child{border-bottom:none;}
+.bill-info{flex:1;min-width:0;}
+.bill-info strong{display:block;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bill-meta{font-size:.75rem;color:var(--muted);}
+.btn-recall{background:var(--pl);color:var(--primary);}
+.btn-del{background:#fee2e2;color:#991b1b;padding:0 10px;}`;
 
     /* ── HTML shell ────────────────────────────────────────────────── */
     const logoTag = logo ? `<img src="${logo}" class="logo-img" alt="logo">` : '';
@@ -459,6 +472,14 @@ footer{text-align:center;padding:12px 0 4px;}
   <div class="card meta-row">
     <input type="text" id="tab" value="Table 01" oninput="calc()">
     <input type="text" id="note" value="2 Guests" oninput="calc()">
+  </div>
+  <div class="card">
+    <div class="bill-save-row">
+      <input type="text" id="billLabel" placeholder="Bill name / label…">
+      <button class="btn-sm btn-save" onclick="saveBill()">💾 Save</button>
+      <button class="btn-sm btn-new" onclick="newOrder()">🆕 New</button>
+    </div>
+    <div id="savedBills"></div>
   </div>
   <button class="btn btn-primary" id="printBtn" onclick="window.frames[0].focus();window.frames[0].print();">🖨️ Print Receipt</button>
   <iframe></iframe>
@@ -509,11 +530,13 @@ footer{text-align:center;padding:12px 0 4px;}
         '};',
 
         // Fetch live menu from server on load (updates embedded snapshot silently)
+        // Returns a resolved promise so callers can .then() after dataset is ready
         'async function loadLiveMenu(){',
         '  try{',
         '    const r=await fetch(`/data/${SLUG}-menu.json`);',
         '    if(r.ok){dataset=await r.json();fb();up();}',
         '  }catch(e){}',
+        '  return true;',
         '}',
 
         // Tab switcher
@@ -708,6 +731,7 @@ footer{text-align:center;padding:12px 0 4px;}
         '  ${ppSection}',
         '  </body></html>`;',
         '  document.querySelector("iframe").srcdoc=doc;',
+        '  saveDraft();',
         '}',
 
         /* ── Edit modal ────────────────────────────────────────── */
@@ -787,8 +811,126 @@ footer{text-align:center;padding:12px 0 4px;}
         '  }',
         '}',
 
-        // Init
-        'fb();add();loadLiveMenu();'
+        // Draft persistence — save/restore order across page reloads
+        'function saveDraft(){',
+        '  const rows=[];',
+        '  document.querySelectorAll(".item-row").forEach(row=>{',
+        '    const sel=row.querySelector("select");',
+        '    const qty=parseInt(row.querySelector(".q").value)||0;',
+        '    if(sel.value&&qty>0)rows.push({id:sel.value,qty});',
+        '  });',
+        '  localStorage.setItem("pos_draft_"+SLUG,JSON.stringify({',
+        '    rows,',
+        '    disc:document.getElementById("disc").value,',
+        '    sc:document.getElementById("sc").value,',
+        '    pm:document.getElementById("pm").value,',
+        '    tab:document.getElementById("tab").value,',
+        '    note:document.getElementById("note").value',
+        '  }));',
+        '}',
+        'function restoreDraft(){',
+        '  try{',
+        '    const raw=localStorage.getItem("pos_draft_"+SLUG);',
+        '    if(!raw)return false;',
+        '    const d=JSON.parse(raw);',
+        '    if(!d.rows||!d.rows.length)return false;',
+        '    document.getElementById("disc").value=d.disc||"0";',
+        '    document.getElementById("sc").value=d.sc||"0";',
+        '    if(d.pm)document.getElementById("pm").value=d.pm;',
+        '    document.getElementById("tab").value=d.tab||"Table 01";',
+        '    document.getElementById("note").value=d.note||"";',
+        '    document.getElementById("lines").innerHTML="";',
+        '    d.rows.forEach(r=>{',
+        '      add();',
+        '      const rows=[...document.querySelectorAll(".item-row")];',
+        '      const row=rows[rows.length-1];',
+        '      const sel=row.querySelector("select");',
+        '      sel.value=r.id;',
+        '      const item=dataset.find(x=>x.id===r.id);',
+        '      sel.dataset.price=item?item.price:0;',
+        '      row.querySelector(".q").value=r.qty;',
+        '    });',
+        '    calc();return true;',
+        '  }catch(e){return false;}',
+        '}',
+
+        // Named bill save / recall
+        'function saveBill(){',
+        '  const rows=[];',
+        '  document.querySelectorAll(".item-row").forEach(row=>{',
+        '    const sel=row.querySelector("select");',
+        '    const qty=parseInt(row.querySelector(".q").value)||0;',
+        '    if(sel.value&&qty>0)rows.push({id:sel.value,qty});',
+        '  });',
+        '  if(!rows.length){alert(l==="EN"?"No items to save.":"ยังไม่มีรายการ");return;}',
+        '  const label=document.getElementById("billLabel").value.trim()||',
+        '    ("Bill "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}));',
+        '  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");',
+        '  bills.unshift({label,rows,',
+        '    disc:document.getElementById("disc").value,',
+        '    sc:document.getElementById("sc").value,',
+        '    pm:document.getElementById("pm").value,',
+        '    tab:document.getElementById("tab").value,',
+        '    note:document.getElementById("note").value,',
+        '    savedAt:new Date().toISOString()});',
+        '  localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills.slice(0,30)));',
+        '  document.getElementById("billLabel").value="";',
+        '  renderBills();',
+        '}',
+        'function recallBill(idx){',
+        '  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");',
+        '  const b=bills[idx];if(!b)return;',
+        '  document.getElementById("disc").value=b.disc||"0";',
+        '  document.getElementById("sc").value=b.sc||"0";',
+        '  if(b.pm)document.getElementById("pm").value=b.pm;',
+        '  document.getElementById("tab").value=b.tab||"";',
+        '  document.getElementById("note").value=b.note||"";',
+        '  document.getElementById("lines").innerHTML="";',
+        '  b.rows.forEach(r=>{',
+        '    add();',
+        '    const rows=[...document.querySelectorAll(".item-row")];',
+        '    const row=rows[rows.length-1];',
+        '    const sel=row.querySelector("select");',
+        '    sel.value=r.id;',
+        '    const item=dataset.find(x=>x.id===r.id);',
+        '    sel.dataset.price=item?item.price:0;',
+        '    row.querySelector(".q").value=r.qty;',
+        '  });',
+        '  calc();m("calc");',
+        '}',
+        'function deleteBill(idx){',
+        '  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");',
+        '  bills.splice(idx,1);',
+        '  localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills));',
+        '  renderBills();',
+        '}',
+        'function renderBills(){',
+        '  const el=document.getElementById("savedBills");',
+        '  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");',
+        '  if(!bills.length){el.innerHTML=`<p style="color:var(--muted);font-size:.85rem;margin:4px 0 0">${l==="EN"?"No saved bills yet.":"ยังไม่มีบิลที่บันทึกไว้"}</p>`;return;}',
+        '  el.innerHTML=bills.map((b,i)=>`',
+        '    <div class="bill-row">',
+        '      <div class="bill-info">',
+        '        <strong>${b.label}</strong>',
+        '        <span class="bill-meta">${new Date(b.savedAt).toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</span>',
+        '      </div>',
+        '      <button class="btn-sm btn-recall" onclick="recallBill(${i})">↩ Recall</button>',
+        '      <button class="btn-sm btn-del" onclick="deleteBill(${i})">✕</button>',
+        '    </div>`).join("");',
+        '}',
+        'function newOrder(){',
+        '  if(!confirm(l==="EN"?"Clear current order and start new?":"ล้างบิลปัจจุบันและเริ่มใหม่?"))return;',
+        '  document.getElementById("lines").innerHTML="";',
+        '  document.getElementById("disc").value="0";',
+        '  document.getElementById("sc").value="0";',
+        '  document.getElementById("billLabel").value="";',
+        '  add();calc();m("calc");',
+        '  localStorage.removeItem("pos_draft_"+SLUG);',
+        '}',
+
+        // Init — restore draft after live menu loads so item IDs resolve correctly
+        'fb();',
+        'loadLiveMenu().then(ok=>{if(!restoreDraft())add();renderBills();});'
     ].join('\n');
 
     return html + '\n<script>\n' + script + '\n<\/script>\n</body>\n</html>';
