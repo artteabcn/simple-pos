@@ -428,7 +428,15 @@ footer{text-align:center;padding:12px 0 4px;}
 .bill-info strong{display:block;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .bill-meta{font-size:.75rem;color:var(--muted);}
 .btn-recall{background:var(--pl);color:var(--primary);}
-.btn-del{background:#fee2e2;color:#991b1b;padding:0 10px;}`;
+.btn-del{background:#fee2e2;color:#991b1b;padding:0 10px;}
+/* Paid history */
+.paid-card{background:var(--bg);border:1px solid var(--bdr);border-radius:10px;padding:12px;margin-bottom:10px;}
+.paid-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+.paid-card-label{font-weight:800;font-size:.95rem;}
+.paid-card-total{font-weight:800;color:var(--primary);font-size:1rem;}
+.paid-card-meta{font-size:.75rem;color:var(--muted);margin-bottom:8px;}
+.paid-items{font-size:.8rem;color:var(--muted);line-height:1.6;}
+.hist-day{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:10px 0 4px;border-bottom:1px solid var(--bdr);margin-bottom:8px;}`;
 
     /* ── HTML shell ────────────────────────────────────────────────── */
     const logoTag = logo ? `<img src="${logo}" class="logo-img" alt="logo">` : '';
@@ -452,6 +460,7 @@ footer{text-align:center;padding:12px 0 4px;}
 <div class="nav">
   <button id="b1" class="active" onclick="m('calc')">🧾 Order</button>
   <button id="b2" onclick="m('doc')">🖨️ Invoice</button>
+  <button id="b3" onclick="m('hist')">📋 History</button>
 </div>
 <div class="hero" id="totalBox">0.00 ${c}</div>
 <div id="pCalc" class="panel active">
@@ -477,12 +486,18 @@ footer{text-align:center;padding:12px 0 4px;}
     <div class="bill-save-row">
       <input type="text" id="billLabel" placeholder="Bill name / label…">
       <button class="btn-sm btn-save" onclick="saveBill()">💾 Save</button>
-      <button class="btn-sm btn-new" onclick="newOrder()">🆕 New</button>
+      <button class="btn-sm btn-new" onclick="clearOrder()">🗑 Clear</button>
     </div>
     <div id="savedBills"></div>
   </div>
   <button class="btn btn-primary" id="printBtn" onclick="window.frames[0].focus();window.frames[0].print();">🖨️ Print Receipt</button>
+  <button class="btn" id="paidBtn" style="background:var(--success);color:#fff;margin-top:8px" onclick="markAsPaid()">✅ Mark as Paid</button>
   <iframe></iframe>
+</div>
+<div id="pHist" class="panel">
+  <div class="card" style="padding:10px 14px">
+    <div id="paidBills"><p style="color:var(--muted);font-size:.85rem;margin:0">No paid bills yet.</p></div>
+  </div>
 </div>
 <footer>
   <button class="edit-trigger" onclick="openEdit()" title="Staff menu editor">⚙ Edit Menu</button>
@@ -525,8 +540,8 @@ footer{text-align:center;padding:12px 0 4px;}
 
         // UI text dictionaries (updates visible labels when language switches)
         'const uiDict={',
-        '  EN:{orderTab:"🧾 Order",invoiceTab:"🖨️ Invoice",addItem:"➕ Add Item",disc:"Discount",sc:"Service",pm:"Payment",print:"🖨️ Print Receipt"},',
-        '  TH:{orderTab:"🧾 คำสั่งซื้อ",invoiceTab:"🖨️ ใบแจ้งหนี้",addItem:"➕ เพิ่มรายการ",disc:"ส่วนลด",sc:"ค่าบริการ",pm:"ชำระเงิน",print:"🖨️ พิมพ์ใบเสร็จ"}',
+        '  EN:{orderTab:"🧾 Order",invoiceTab:"🖨️ Invoice",histTab:"📋 History",addItem:"➕ Add Item",disc:"Discount",sc:"Service",pm:"Payment",print:"🖨️ Print Receipt",paid:"✅ Mark as Paid"},',
+        '  TH:{orderTab:"🧾 คำสั่งซื้อ",invoiceTab:"🖨️ ใบแจ้งหนี้",histTab:"📋 ประวัติ",addItem:"➕ เพิ่มรายการ",disc:"ส่วนลด",sc:"ค่าบริการ",pm:"ชำระเงิน",print:"🖨️ พิมพ์ใบเสร็จ",paid:"✅ ชำระแล้ว"}',
         '};',
 
         // Fetch live menu from server on load (updates embedded snapshot silently)
@@ -543,9 +558,12 @@ footer{text-align:center;padding:12px 0 4px;}
         'function m(p){',
         '  document.getElementById("pCalc").className=p==="calc"?"panel active":"panel";',
         '  document.getElementById("pDoc").className=p==="doc"?"panel active":"panel";',
+        '  document.getElementById("pHist").className=p==="hist"?"panel active":"panel";',
         '  document.getElementById("b1").className=p==="calc"?"active":"";',
         '  document.getElementById("b2").className=p==="doc"?"active":"";',
+        '  document.getElementById("b3").className=p==="hist"?"active":"";',
         '  if(p==="doc")calc();',
+        '  if(p==="hist")renderPaidBills();',
         '}',
 
         // Language switcher — updates ALL visible UI strings immediately
@@ -561,6 +579,8 @@ footer{text-align:center;padding:12px 0 4px;}
         '  document.getElementById("lSc").textContent=ui.sc;',
         '  document.getElementById("lPm").textContent=ui.pm;',
         '  document.getElementById("printBtn").textContent=ui.print;',
+        '  document.getElementById("paidBtn").textContent=ui.paid;',
+        '  document.getElementById("b3").textContent=ui.histTab;',
         '  up();calc();',
         '}',
 
@@ -855,26 +875,35 @@ footer{text-align:center;padding:12px 0 4px;}
         '}',
 
         // Named bill save / recall
-        'function saveBill(){',
+        'function collectOrder(){',
         '  const rows=[];',
         '  document.querySelectorAll(".item-row").forEach(row=>{',
         '    const sel=row.querySelector("select");',
         '    const qty=parseInt(row.querySelector(".q").value)||0;',
-        '    if(sel.value&&qty>0)rows.push({id:sel.value,qty});',
+        '    if(sel.value&&qty>0){',
+        '      const item=dataset.find(x=>x.id===sel.value);',
+        '      rows.push({id:sel.value,qty,',
+        '        nameEN:item?item.nameEN:"",nameTH:item?item.nameTH:"",',
+        '        price:parseFloat(sel.dataset.price)||0});',
+        '    }',
         '  });',
-        '  if(!rows.length){alert(l==="EN"?"No items to save.":"ยังไม่มีรายการ");return;}',
-        '  const label=document.getElementById("billLabel").value.trim()||',
-        '    ("Bill "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}));',
-        '  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");',
-        '  bills.unshift({label,rows,',
+        '  return{rows,',
         '    disc:document.getElementById("disc").value,',
         '    sc:document.getElementById("sc").value,',
         '    pm:document.getElementById("pm").value,',
         '    tab:document.getElementById("tab").value,',
         '    note:document.getElementById("note").value,',
-        '    savedAt:new Date().toISOString()});',
+        '    total:parseFloat(document.getElementById("totalBox").textContent)||0};',
+        '}',
+        'function saveBill(){',
+        '  const order=collectOrder();',
+        '  if(!order.rows.length){alert(l==="EN"?"No items to save.":"ยังไม่มีรายการ");return;}',
+        '  const label=document.getElementById("billLabel").value.trim()||',
+        '    ("Bill "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}));',
+        '  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");',
+        '  bills.unshift({label,...order,savedAt:new Date().toISOString()});',
         '  localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills.slice(0,30)));',
-        '  document.getElementById("billLabel").value="";',
+        '  clearOrder();',
         '  renderBills();',
         '}',
         'function recallBill(idx){',
@@ -918,19 +947,58 @@ footer{text-align:center;padding:12px 0 4px;}
         '      <button class="btn-sm btn-del" onclick="deleteBill(${i})">✕</button>',
         '    </div>`).join("");',
         '}',
-        'function newOrder(){',
-        '  if(!confirm(l==="EN"?"Clear current order and start new?":"ล้างบิลปัจจุบันและเริ่มใหม่?"))return;',
+        'function clearOrder(){',
         '  document.getElementById("lines").innerHTML="";',
         '  document.getElementById("disc").value="0";',
         '  document.getElementById("sc").value="0";',
         '  document.getElementById("billLabel").value="";',
-        '  add();calc();m("calc");',
+        '  add();calc();',
         '  localStorage.removeItem("pos_draft_"+SLUG);',
+        '}',
+        'function markAsPaid(){',
+        '  const order=collectOrder();',
+        '  if(!order.rows.length){alert(l==="EN"?"No items on this bill.":"ยังไม่มีรายการ");return;}',
+        '  const label=document.getElementById("billLabel").value.trim()||',
+        '    ("Bill "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}));',
+        '  const paid=getPaidBills();',
+        '  paid.unshift({label,...order,paidAt:new Date().toISOString()});',
+        '  localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(paid.slice(0,200)));',
+        '  clearOrder();',
+        '  m("hist");',
+        '}',
+        'function getPaidBills(){',
+        '  const cutoff=Date.now()-30*24*60*60*1000;',
+        '  const all=JSON.parse(localStorage.getItem("pos_paid_"+SLUG)||"[]");',
+        '  return all.filter(b=>new Date(b.paidAt).getTime()>cutoff);',
+        '}',
+        'function renderPaidBills(){',
+        '  const el=document.getElementById("paidBills");',
+        '  const bills=getPaidBills();',
+        '  if(!bills.length){el.innerHTML=`<p style="color:var(--muted);font-size:.85rem;margin:0">${l==="EN"?"No paid bills in the last 30 days.":"ไม่มีบิลที่ชำระในช่วง 30 วันที่ผ่านมา"}</p>`;return;}',
+        '  // Group by date',
+        '  const groups={};',
+        '  bills.forEach(b=>{',
+        '    const day=new Date(b.paidAt).toLocaleDateString("en-GB",{weekday:"short",day:"2-digit",month:"short",year:"numeric"});',
+        '    if(!groups[day])groups[day]=[];',
+        '    groups[day].push(b);',
+        '  });',
+        '  el.innerHTML=Object.entries(groups).map(([day,dayBills])=>`',
+        '    <div class="hist-day">${day}</div>',
+        '    ${dayBills.map(b=>`',
+        '      <div class="paid-card">',
+        '        <div class="paid-card-header">',
+        '          <span class="paid-card-label">${b.label}</span>',
+        '          <span class="paid-card-total">${CURRENCY}${Math.round(b.total||0)}.00</span>',
+        '        </div>',
+        '        <div class="paid-card-meta">${new Date(b.paidAt).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})} · ${b.pm||""} · ${b.tab||""}${b.note?" · "+b.note:""}</div>',
+        '        <div class="paid-items">${b.rows.map(r=>`${r.qty}× ${l==="EN"?r.nameEN:r.nameTH} (${CURRENCY}${Math.round(r.price)})`).join(", ")}</div>',
+        '      </div>`).join("")}',
+        '  `).join("");',
         '}',
 
         // Init — restore draft after live menu loads so item IDs resolve correctly
         'fb();',
-        'loadLiveMenu().then(ok=>{if(!restoreDraft())add();renderBills();});'
+        'loadLiveMenu().then(()=>{if(!restoreDraft())add();renderBills();renderPaidBills();});'
     ].join('\n');
 
     return html + '\n<script>\n' + script + '\n<\/script>\n</body>\n</html>';
