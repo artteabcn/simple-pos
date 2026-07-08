@@ -436,7 +436,13 @@ footer{text-align:center;padding:12px 0 4px;}
 .paid-card-total{font-weight:800;color:var(--primary);font-size:1rem;}
 .paid-card-meta{font-size:.75rem;color:var(--muted);margin-bottom:8px;}
 .paid-items{font-size:.8rem;color:var(--muted);line-height:1.6;}
-.hist-day{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:10px 0 4px;border-bottom:1px solid var(--bdr);margin-bottom:8px;}`;
+.hist-day{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:10px 0 4px;border-bottom:1px solid var(--bdr);margin-bottom:8px;display:flex;justify-content:space-between;}
+.hist-toolbar{display:flex;gap:8px;margin-bottom:10px;}
+.hist-toolbar select{flex:1;padding:10px 8px;border-radius:8px;border:1px solid var(--bdr);font-size:.85rem;font-weight:600;background:var(--bg);color:var(--text);min-height:44px;}
+.hist-summary{background:var(--pl);border-radius:10px;padding:10px 12px;margin-bottom:12px;justify-content:space-between;align-items:center;font-size:.85rem;font-weight:700;color:var(--primary);}
+.month-total{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:12px 0 2px;display:flex;justify-content:space-between;}
+.month-total:first-child{padding-top:0;}
+.paid-del{background:none;border:none;color:var(--danger);font-size:1rem;line-height:1;cursor:pointer;padding:2px 4px;flex-shrink:0;}`;
 
     /* ── HTML shell ────────────────────────────────────────────────── */
     const logoTag = logo ? `<img src="${logo}" class="logo-img" alt="logo">` : '';
@@ -496,6 +502,15 @@ footer{text-align:center;padding:12px 0 4px;}
 </div>
 <div id="pHist" class="panel">
   <div class="card" style="padding:10px 14px">
+    <div class="hist-toolbar">
+      <select id="histFilter" onchange="renderPaidBills()">
+        <option value="all" id="fOptAll">All (30 days)</option>
+        <option value="today" id="fOptToday">Today</option>
+        <option value="week" id="fOptWeek">This Week</option>
+        <option value="month" id="fOptMonth">This Month</option>
+      </select>
+    </div>
+    <div id="histSummary" class="hist-summary" style="display:none"></div>
     <div id="paidBills"><p style="color:var(--muted);font-size:.85rem;margin:0">No paid bills yet.</p></div>
   </div>
 </div>
@@ -540,8 +555,10 @@ footer{text-align:center;padding:12px 0 4px;}
 
         // UI text dictionaries (updates visible labels when language switches)
         'const uiDict={',
-        '  EN:{orderTab:"🧾 Order",invoiceTab:"🖨️ Invoice",histTab:"📋 History",addItem:"➕ Add Item",disc:"Discount",sc:"Service",pm:"Payment",print:"🖨️ Print Receipt",paid:"✅ Mark as Paid"},',
-        '  TH:{orderTab:"🧾 คำสั่งซื้อ",invoiceTab:"🖨️ ใบแจ้งหนี้",histTab:"📋 ประวัติ",addItem:"➕ เพิ่มรายการ",disc:"ส่วนลด",sc:"ค่าบริการ",pm:"ชำระเงิน",print:"🖨️ พิมพ์ใบเสร็จ",paid:"✅ ชำระแล้ว"}',
+        '  EN:{orderTab:"🧾 Order",invoiceTab:"🖨️ Invoice",histTab:"📋 History",addItem:"➕ Add Item",disc:"Discount",sc:"Service",pm:"Payment",print:"🖨️ Print Receipt",paid:"✅ Mark as Paid",',
+        '      histAll:"All (30 days)",histToday:"Today",histWeek:"This Week",histMonth:"This Month",histTotal:"Total",histBills:"bills",histNone:"No paid bills in this period.",histDelConfirm:"Delete this bill from history?",histDel:"Delete"},',
+        '  TH:{orderTab:"🧾 คำสั่งซื้อ",invoiceTab:"🖨️ ใบแจ้งหนี้",histTab:"📋 ประวัติ",addItem:"➕ เพิ่มรายการ",disc:"ส่วนลด",sc:"ค่าบริการ",pm:"ชำระเงิน",print:"🖨️ พิมพ์ใบเสร็จ",paid:"✅ ชำระแล้ว",',
+        '      histAll:"ทั้งหมด (30 วัน)",histToday:"วันนี้",histWeek:"สัปดาห์นี้",histMonth:"เดือนนี้",histTotal:"ยอดรวม",histBills:"บิล",histNone:"ไม่มีบิลที่ชำระในช่วงนี้",histDelConfirm:"ลบบิลนี้ออกจากประวัติ?",histDel:"ลบ"}',
         '};',
 
         // Fetch live menu from server on load (updates embedded snapshot silently)
@@ -581,7 +598,12 @@ footer{text-align:center;padding:12px 0 4px;}
         '  document.getElementById("printBtn").textContent=ui.print;',
         '  document.getElementById("paidBtn").textContent=ui.paid;',
         '  document.getElementById("b3").textContent=ui.histTab;',
+        '  document.getElementById("fOptAll").textContent=ui.histAll;',
+        '  document.getElementById("fOptToday").textContent=ui.histToday;',
+        '  document.getElementById("fOptWeek").textContent=ui.histWeek;',
+        '  document.getElementById("fOptMonth").textContent=ui.histMonth;',
         '  up();calc();',
+        '  if(document.getElementById("pHist").className.indexOf("active")>-1)renderPaidBills();',
         '}',
 
         // Category filter chips
@@ -960,40 +982,81 @@ footer{text-align:center;padding:12px 0 4px;}
         '  if(!order.rows.length){alert(l==="EN"?"No items on this bill.":"ยังไม่มีรายการ");return;}',
         '  const label=document.getElementById("billLabel").value.trim()||',
         '    ("Bill "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}));',
-        '  const paid=getPaidBills();',
-        '  paid.unshift({label,...order,paidAt:new Date().toISOString()});',
-        '  localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(paid.slice(0,200)));',
+        '  const paid=getPaidBills(true);',
+        '  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,8);',
+        '  paid.unshift({id,label,...order,paidAt:new Date().toISOString()});',
+        '  localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(paid.slice(0,500)));',
         '  clearOrder();',
         '  m("hist");',
         '}',
-        'function getPaidBills(){',
-        '  const cutoff=Date.now()-30*24*60*60*1000;',
+        'function getPaidBills(unfiltered){',
         '  const all=JSON.parse(localStorage.getItem("pos_paid_"+SLUG)||"[]");',
+        '  if(unfiltered)return all;',
+        '  const cutoff=Date.now()-30*24*60*60*1000;',
         '  return all.filter(b=>new Date(b.paidAt).getTime()>cutoff);',
+        '}',
+        'function deletePaidBill(id){',
+        '  if(!confirm(uiDict[l].histDelConfirm))return;',
+        '  const all=getPaidBills(true).filter(b=>b.id!==id);',
+        '  localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(all));',
+        '  renderPaidBills();',
+        '}',
+        'function filterPaidBills(bills,mode){',
+        '  const now=new Date();',
+        '  if(mode==="today")return bills.filter(b=>new Date(b.paidAt).toDateString()===now.toDateString());',
+        '  if(mode==="week"){',
+        '    const offset=(now.getDay()+6)%7;',
+        '    const start=new Date(now);start.setHours(0,0,0,0);start.setDate(now.getDate()-offset);',
+        '    return bills.filter(b=>new Date(b.paidAt).getTime()>=start.getTime());',
+        '  }',
+        '  if(mode==="month")return bills.filter(b=>{const d=new Date(b.paidAt);return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();});',
+        '  return bills;',
         '}',
         'function renderPaidBills(){',
         '  const el=document.getElementById("paidBills");',
-        '  const bills=getPaidBills();',
-        '  if(!bills.length){el.innerHTML=`<p style="color:var(--muted);font-size:.85rem;margin:0">${l==="EN"?"No paid bills in the last 30 days.":"ไม่มีบิลที่ชำระในช่วง 30 วันที่ผ่านมา"}</p>`;return;}',
-        '  // Group by date',
-        '  const groups={};',
+        '  const sumEl=document.getElementById("histSummary");',
+        '  const selEl=document.getElementById("histFilter");',
+        '  const mode=selEl?selEl.value:"all";',
+        '  const ui=uiDict[l];',
+        '  const bills=filterPaidBills(getPaidBills(),mode);',
+        '  if(!bills.length){',
+        '    sumEl.style.display="none";',
+        '    el.innerHTML=`<p style="color:var(--muted);font-size:.85rem;margin:0">${ui.histNone}</p>`;',
+        '    return;',
+        '  }',
+        '  const grandTotal=bills.reduce((s,b)=>s+(b.total||0),0);',
+        '  sumEl.style.display="flex";',
+        '  sumEl.innerHTML=`<span>${ui.histTotal} (${bills.length} ${ui.histBills})</span><span>${CURRENCY}${Math.round(grandTotal)}.00</span>`;',
+        '  // Group by month, then by day within each month, tracking subtotals at both levels',
+        '  const monthGroups={};',
         '  bills.forEach(b=>{',
-        '    const day=new Date(b.paidAt).toLocaleDateString("en-GB",{weekday:"short",day:"2-digit",month:"short",year:"numeric"});',
-        '    if(!groups[day])groups[day]=[];',
-        '    groups[day].push(b);',
+        '    const d=new Date(b.paidAt);',
+        '    const mKey=d.toLocaleDateString("en-GB",{month:"long",year:"numeric"});',
+        '    const dKey=d.toLocaleDateString("en-GB",{weekday:"short",day:"2-digit",month:"short",year:"numeric"});',
+        '    if(!monthGroups[mKey])monthGroups[mKey]={total:0,days:{}};',
+        '    monthGroups[mKey].total+=(b.total||0);',
+        '    if(!monthGroups[mKey].days[dKey])monthGroups[mKey].days[dKey]=[];',
+        '    monthGroups[mKey].days[dKey].push(b);',
         '  });',
-        '  el.innerHTML=Object.entries(groups).map(([day,dayBills])=>`',
-        '    <div class="hist-day">${day}</div>',
-        '    ${dayBills.map(b=>`',
-        '      <div class="paid-card">',
-        '        <div class="paid-card-header">',
-        '          <span class="paid-card-label">${b.label}</span>',
-        '          <span class="paid-card-total">${CURRENCY}${Math.round(b.total||0)}.00</span>',
-        '        </div>',
-        '        <div class="paid-card-meta">${new Date(b.paidAt).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})} · ${b.pm||""} · ${b.tab||""}${b.note?" · "+b.note:""}</div>',
-        '        <div class="paid-items">${b.rows.map(r=>`${r.qty}× ${l==="EN"?r.nameEN:r.nameTH} (${CURRENCY}${Math.round(r.price)})`).join(", ")}</div>',
-        '      </div>`).join("")}',
-        '  `).join("");',
+        '  el.innerHTML=Object.entries(monthGroups).map(([month,mg])=>{',
+        '    const dayHtml=Object.entries(mg.days).map(([day,dayBills])=>{',
+        '      const dayTotal=dayBills.reduce((s,b)=>s+(b.total||0),0);',
+        '      const cards=dayBills.map(b=>`',
+        '        <div class="paid-card">',
+        '          <div class="paid-card-header">',
+        '            <span class="paid-card-label">${b.label}</span>',
+        '            <span style="display:flex;align-items:center;gap:4px">',
+        '              <span class="paid-card-total">${CURRENCY}${Math.round(b.total||0)}.00</span>',
+        '              <button class="paid-del" onclick="deletePaidBill(\'${b.id}\')" title="${ui.histDel}">✕</button>',
+        '            </span>',
+        '          </div>',
+        '          <div class="paid-card-meta">${new Date(b.paidAt).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})} · ${b.pm||""} · ${b.tab||""}${b.note?" · "+b.note:""}</div>',
+        '          <div class="paid-items">${b.rows.map(r=>`${r.qty}× ${l==="EN"?r.nameEN:r.nameTH} (${CURRENCY}${Math.round(r.price)})`).join(", ")}</div>',
+        '        </div>`).join("");',
+        '      return `<div class="hist-day"><span>${day}</span><span>${CURRENCY}${Math.round(dayTotal)}.00</span></div>${cards}`;',
+        '    }).join("");',
+        '    return `<div class="month-total"><span>${month}</span><span>${CURRENCY}${Math.round(mg.total)}.00</span></div>${dayHtml}`;',
+        '  }).join("");',
         '}',
 
         // Init — restore draft after live menu loads so item IDs resolve correctly
