@@ -195,7 +195,8 @@ function importCsvMenu(event) {
             return alert("CSV must contain at least 'Item' (or Name) and 'Price' columns.");
         }
 
-        const items = [];
+        const categoryMap = {};
+
         for (let i = 1; i < lines.length; i++) {
             if (!lines[i].trim()) continue;
             
@@ -208,22 +209,32 @@ function importCsvMenu(event) {
             const price = parseFloat(cleanCols[idxPrice]) || 0;
             const desc = idxDesc !== -1 && cleanCols[idxDesc] ? cleanCols[idxDesc] : "";
 
-            items.push({
+            if (!categoryMap[cat]) {
+                categoryMap[cat] = {
+                    id: "cat_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4),
+                    categoryName: cat,
+                    visible: true,
+                    items: []
+                };
+            }
+
+            const newItem = {
                 id: "it_" + String(i).padStart(2, '0'),
-                category: cat,
                 nameEN: name,
                 nameTH: name,
-                price: price,
-                ...(desc ? { description: desc } : {})
-            });
+                price: price
+            };
+            if (desc) newItem.description = desc;
+
+            categoryMap[cat].items.push(newItem);
         }
 
-        // Auto-fill into the studio menu textarea/state
-        const menuArea = document.getElementById('menuJsonInput');
-        if (menuArea) {
-            menuArea.value = JSON.stringify(items, null, 2);
-        }
-        alert(`Successfully imported ${items.length} menu items from CSV!`);
+        menuStructure = Object.values(categoryMap);
+        renderStudio();
+        saveToLocalStorage();
+
+        const totalItems = menuStructure.reduce((sum, cat) => sum + cat.items.length, 0);
+        alert(`Successfully imported ${totalItems} menu items across ${menuStructure.length} categories!`);
     };
 
     reader.readAsText(file);
