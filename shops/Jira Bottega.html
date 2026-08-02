@@ -237,12 +237,13 @@ function fb(){
     bar.appendChild(b);
   });
 }
-function up(){
+function up(forceAll){
+  const showAll=forceAll||f==="ALL";
   document.querySelectorAll(".item-row select").forEach(s=>{
     const cur=s.value;
     s.innerHTML=`<option value="">-- ${l==="EN"?"Select item":"เลือกรายการ"} --</option>`;
     dataset.forEach(d=>{
-      if(f==="ALL"||d.category===f||d.id===cur){
+      if(showAll||d.category===f||d.id===cur){
         const o=document.createElement("option");o.value=d.id;
         o.text=(l==="EN"?d.nameEN:d.nameTH)+` (${CURRENCY}${d.price})`;
         s.appendChild(o);
@@ -250,6 +251,19 @@ function up(){
     });
     s.value=cur;
   });
+}
+function applyRow(row,r){
+  const sel=row.querySelector("select");
+  let item=dataset.find(x=>x.id===r.id);
+  if(!item){
+    item={id:r.id,nameEN:r.nameEN||"Unknown",nameTH:r.nameTH||"ไม่ทราบ",price:r.price||0};
+    const o=document.createElement("option");o.value=item.id;
+    o.text=(l==="EN"?item.nameEN:item.nameTH)+` (${CURRENCY}${item.price})`;
+    sel.appendChild(o);
+  }
+  sel.value=r.id;
+  sel.dataset.price=item.price;
+  row.querySelector(".q").value=r.qty;
 }
 function add(){
   const id="r_"+Math.random().toString(36).substr(2,5);
@@ -265,8 +279,27 @@ function add(){
   const del=document.createElement("button");del.type="button";del.className="del-btn";del.textContent="✕";
   del.onclick=()=>{row.remove();calc();};
   row.append(sel,step,del);
-  document.getElementById("lines").appendChild(row);up();
+  document.getElementById("lines").appendChild(row);
+  return row;
 }
+function addNoUpd(){
+  const id="r_"+Math.random().toString(36).substr(2,5);
+  const row=document.createElement("div");row.className="item-row";row.id=id;
+  const sel=document.createElement("select");sel.onchange=()=>hc(id);
+  const step=document.createElement("div");step.className="qty-stepper";
+  const bM=document.createElement("button");bM.type="button";bM.textContent="−";
+  bM.onclick=()=>{const q=row.querySelector(".q");q.value=Math.max(1,(parseInt(q.value)||1)-1);calc();};
+  const qIn=document.createElement("input");qIn.type="number";qIn.className=".q";qIn.value="1";qIn.min="1";qIn.oninput=calc;
+  const bP=document.createElement("button");bP.type="button";bP.textContent="+";
+  bP.onclick=()=>{const q=row.querySelector(".q");q.value=(parseInt(q.value)||0)+1;calc();};
+  step.append(bM,qIn,bP);
+  const del=document.createElement("button");del.type="button";del.className="del-btn";del.textContent="✕";
+  del.onclick=()=>{row.remove();calc();};
+  row.append(sel,step,del);
+  document.getElementById("lines").appendChild(row);
+  return row;
+}
+function add(){ addNoUpd(); up(); }
 function hc(id){
   const sel=document.getElementById(id).querySelector("select");
   const item=dataset.find(d=>d.id===sel.value);
@@ -467,16 +500,13 @@ function restoreDraft(){
     document.getElementById("tab").value=d.tab||"Table 01";
     document.getElementById("note").value=d.note||"";
     document.getElementById("lines").innerHTML="";
-    d.rows.forEach(r=>{
-      add();
-      const rows=[...document.querySelectorAll(".item-row")];
-      const row=rows[rows.length-1];
-      const sel=row.querySelector("select");
-      sel.value=r.id;
-      const item=dataset.find(x=>x.id===r.id);
-      sel.dataset.price=item?item.price:0;
-      row.querySelector(".q").value=r.qty;
-    });
+    const prevF=f;f="ALL";
+    const added=[];
+    d.rows.forEach(r=>{ const row=addNoUpd(); added.push({row,r}); });
+    up(true);
+    added.forEach(({row,r})=>applyRow(row,r));
+    f=prevF;
+    if(prevF!=="ALL")fb();
     calc();return true;
   }catch(e){return false;}
 }
@@ -520,16 +550,13 @@ function recallBill(idx){
   document.getElementById("tab").value=b.tab||"";
   document.getElementById("note").value=b.note||"";
   document.getElementById("lines").innerHTML="";
-  b.rows.forEach(r=>{
-    add();
-    const rows=[...document.querySelectorAll(".item-row")];
-    const row=rows[rows.length-1];
-    const sel=row.querySelector("select");
-    sel.value=r.id;
-    const item=dataset.find(x=>x.id===r.id);
-    sel.dataset.price=item?item.price:0;
-    row.querySelector(".q").value=r.qty;
-  });
+  const prevF=f;f="ALL";
+  const added=[];
+  b.rows.forEach(r=>{ const row=addNoUpd(); added.push({row,r}); });
+  up(true);
+  added.forEach(({row,r})=>applyRow(row,r));
+  f=prevF;
+  if(prevF!=="ALL")fb();
   calc();m("calc");
 }
 function deleteBill(idx){
