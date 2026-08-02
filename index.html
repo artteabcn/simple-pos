@@ -488,18 +488,33 @@ footer{text-align:center;padding:12px 0 4px;}
 .save-status.ok{background:#d1fae5;color:#065f46;display:block;}
 .save-status.err{background:#fee2e2;color:#991b1b;display:block;}
 /* Bill manager */
-.bill-save-row{display:flex;gap:8px;align-items:center;margin-bottom:12px;}
-.bill-save-row input{flex:1;padding:10px 12px;border-radius:8px;border:1px solid var(--bdr);font-size:.9rem;background:var(--bg);color:var(--text);min-height:44px;}
+.bill-save-row{display:flex;gap:8px;align-items:stretch;margin-bottom:12px;}
+.bill-save-row input{flex:1 1 auto;min-width:0;padding:10px 12px;border-radius:8px;border:1px solid var(--bdr);font-size:.9rem;background:var(--bg);color:var(--text);min-height:44px;}
+.bill-save-row .btn-sm{flex:0 0 auto;}
 .btn-sm{padding:0 14px;min-height:44px;border:none;border-radius:8px;font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap;}
 .btn-save{background:var(--primary);color:#fff;}
 .btn-new{background:var(--bdr);color:var(--text);}
 .bill-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--bdr);}
 .bill-row:last-child{border-bottom:none;}
-.bill-info{flex:1;min-width:0;}
+.bill-info{flex:1 1 auto;min-width:0;overflow:hidden;}
 .bill-info strong{display:block;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .bill-meta{font-size:.75rem;color:var(--muted);}
+.bill-row .btn-sm{flex:0 0 auto;}
 .btn-recall{background:var(--pl);color:var(--primary);}
 .btn-del{background:#fee2e2;color:#991b1b;padding:0 10px;}
+/* Sync badge shown when bills are being pushed to / loaded from the server */
+.sync-badge{display:none;font-size:.72rem;color:var(--muted);margin:-6px 0 8px;font-weight:600;}
+.sync-badge.busy{display:block;}
+.sync-badge.err{display:block;color:var(--danger);}
+/* Invoice layout on mobile — let button row wrap and shrink buttons to fit */
+@media(max-width:480px){
+  .bill-save-row{flex-wrap:wrap;}
+  .bill-save-row input{flex:1 1 100%;min-width:0;}
+  .bill-save-row .btn-sm{flex:1 1 calc(50% - 8px);min-width:0;}
+  .bill-row{flex-wrap:nowrap;}
+  .bill-row .btn-sm{padding:0 10px;font-size:.8rem;}
+  .bill-info strong{font-size:.9rem;}
+}
 /* Paid history */
 .paid-card{background:var(--bg);border:1px solid var(--bdr);border-radius:10px;padding:12px;margin-bottom:10px;}
 .paid-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
@@ -565,6 +580,7 @@ footer{text-align:center;padding:12px 0 4px;}
       <button class="btn-sm btn-save" onclick="saveBill()">💾 Save</button>
       <button class="btn-sm btn-new" onclick="clearOrder()">🗑 Clear</button>
     </div>
+    <div id="syncBadge" class="sync-badge"></div>
     <div id="savedBills"></div>
   </div>
   <button class="btn btn-primary" id="printBtn" onclick="window.frames[0].focus();window.frames[0].print();">🖨️ Print Receipt</button>
@@ -966,6 +982,22 @@ footer{text-align:center;padding:12px 0 4px;}
         '}',
 
         // Draft persistence — save/restore order across page reloads
+        'async function syncBillsToServer(bills){',
+        '  const badge=document.getElementById("syncBadge");badge.className="sync-badge busy";badge.textContent=l==="EN"?"Syncing bills…":"กำลังซิงก์บิล…";',
+        '  try{',
+        '    const r=await fetch("/api/deploy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,path:`data/${SLUG}-bills.json`,content:JSON.stringify(bills,null,2),message:`pos(bills): sync ${SLUG}`})});',
+        '    if(r.ok){ badge.className="sync-badge"; badge.textContent=l==="EN"?"Synced":"ซิงก์แล้ว"; setTimeout(()=>badge.className="sync-badge",1500); }',
+        '    else{ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync failed":"ซิงก์ล้มเหลว"; }',
+        '  }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync error":"เกิดข้อผิดพลาด"; }',
+        '}',
+        'async function loadBillsFromServer(){',
+        '  const badge=document.getElementById("syncBadge");badge.className="sync-badge busy";badge.textContent=l==="EN"?"Loading saved bills…":"กำลังโหลดบิลที่บันทึกไว้…";',
+        '  try{',
+        '    const r=await fetch(`/data/${SLUG}-bills.json`);',
+        '    if(r.ok){ const bills=await r.json(); localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills)); renderBills(); badge.className="sync-badge"; badge.textContent=l==="EN"?"Loaded":"โหลดแล้ว"; setTimeout(()=>badge.className="sync-badge",1500); return true; }',
+        '    badge.className="sync-badge"; badge.textContent=""; return false;',
+        '  }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Load error":"โหลดไม่ได้"; return false; }',
+        '}',
         'function saveDraft(){',
         '  const rows=[];',
         '  document.querySelectorAll(".item-row").forEach(row=>{',
@@ -1036,6 +1068,8 @@ footer{text-align:center;padding:12px 0 4px;}
         '  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");',
         '  bills.unshift({label,...order,savedAt:new Date().toISOString()});',
         '  localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills.slice(0,30)));',
+        '  // Optimistically persist to server-backed store so bills are available across devices',
+        '  try{ syncBillsToServer(bills.slice(0,30)); }catch(e){}',
         '  clearOrder();',
         '  renderBills();',
         '}',
@@ -1063,6 +1097,7 @@ footer{text-align:center;padding:12px 0 4px;}
         '  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");',
         '  bills.splice(idx,1);',
         '  localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills));',
+        '  try{ syncBillsToServer(bills); }catch(e){}',
         '  renderBills();',
         '}',
         'function renderBills(){',
@@ -1171,7 +1206,7 @@ footer{text-align:center;padding:12px 0 4px;}
 
         // Init — restore draft after live menu loads so item IDs resolve correctly
         'fb();',
-        'loadLiveMenu().then(()=>{if(!restoreDraft())add();renderBills();renderPaidBills();});'
+        'loadLiveMenu().then(()=>{ loadBillsFromServer().then(()=>{ if(!restoreDraft())add(); renderBills(); renderPaidBills(); }); });'
     ].join('\n');
 
     return html + '\n<script>\n' + script + '\n<\/script>\n</body>\n</html>';

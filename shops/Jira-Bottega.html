@@ -76,6 +76,10 @@ footer{text-align:center;padding:12px 0 4px;}
 .bill-meta{font-size:.75rem;color:var(--muted);}
 .btn-recall{background:var(--pl);color:var(--primary);}
 .btn-del{background:#fee2e2;color:#991b1b;padding:0 10px;}
+/* Sync badge shown when bills are being pushed to / loaded from the server */
+.sync-badge{display:none;font-size:.72rem;color:var(--muted);margin:-6px 0 8px;font-weight:600;}
+.sync-badge.busy{display:block;}
+.sync-badge.err{display:block;color:var(--danger);}
 /* Paid history */
 .paid-card{background:var(--bg);border:1px solid var(--bdr);border-radius:10px;padding:12px;margin-bottom:10px;}
 .paid-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
@@ -131,6 +135,7 @@ footer{text-align:center;padding:12px 0 4px;}
       <button class="btn-sm btn-save" onclick="saveBill()">💾 Save</button>
       <button class="btn-sm btn-new" onclick="clearOrder()">🗑 Clear</button>
     </div>
+    <div id="syncBadge" class="sync-badge"></div>
     <div id="savedBills"></div>
   </div>
   <button class="btn btn-primary" id="printBtn" onclick="window.frames[0].focus();window.frames[0].print();">🖨️ Print Receipt</button>
@@ -1147,6 +1152,22 @@ function saveDraft(){
     note:document.getElementById("note").value
   }));
 }
+async function syncBillsToServer(bills){
+  const badge=document.getElementById("syncBadge");badge.className="sync-badge busy";badge.textContent=l==="EN"?"Syncing bills…":"กำลังซิงก์บิล…";
+  try{
+    const r=await fetch("/api/deploy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,path:`data/${SLUG}-bills.json`,content:JSON.stringify(bills,null,2),message:`pos(bills): sync ${SLUG}`})});
+    if(r.ok){ badge.className="sync-badge"; badge.textContent=l==="EN"?"Synced":"ซิงก์แล้ว"; setTimeout(()=>badge.className="sync-badge",1500); }
+    else{ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync failed":"ซิงก์ล้มเหลว"; }
+  }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync error":"เกิดข้อผิดพลาด"; }
+}
+async function loadBillsFromServer(){
+  const badge=document.getElementById("syncBadge");badge.className="sync-badge busy";badge.textContent=l==="EN"?"Loading saved bills…":"กำลังโหลดบิลที่บันทึกไว้…";
+  try{
+    const r=await fetch(`/data/${SLUG}-bills.json`);
+    if(r.ok){ const bills=await r.json(); localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills)); renderBills(); badge.className="sync-badge"; badge.textContent=l==="EN"?"Loaded":"โหลดแล้ว"; setTimeout(()=>badge.className="sync-badge",1500); return true; }
+    badge.className="sync-badge"; badge.textContent=""; return false;
+  }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Load error":"โหลดไม่ได้"; return false; }
+}
 function restoreDraft(){
   try{
     const raw=localStorage.getItem("pos_draft_"+SLUG);
@@ -1197,6 +1218,8 @@ function saveBill(){
   const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");
   bills.unshift({label,...order,savedAt:new Date().toISOString()});
   localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills.slice(0,30)));
+  // Optimistically persist to server-backed store
+  try{ syncBillsToServer(bills.slice(0,30)); }catch(e){}
   clearOrder();
   renderBills();
 }
@@ -1222,6 +1245,7 @@ function deleteBill(idx){
   const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");
   bills.splice(idx,1);
   localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills));
+  try{ syncBillsToServer(bills); }catch(e){}
   renderBills();
 }
 function renderBills(){
@@ -1328,7 +1352,7 @@ function renderPaidBills(){
   }).join("");
 }
 fb();
-loadLiveMenu().then(()=>{if(!restoreDraft())add();renderBills();renderPaidBills();});
+loadLiveMenu().then(()=>{ loadBillsFromServer().then(()=>{ if(!restoreDraft())add(); renderBills(); renderPaidBills(); }); });
 </script>
 </body>
 </html>
