@@ -5,12 +5,12 @@
   "bizTel": "Tel:  833972 285",
   "bizAddress": "Moo 4, Khanom Beach, Nakhon Si Thammarat, Thailand",
   "bizLogo": "",
-  "bizPromptpay": "",
+  "bizPromptpay": "090249036",
   "bizPin": "123456",
   "bizVatMode": "inclusive",
   "menuStructure": [
     {
-      "id": "cat_1785577769669_aoo8",
+      "id": "cat_1785674645159_0uyr",
       "categoryName": "Starter",
       "visible": true,
       "items": [
@@ -18,251 +18,218 @@
           "id": "it_01",
           "nameEN": "Classic",
           "nameTH": "Classic",
-          "price": 220,
-          "description": "garlic, oregano, basil, fresh tomato"
+          "price": 220
         },
         {
           "id": "it_02",
           "nameEN": "Avocado",
-          "nameTH": "อะโวคาโด",
-          "price": 0,
-          "description": "290"
+          "nameTH": "Avocado",
+          "price": 290
         },
         {
           "id": "it_03",
           "nameEN": "Bufala",
-          "nameTH": "CRRRRR",
-          "price": 280,
-          "description": "mozzarella bufala cheese, fresh tomato, pesto"
+          "nameTH": "Bufala",
+          "price": 280
         },
         {
           "id": "it_04",
           "nameEN": "Tartar",
-          "nameTH": "คราบหินปูน",
-          "price": 380,
-          "description": "salmon sashimi quality, garlic, onion, parsley"
+          "nameTH": "Tartar",
+          "price": 380
         },
         {
           "id": "it_05",
           "nameEN": "Tartar",
           "nameTH": "Tartar",
-          "price": 370,
-          "description": "angus beef, garlic, onion, parsley"
+          "price": 370
         },
         {
           "id": "it_06",
           "nameEN": "Ham",
           "nameTH": "Ham",
-          "price": 390,
-          "description": "parma ham, rocket, parmesan cheese"
+          "price": 390
         },
         {
           "id": "it_07",
           "nameEN": "Antipasti",
           "nameTH": "Antipasti",
-          "price": 550,
-          "description": "parma ham, salami & spicy salami, mixed cheese, olive, pickled cucumbers, homemade bread"
+          "price": 550
         }
       ]
     },
     {
-      "id": "cat_1785577769670_ua67",
+      "id": "cat_1785674645160_qsbf",
       "categoryName": "Pasta",
       "visible": true,
       "items": [
         {
           "id": "it_08",
           "nameEN": "Lasagne",
-          "nameTH": "ลาซานญ่า",
-          "price": 380,
-          "description": "beef bolognese sauce, cheese"
+          "nameTH": "Lasagne",
+          "price": 380
         },
         {
           "id": "it_09",
           "nameEN": "Spinaci",
           "nameTH": "Spinaci",
-          "price": 300,
-          "description": "ricotta cheese, spinach"
+          "price": 300
         },
         {
           "id": "it_10",
           "nameEN": "Lobster",
-          "nameTH": "กุ้งมังกร",
-          "price": 390,
-          "description": "filling"
+          "nameTH": "Lobster",
+          "price": 390
         },
         {
           "id": "it_11",
           "nameEN": "Crab",
           "nameTH": "Crab",
-          "price": 380,
-          "description": "filling"
+          "price": 380
         },
         {
           "id": "it_12",
           "nameEN": "Truffel",
           "nameTH": "Truffel",
-          "price": 390,
-          "description": "filling"
+          "price": 390
         },
         {
           "id": "it_13",
           "nameEN": "Pesto",
           "nameTH": "Pesto",
-          "price": 290,
-          "description": "pesto"
+          "price": 290
         },
         {
           "id": "it_14",
           "nameEN": "Basilico",
           "nameTH": "Basilico",
-          "price": 280,
-          "description": "homemade tomato sauce, basil"
+          "price": 280
         },
         {
           "id": "it_15",
           "nameEN": "Meat",
           "nameTH": "Meat",
-          "price": 390,
-          "description": "pork meat filling, parmesan sauce"
+          "price": 390
         },
         {
           "id": "it_16",
           "nameEN": "Seafood",
           "nameTH": "Seafood",
-          "price": 450,
-          "description": "mixed seafood, white wine, tomato sauce, parsley"
+          "price": 450
         },
         {
           "id": "it_17",
           "nameEN": "Vongole",
           "nameTH": "Vongole",
-          "price": 390,
-          "description": "fresh vongole, white wine, cherry tomato, parsley"
+          "price": 390
         },
         {
           "id": "it_18",
           "nameEN": "Carbonara",
           "nameTH": "Carbonara",
-          "price": 340,
-          "description": "smoked bacon, egg, parmesan cheese"
+          "price": 340
         },
         {
           "id": "it_19",
           "nameEN": "Salmon",
-          "nameTH": "แซลมอน",
-          "price": 440,
-          "description": "fresh salmon, whipping cream, parsley"
+          "nameTH": "Salmon",
+          "price": 440
         },
         {
           "id": "it_20",
           "nameEN": "Arrabbiata",
           "nameTH": "Arrabbiata",
-          "price": 290,
-          "description": "tomato sauce, chili, garlic, parsley"
+          "price": 290
         },
         {
           "id": "it_21",
           "nameEN": "Amatriciana",
           "nameTH": "Amatriciana",
-          "price": 370,
-          "description": "smoked bacon, tomato sauce garlic, parsley"
+          "price": 370
         },
         {
           "id": "it_22",
           "nameEN": "Spaghetti Aglio, Olio e Peperoncino",
           "nameTH": "Spaghetti Aglio, Olio e Peperoncino",
-          "price": 280,
-          "description": "garlic, olive oil, chili, parsley"
+          "price": 280
         }
       ]
     },
     {
-      "id": "cat_1785577769670_hoca",
+      "id": "cat_1785674645160_orqz",
       "categoryName": "Dish",
       "visible": true,
       "items": [
         {
           "id": "it_23",
           "nameEN": "Potatoes",
-          "nameTH": "มันฝรั่ง",
-          "price": 0,
-          "description": "150"
+          "nameTH": "Potatoes",
+          "price": 150
         },
         {
           "id": "it_24",
           "nameEN": "Fries",
           "nameTH": "Fries",
-          "price": 0,
-          "description": "120"
+          "price": 120
         },
         {
           "id": "it_25",
           "nameEN": "Vegetables",
-          "nameTH": "ผัก",
-          "price": 0,
-          "description": "180"
+          "nameTH": "Vegetables",
+          "price": 180
         },
         {
           "id": "it_26",
           "nameEN": "Salad",
-          "nameTH": "สลัด",
-          "price": 0,
-          "description": "130"
+          "nameTH": "Salad",
+          "price": 130
         },
         {
           "id": "it_27",
           "nameEN": "Truffle",
           "nameTH": "Truffle",
-          "price": 0,
-          "description": "450"
+          "price": 450
         },
         {
           "id": "it_28",
           "nameEN": "Seafood",
-          "nameTH": "อาหารทะเล",
-          "price": 0,
-          "description": "450"
+          "nameTH": "Seafood",
+          "price": 450
         },
         {
           "id": "it_29",
           "nameEN": "Steak",
           "nameTH": "Steak",
-          "price": 690,
-          "description": "rosemary potatoes, grilled vegetables, black truffle sauce"
+          "price": 690
         },
         {
           "id": "it_30",
           "nameEN": "Style",
           "nameTH": "Style",
-          "price": 490,
-          "description": "rosemary potatoes, mixed salad"
+          "price": 490
         },
         {
           "id": "it_31",
           "nameEN": "Pork",
           "nameTH": "Pork",
-          "price": 450,
-          "description": "green pepper sauce, rosemary potatoes"
+          "price": 450
         },
         {
           "id": "it_32",
           "nameEN": "Cozze",
           "nameTH": "Cozze",
-          "price": 380,
-          "description": "fresh mussels, white wine, parsley"
+          "price": 380
         },
         {
           "id": "it_33",
           "nameEN": "Misti",
           "nameTH": "Misti",
-          "price": 390,
-          "description": "fried prawns, squids, shells in Italian style"
+          "price": 390
         }
       ]
     },
     {
-      "id": "cat_1785577769670_91zj",
+      "id": "cat_1785674645160_oigh",
       "categoryName": "Salad",
       "visible": true,
       "items": [
@@ -270,27 +237,24 @@
           "id": "it_34",
           "nameEN": "Salad",
           "nameTH": "Salad",
-          "price": 380,
-          "description": "mozzarella bufala, parma ham, mixed salad, cherry tomato, basil"
+          "price": 380
         },
         {
           "id": "it_35",
           "nameEN": "Salad",
           "nameTH": "Salad",
-          "price": 370,
-          "description": "chicken, crispy bacon, croutons, parmesan"
+          "price": 370
         },
         {
           "id": "it_36",
           "nameEN": "Salad",
           "nameTH": "Salad",
-          "price": 290,
-          "description": "feta, mixed salad, black olive"
+          "price": 290
         }
       ]
     },
     {
-      "id": "cat_1785577769670_qiq8",
+      "id": "cat_1785674645160_xzgo",
       "categoryName": "Pizza",
       "visible": true,
       "items": [
@@ -298,97 +262,84 @@
           "id": "it_37",
           "nameEN": "Salami",
           "nameTH": "Salami",
-          "price": 390,
-          "description": "spicy salami, mozzarella, tomato sauce"
+          "price": 390
         },
         {
           "id": "it_38",
           "nameEN": "Seafood",
           "nameTH": "Seafood",
-          "price": 450,
-          "description": "mixed seafood, mozzarella, tomato sauce"
+          "price": 450
         },
         {
           "id": "it_39",
           "nameEN": "Seafood",
           "nameTH": "Seafood",
-          "price": 370,
-          "description": "minced pork/seafood, mozzarella, tomato sauce, chili, Thai basil"
+          "price": 370
         },
         {
           "id": "it_40",
           "nameEN": "Rocket",
           "nameTH": "Rocket",
-          "price": 450,
-          "description": "mozzarella bufala, parma ham, rocket"
+          "price": 450
         },
         {
           "id": "it_41",
           "nameEN": "Cream",
           "nameTH": "Cream",
-          "price": 420,
-          "description": "Italian mushroom, truffle"
+          "price": 420
         },
         {
           "id": "it_42",
           "nameEN": "Salmon",
           "nameTH": "Salmon",
-          "price": 450,
-          "description": "cream"
+          "price": 450
         },
         {
           "id": "it_43",
           "nameEN": "Cheese",
           "nameTH": "Cheese",
-          "price": 420,
-          "description": "gorgonzola, mozzarella, brie, goat cheese"
+          "price": 420
         },
         {
           "id": "it_44",
           "nameEN": "Calzone",
           "nameTH": "Calzone",
-          "price": 390,
-          "description": "filled pizza with ham, cheese"
+          "price": 390
         },
         {
           "id": "it_45",
           "nameEN": "Hawaiian",
           "nameTH": "Hawaiian",
-          "price": 390,
-          "description": "ham, cheese, pineapple, bacon"
+          "price": 390
         },
         {
           "id": "it_46",
           "nameEN": "Margherita",
           "nameTH": "Margherita",
-          "price": 0,
-          "description": "380"
+          "price": 380
         },
         {
           "id": "it_47",
           "nameEN": "Bolognese",
           "nameTH": "Bolognese",
-          "price": 0,
-          "description": "420"
+          "price": 420
         },
         {
           "id": "it_48",
           "nameEN": "Vegetarian",
           "nameTH": "Vegetarian",
-          "price": 0,
-          "description": "380"
+          "price": 380
         },
         {
           "id": "it_49",
           "nameEN": "Napoli",
           "nameTH": "Napoli",
-          "price": 390,
-          "description": "black olive, garlic, anchovy"
+          "price": 390
         }
       ]
     },
     {
-      "id": "cat_1785577769670_61zk",
+      "id": "cat_1785674645160_l9fp",
       "categoryName": "Dessert",
       "visible": true,
       "items": [
@@ -396,365 +347,333 @@
           "id": "it_50",
           "nameEN": "Classic",
           "nameTH": "Classic",
-          "price": 0,
-          "description": "190"
-        },
-        {
-          "id": "it_51",
-          "nameEN": "Cotta",
-          "nameTH": "Cotta",
-          "price": 180,
-          "description": "strawberry, mango-passion fruit"
+          "price": 190
         },
         {
           "id": "it_52",
+          "nameEN": "Cotta",
+          "nameTH": "Cotta",
+          "price": 180
+        },
+        {
+          "id": "it_53",
           "nameEN": "Gelato",
           "nameTH": "Gelato",
-          "price": 100,
-          "description": "scoop"
+          "price": 100
         }
       ]
     },
     {
-      "id": "cat_1785577769670_y4uf",
+      "id": "cat_1785674645160_2hor",
+      "categoryName": "category",
+      "visible": true,
+      "items": [
+        {
+          "id": "it_51",
+          "nameEN": "nameEN",
+          "nameTH": "nameEN",
+          "price": 0
+        }
+      ]
+    },
+    {
+      "id": "cat_1785674645161_f7k1",
       "categoryName": "Drink",
       "visible": true,
       "items": [
         {
-          "id": "it_53",
-          "nameEN": "Water",
-          "nameTH": "น้ำ",
-          "price": 0,
-          "description": "20"
-        },
-        {
           "id": "it_54",
-          "nameEN": "S",
-          "nameTH": "S",
-          "price": 0,
-          "description": "100"
+          "nameEN": "Water",
+          "nameTH": "Water",
+          "price": 20
         },
         {
           "id": "it_55",
-          "nameEN": "L",
-          "nameTH": "L",
-          "price": 0,
-          "description": "150"
+          "nameEN": "S",
+          "nameTH": "S",
+          "price": 100
         },
         {
           "id": "it_56",
-          "nameEN": "Water",
-          "nameTH": "น้ำ",
-          "price": 0,
-          "description": "30"
+          "nameEN": "L",
+          "nameTH": "L",
+          "price": 150
         },
         {
           "id": "it_57",
-          "nameEN": "Coke/Fanta/Sprite",
-          "nameTH": "Coke/Fanta/Sprite",
-          "price": 0,
-          "description": "50"
+          "nameEN": "Water",
+          "nameTH": "Water",
+          "price": 30
         },
         {
           "id": "it_58",
-          "nameEN": "Lemon",
-          "nameTH": "Lemon",
-          "price": 0,
-          "description": "50"
+          "nameEN": "Coke/Fanta/Sprite",
+          "nameTH": "Coke/Fanta/Sprite",
+          "price": 50
         },
         {
           "id": "it_59",
-          "nameEN": "Tea",
-          "nameTH": "Tea",
-          "price": 0,
-          "description": "60"
+          "nameEN": "Lemon",
+          "nameTH": "Lemon",
+          "price": 50
         },
         {
           "id": "it_60",
-          "nameEN": "Lemonade",
-          "nameTH": "Lemonade",
-          "price": 0,
-          "description": "80"
+          "nameEN": "Tea",
+          "nameTH": "Tea",
+          "price": 60
         },
         {
           "id": "it_61",
-          "nameEN": "Soda",
-          "nameTH": "น้ำโซดา",
-          "price": 90,
-          "description": "Strawberry/Passion"
+          "nameEN": "Lemonade",
+          "nameTH": "Lemonade",
+          "price": 80
         },
         {
           "id": "it_62",
-          "nameEN": "Shake",
-          "nameTH": "Shake",
-          "price": 120,
-          "description": "Mango/Watermelon/Pineapple"
+          "nameEN": "Soda",
+          "nameTH": "Soda",
+          "price": 90
         },
         {
           "id": "it_63",
+          "nameEN": "Shake",
+          "nameTH": "Shake",
+          "price": 120
+        },
+        {
+          "id": "it_64",
           "nameEN": "Smoothies",
           "nameTH": "Smoothies",
-          "price": 150,
-          "description": "Strawberry/Mango/Blueberry"
+          "price": 150
         }
       ]
     },
     {
-      "id": "cat_1785577769671_f7nw",
+      "id": "cat_1785674645161_0w84",
       "categoryName": "Beer",
       "visible": true,
       "items": [
         {
-          "id": "it_64",
+          "id": "it_65",
           "nameEN": "Leo/Singha/Chang",
           "nameTH": "Leo/Singha/Chang",
-          "price": 0,
-          "description": "80"
+          "price": 80
         }
       ]
     },
     {
-      "id": "cat_1785577769671_03az",
+      "id": "cat_1785674645161_jua2",
       "categoryName": "Liquor",
       "visible": true,
       "items": [
         {
-          "id": "it_65",
+          "id": "it_66",
           "nameEN": "Limoncello/Arancello",
           "nameTH": "Limoncello/Arancello",
-          "price": 0,
-          "description": "190"
+          "price": 190
         },
         {
-          "id": "it_66",
+          "id": "it_67",
           "nameEN": "Grappa",
           "nameTH": "Grappa",
-          "price": 0,
-          "description": "200"
+          "price": 200
         }
       ]
     },
     {
-      "id": "cat_1785577769671_2wkw",
+      "id": "cat_1785674645161_cmxg",
       "categoryName": "Cocktail",
       "visible": true,
       "items": [
         {
-          "id": "it_67",
+          "id": "it_68",
           "nameEN": "Margarita",
           "nameTH": "Margarita",
-          "price": 0,
-          "description": "200"
-        },
-        {
-          "id": "it_68",
-          "nameEN": "Caipirinha",
-          "nameTH": "Caipirinha",
-          "price": 0,
-          "description": "200"
+          "price": 200
         },
         {
           "id": "it_69",
-          "nameEN": "Colada",
-          "nameTH": "Colada",
-          "price": 0,
-          "description": "200"
+          "nameEN": "Caipirinha",
+          "nameTH": "Caipirinha",
+          "price": 200
         },
         {
           "id": "it_70",
-          "nameEN": "Mojito",
-          "nameTH": "Mojito",
-          "price": 200,
-          "description": "Yum"
+          "nameEN": "Colada",
+          "nameTH": "Colada",
+          "price": 200
         },
         {
           "id": "it_71",
-          "nameEN": "Cucumber",
-          "nameTH": "Cucumber",
-          "price": 0,
-          "description": "200"
+          "nameEN": "Mojito",
+          "nameTH": "Mojito",
+          "price": 200
         },
         {
           "id": "it_72",
-          "nameEN": "Spritz",
-          "nameTH": "Spritz",
-          "price": 0,
-          "description": "240"
+          "nameEN": "Cucumber",
+          "nameTH": "Cucumber",
+          "price": 200
         },
         {
           "id": "it_73",
           "nameEN": "Spritz",
           "nameTH": "Spritz",
-          "price": 0,
-          "description": "240"
+          "price": 240
+        },
+        {
+          "id": "it_74",
+          "nameEN": "Spritz",
+          "nameTH": "Spritz",
+          "price": 240
         }
       ]
     },
     {
-      "id": "cat_1785577769671_3q2r",
+      "id": "cat_1785674645161_d4o5",
       "categoryName": "Coffee",
       "visible": true,
       "items": [
         {
-          "id": "it_74",
+          "id": "it_75",
           "nameEN": "Espresso",
           "nameTH": "Espresso",
-          "price": 0,
-          "description": "80"
-        },
-        {
-          "id": "it_75",
-          "nameEN": "Cappuccino",
-          "nameTH": "Cappuccino",
-          "price": 0,
-          "description": "100"
+          "price": 80
         },
         {
           "id": "it_76",
-          "nameEN": "Latte",
-          "nameTH": "Latte",
-          "price": 0,
-          "description": "100"
+          "nameEN": "Cappuccino",
+          "nameTH": "Cappuccino",
+          "price": 100
         },
         {
           "id": "it_77",
-          "nameEN": "Americano",
-          "nameTH": "Americano",
-          "price": 0,
-          "description": "80"
+          "nameEN": "Latte",
+          "nameTH": "Latte",
+          "price": 100
         },
         {
           "id": "it_78",
-          "nameEN": "Cafe",
-          "nameTH": "Cafe",
-          "price": 0,
-          "description": "100"
+          "nameEN": "Americano",
+          "nameTH": "Americano",
+          "price": 80
         },
         {
           "id": "it_79",
-          "nameEN": "Chocomilk",
-          "nameTH": "Chocomilk",
-          "price": 0,
-          "description": "100"
+          "nameEN": "Cafe",
+          "nameTH": "Cafe",
+          "price": 100
         },
         {
           "id": "it_80",
+          "nameEN": "Chocomilk",
+          "nameTH": "Chocomilk",
+          "price": 100
+        },
+        {
+          "id": "it_81",
           "nameEN": "Chocolate",
           "nameTH": "Chocolate",
-          "price": 0,
-          "description": "100"
+          "price": 100
         }
       ]
     },
     {
-      "id": "cat_1785577769671_36us",
+      "id": "cat_1785674645161_q8i2",
       "categoryName": "Glass",
       "visible": true,
       "items": [
         {
-          "id": "it_81",
+          "id": "it_82",
           "nameEN": "Nua",
           "nameTH": "Nua",
-          "price": 0,
-          "description": "250"
-        },
-        {
-          "id": "it_82",
-          "nameEN": "Rose",
-          "nameTH": "Rose",
-          "price": 0,
-          "description": "250"
+          "price": 250
         },
         {
           "id": "it_83",
-          "nameEN": "Blanc",
-          "nameTH": "Blanc",
-          "price": 0,
-          "description": "220"
+          "nameEN": "Rose",
+          "nameTH": "Rose",
+          "price": 250
         },
         {
           "id": "it_84",
+          "nameEN": "Blanc",
+          "nameTH": "Blanc",
+          "price": 220
+        },
+        {
+          "id": "it_85",
           "nameEN": "Sauvignon",
           "nameTH": "Sauvignon",
-          "price": 0,
-          "description": "240"
+          "price": 240
         }
       ]
     },
     {
-      "id": "cat_1785577769671_mf7u",
+      "id": "cat_1785674645161_umcj",
       "categoryName": "Bottle",
       "visible": true,
       "items": [
         {
-          "id": "it_85",
-          "nameEN": "IGT",
-          "nameTH": "IGT",
-          "price": 0,
-          "description": "1350"
-        },
-        {
           "id": "it_86",
           "nameEN": "IGT",
           "nameTH": "IGT",
-          "price": 0,
-          "description": "1350"
+          "price": 1350
         },
         {
           "id": "it_87",
-          "nameEN": "DOCG",
-          "nameTH": "DOCG",
-          "price": 0,
-          "description": "1650"
+          "nameEN": "IGT",
+          "nameTH": "IGT",
+          "price": 1350
         },
         {
           "id": "it_88",
           "nameEN": "DOCG",
           "nameTH": "DOCG",
-          "price": 0,
-          "description": "1750"
+          "price": 1650
         },
         {
           "id": "it_89",
-          "nameEN": "IGT",
-          "nameTH": "IGT",
-          "price": 0,
-          "description": "1350"
+          "nameEN": "DOCG",
+          "nameTH": "DOCG",
+          "price": 1750
         },
         {
           "id": "it_90",
-          "nameEN": "DOCG",
-          "nameTH": "DOCG",
-          "price": 0,
-          "description": "1450"
+          "nameEN": "IGT",
+          "nameTH": "IGT",
+          "price": 1350
         },
         {
           "id": "it_91",
-          "nameEN": "Blanc",
-          "nameTH": "Blanc",
-          "price": 0,
-          "description": "1350"
+          "nameEN": "DOCG",
+          "nameTH": "DOCG",
+          "price": 1450
         },
         {
           "id": "it_92",
-          "nameEN": "Toscana",
-          "nameTH": "Toscana",
-          "price": 0,
-          "description": "1400"
+          "nameEN": "Blanc",
+          "nameTH": "Blanc",
+          "price": 1350
         },
         {
           "id": "it_93",
-          "nameEN": "Nua",
-          "nameTH": "Nua",
-          "price": 0,
-          "description": "1350"
+          "nameEN": "Toscana",
+          "nameTH": "Toscana",
+          "price": 1400
         },
         {
           "id": "it_94",
+          "nameEN": "Nua",
+          "nameTH": "Nua",
+          "price": 1350
+        },
+        {
+          "id": "it_95",
           "nameEN": "Rose",
           "nameTH": "Rose",
-          "price": 0,
-          "description": "1450"
+          "price": 1450
         }
       ]
     }
