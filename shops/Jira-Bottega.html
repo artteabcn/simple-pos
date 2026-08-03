@@ -4,10 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Jira Bottega - POS</title>
-<meta name="theme-color" content="#2563eb">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Jira Bottega">
-<link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Jira%20Bottega%22%2C%22short_name%22%3A%22Jira%20Bottega%22%2C%22start_url%22%3A%22.%2FJira-Bottega.html%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f7fafc%22%2C%22theme_color%22%3A%22%232563eb%22%7D">
 <style>
 :root{--bg:#f7fafc;--card:#fff;--text:#1a202c;--muted:#718096;--primary:#2563eb;--pl:#eff6ff;--bdr:#e2e8f0;--danger:#ef4444;--success:#10b981;}
 @media(prefers-color-scheme:dark){:root{--bg:#121620;--card:#1a202c;--text:#edf2f7;--muted:#a0aec0;--primary:#3b82f6;--pl:rgba(59,130,246,.12);--bdr:#2d3748;}}
@@ -68,22 +64,33 @@ footer{text-align:center;padding:12px 0 4px;}
 .save-status.ok{background:#d1fae5;color:#065f46;display:block;}
 .save-status.err{background:#fee2e2;color:#991b1b;display:block;}
 /* Bill manager */
-.bill-save-row{display:flex;gap:8px;align-items:center;margin-bottom:12px;}
-.bill-save-row input{flex:1;padding:10px 12px;border-radius:8px;border:1px solid var(--bdr);font-size:.9rem;background:var(--bg);color:var(--text);min-height:44px;}
+.bill-save-row{display:flex;gap:8px;align-items:stretch;margin-bottom:12px;}
+.bill-save-row input{flex:1 1 auto;min-width:0;padding:10px 12px;border-radius:8px;border:1px solid var(--bdr);font-size:.9rem;background:var(--bg);color:var(--text);min-height:44px;}
+.bill-save-row .btn-sm{flex:0 0 auto;}
 .btn-sm{padding:0 14px;min-height:44px;border:none;border-radius:8px;font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap;}
 .btn-save{background:var(--primary);color:#fff;}
 .btn-new{background:var(--bdr);color:var(--text);}
 .bill-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--bdr);}
 .bill-row:last-child{border-bottom:none;}
-.bill-info{flex:1;min-width:0;}
+.bill-info{flex:1 1 auto;min-width:0;overflow:hidden;}
 .bill-info strong{display:block;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .bill-meta{font-size:.75rem;color:var(--muted);}
+.bill-row .btn-sm{flex:0 0 auto;}
 .btn-recall{background:var(--pl);color:var(--primary);}
 .btn-del{background:#fee2e2;color:#991b1b;padding:0 10px;}
 /* Sync badge shown when bills are being pushed to / loaded from the server */
 .sync-badge{display:none;font-size:.72rem;color:var(--muted);margin:-6px 0 8px;font-weight:600;}
 .sync-badge.busy{display:block;}
 .sync-badge.err{display:block;color:var(--danger);}
+/* Invoice layout on mobile — let button row wrap and shrink buttons to fit */
+@media(max-width:480px){
+  .bill-save-row{flex-wrap:wrap;}
+  .bill-save-row input{flex:1 1 100%;min-width:0;}
+  .bill-save-row .btn-sm{flex:1 1 calc(50% - 8px);min-width:0;}
+  .bill-row{flex-wrap:nowrap;}
+  .bill-row .btn-sm{padding:0 10px;font-size:.8rem;}
+  .bill-info strong{font-size:.9rem;}
+}
 /* Paid history */
 .paid-card{background:var(--bg);border:1px solid var(--bdr);border-radius:10px;padding:12px;margin-bottom:10px;}
 .paid-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
@@ -98,6 +105,10 @@ footer{text-align:center;padding:12px 0 4px;}
 .month-total{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:12px 0 2px;display:flex;justify-content:space-between;}
 .month-total:first-child{padding-top:0;}
 .paid-del{background:none;border:none;color:var(--danger);font-size:1rem;line-height:1;cursor:pointer;padding:2px 4px;flex-shrink:0;}</style>
+<link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Jira%20Bottega%22%2C%22short_name%22%3A%22Jira%20Bottega%22%2C%22start_url%22%3A%22.%2FJira-Bottega.html%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f7fafc%22%2C%22theme_color%22%3A%22%232563eb%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fsimple-pos-58v.pages.dev%2Fdata%2Flogos%2FJira-Bottega.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
+<meta name="theme-color" content="#2563eb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Jira Bottega">
 </head>
 <body>
 <div class="app">
@@ -940,6 +951,9 @@ function up(forceAll){
 function applyRow(row,r){
   const sel=row.querySelector("select");
   let item=dataset.find(x=>x.id===r.id);
+  // Item id no longer exists in dataset (menu edit / live reload) —
+  // inject a synthetic option from the saved snapshot so the row is
+  // never silently dropped on recall.
   if(!item){
     item={id:r.id,nameEN:r.nameEN||"Unknown",nameTH:r.nameTH||"ไม่ทราบ",price:r.price||0};
     const o=document.createElement("option");o.value=item.id;
@@ -965,7 +979,6 @@ function add(){
   del.onclick=()=>{row.remove();calc();};
   row.append(sel,step,del);
   document.getElementById("lines").appendChild(row);
-  return row;
 }
 function addNoUpd(){
   const id="r_"+Math.random().toString(36).substr(2,5);
@@ -974,7 +987,7 @@ function addNoUpd(){
   const step=document.createElement("div");step.className="qty-stepper";
   const bM=document.createElement("button");bM.type="button";bM.textContent="−";
   bM.onclick=()=>{const q=row.querySelector(".q");q.value=Math.max(1,(parseInt(q.value)||1)-1);calc();};
-  const qIn=document.createElement("input");qIn.type="number";qIn.className=".q";qIn.value="1";qIn.min="1";qIn.oninput=calc;
+  const qIn=document.createElement("input");qIn.type="number";qIn.className="q";qIn.value="1";qIn.min="1";qIn.oninput=calc;
   const bP=document.createElement("button");bP.type="button";bP.textContent="+";
   bP.onclick=()=>{const q=row.querySelector(".q");q.value=(parseInt(q.value)||0)+1;calc();};
   step.append(bM,qIn,bP);
@@ -1159,22 +1172,6 @@ async function saveMenu(){
     status.className="save-status err";
   }
 }
-function saveDraft(){
-  const rows=[];
-  document.querySelectorAll(".item-row").forEach(row=>{
-    const sel=row.querySelector("select");
-    const qty=parseInt(row.querySelector(".q").value)||0;
-    if(sel.value&&qty>0)rows.push({id:sel.value,qty});
-  });
-  localStorage.setItem("pos_draft_"+SLUG,JSON.stringify({
-    rows,
-    disc:document.getElementById("disc").value,
-    sc:document.getElementById("sc").value,
-    pm:document.getElementById("pm").value,
-    tab:document.getElementById("tab").value,
-    note:document.getElementById("note").value
-  }));
-}
 async function syncBillsToServer(bills){
   const badge=document.getElementById("syncBadge");badge.className="sync-badge busy";badge.textContent=l==="EN"?"Syncing bills…":"กำลังซิงก์บิล…";
   try{
@@ -1191,6 +1188,37 @@ async function loadBillsFromServer(){
     badge.className="sync-badge"; badge.textContent=""; return false;
   }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Load error":"โหลดไม่ได้"; return false; }
 }
+async function syncPaidBillsToServer(paid){
+  const badge=document.getElementById("syncBadge");badge.className="sync-badge busy";badge.textContent=l==="EN"?"Syncing paid bills…":"กำลังซิงก์บิลที่ชำระ…";
+  try{
+    const r=await fetch("/api/deploy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,path:`data/${SLUG}-paid.json`,content:JSON.stringify(paid,null,2),message:`pos(paid): sync ${SLUG}`})});
+    if(r.ok){ badge.className="sync-badge"; badge.textContent=l==="EN"?"Synced":"ซิงก์แล้ว"; setTimeout(()=>badge.className="sync-badge",1500); }
+    else{ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync failed":"ซิงก์ล้มเหลว"; }
+  }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync error":"เกิดข้อผิดพลาด"; }
+}
+async function loadPaidBillsFromServer(){
+  try{
+    const r=await fetch(`/data/${SLUG}-paid.json`);
+    if(r.ok){ const paid=await r.json(); localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(paid||[])); renderPaidBills(); return true; }
+    return false;
+  }catch(e){ return false; }
+}
+function saveDraft(){
+  const rows=[];
+  document.querySelectorAll(".item-row").forEach(row=>{
+    const sel=row.querySelector("select");
+    const qty=parseInt(row.querySelector(".q").value)||0;
+    if(sel.value&&qty>0)rows.push({id:sel.value,qty});
+  });
+  localStorage.setItem("pos_draft_"+SLUG,JSON.stringify({
+    rows,
+    disc:document.getElementById("disc").value,
+    sc:document.getElementById("sc").value,
+    pm:document.getElementById("pm").value,
+    tab:document.getElementById("tab").value,
+    note:document.getElementById("note").value
+  }));
+}
 function restoreDraft(){
   try{
     const raw=localStorage.getItem("pos_draft_"+SLUG);
@@ -1205,7 +1233,9 @@ function restoreDraft(){
     document.getElementById("lines").innerHTML="";
     const prevF=f;f="ALL";
     const added=[];
-    d.rows.forEach(r=>{ const row=addNoUpd(); added.push({row,r}); });
+    d.rows.forEach(r=>{
+      const row=addNoUpd(); added.push({row,r});
+    });
     up(true);
     added.forEach(({row,r})=>applyRow(row,r));
     f=prevF;
@@ -1241,7 +1271,7 @@ function saveBill(){
   const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");
   bills.unshift({label,...order,savedAt:new Date().toISOString()});
   localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills.slice(0,30)));
-  // Optimistically persist to server-backed store
+  // Optimistically persist to server-backed store so bills are available across devices
   try{ syncBillsToServer(bills.slice(0,30)); }catch(e){}
   clearOrder();
   renderBills();
@@ -1257,7 +1287,9 @@ function recallBill(idx){
   document.getElementById("lines").innerHTML="";
   const prevF=f;f="ALL";
   const added=[];
-  b.rows.forEach(r=>{ const row=addNoUpd(); added.push({row,r}); });
+  b.rows.forEach(r=>{
+    const row=addNoUpd(); added.push({row,r});
+  });
   up(true);
   added.forEach(({row,r})=>applyRow(row,r));
   f=prevF;
@@ -1303,6 +1335,8 @@ function markAsPaid(pmOverride){
   const id=Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   paid.unshift({id,label,...order,paidAt:new Date().toISOString()});
   localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(paid.slice(0,500)));
+  // Persist paid bill to server so history survives across devices / clears
+  try{ syncPaidBillsToServer(paid.slice(0,500)); }catch(e){}
   clearOrder();
   m("hist");
 }
@@ -1316,6 +1350,7 @@ function deletePaidBill(id){
   if(!confirm(uiDict[l].histDelConfirm))return;
   const all=getPaidBills(true).filter(b=>b.id!==id);
   localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(all));
+  try{ syncPaidBillsToServer(all); }catch(e){}
   renderPaidBills();
 }
 function filterPaidBills(bills,mode){
@@ -1447,7 +1482,7 @@ function printHistorySummary(){
   setTimeout(()=>win.print(),400);
 }
 fb();
-loadLiveMenu().then(()=>{ loadBillsFromServer().then(()=>{ if(!restoreDraft())add(); renderBills(); renderPaidBills(); }); });
+loadLiveMenu().then(()=>{ Promise.all([loadBillsFromServer(),loadPaidBillsFromServer()]).then(()=>{ if(!restoreDraft())add(); renderBills(); renderPaidBills(); }); });
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();window.__installEvt=e;const b=document.getElementById("installBtn");if(b){b.style.display="inline-block";b.onclick=()=>{e.prompt();e.userChoice.then(()=>{b.style.display="none";window.__installEvt=null;});};};});
 </script>
 </body>
