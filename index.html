@@ -488,18 +488,33 @@ footer{text-align:center;padding:12px 0 4px;}
 .save-status.ok{background:#d1fae5;color:#065f46;display:block;}
 .save-status.err{background:#fee2e2;color:#991b1b;display:block;}
 /* Bill manager */
-.bill-save-row{display:flex;gap:8px;align-items:center;margin-bottom:12px;}
-.bill-save-row input{flex:1;padding:10px 12px;border-radius:8px;border:1px solid var(--bdr);font-size:.9rem;background:var(--bg);color:var(--text);min-height:44px;}
+.bill-save-row{display:flex;gap:8px;align-items:stretch;margin-bottom:12px;}
+.bill-save-row input{flex:1 1 auto;min-width:0;padding:10px 12px;border-radius:8px;border:1px solid var(--bdr);font-size:.9rem;background:var(--bg);color:var(--text);min-height:44px;}
+.bill-save-row .btn-sm{flex:0 0 auto;}
 .btn-sm{padding:0 14px;min-height:44px;border:none;border-radius:8px;font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap;}
 .btn-save{background:var(--primary);color:#fff;}
 .btn-new{background:var(--bdr);color:var(--text);}
 .bill-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--bdr);}
 .bill-row:last-child{border-bottom:none;}
-.bill-info{flex:1;min-width:0;}
+.bill-info{flex:1 1 auto;min-width:0;overflow:hidden;}
 .bill-info strong{display:block;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .bill-meta{font-size:.75rem;color:var(--muted);}
+.bill-row .btn-sm{flex:0 0 auto;}
 .btn-recall{background:var(--pl);color:var(--primary);}
 .btn-del{background:#fee2e2;color:#991b1b;padding:0 10px;}
+/* Sync badge shown when bills are being pushed to / loaded from the server */
+.sync-badge{display:none;font-size:.72rem;color:var(--muted);margin:-6px 0 8px;font-weight:600;}
+.sync-badge.busy{display:block;}
+.sync-badge.err{display:block;color:var(--danger);}
+/* Invoice layout on mobile — let button row wrap and shrink buttons to fit */
+@media(max-width:480px){
+  .bill-save-row{flex-wrap:wrap;}
+  .bill-save-row input{flex:1 1 100%;min-width:0;}
+  .bill-save-row .btn-sm{flex:1 1 calc(50% - 8px);min-width:0;}
+  .bill-row{flex-wrap:nowrap;}
+  .bill-row .btn-sm{padding:0 10px;font-size:.8rem;}
+  .bill-info strong{font-size:.9rem;}
+}
 /* Paid history */
 .paid-card{background:var(--bg);border:1px solid var(--bdr);border-radius:10px;padding:12px;margin-bottom:10px;}
 .paid-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
@@ -524,6 +539,10 @@ footer{text-align:center;padding:12px 0 4px;}
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>${n} - POS</title>
 <style>${css}</style>
+<link rel="manifest" href="data:application/manifest+json;charset=utf-8,${encodeURIComponent(JSON.stringify({name:n,short_name:n,start_url:"./"+SLUG+".html",display:"standalone",background_color:"#f7fafc",theme_color:"#2563eb",icons:[{src:logo||""||undefined,sizes:"512x512",type:"image/png"}].filter(i=>i.src)}))}">
+<meta name="theme-color" content="#2563eb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="${n}">
 </head>
 <body>
 <div class="app">
@@ -532,6 +551,7 @@ footer{text-align:center;padding:12px 0 4px;}
   <div class="lang-toggle">
     <button id="lEN" class="lang-btn active" onclick="sl('EN')">EN</button>
     <button id="lTH" class="lang-btn" onclick="sl('TH')">ไทย</button>
+    <button id="installBtn" class="lang-btn" style="display:none;background:var(--primary);color:#fff" title="Install as app">⬇</button>
   </div>
 </header>
 <div class="nav">
@@ -565,10 +585,14 @@ footer{text-align:center;padding:12px 0 4px;}
       <button class="btn-sm btn-save" onclick="saveBill()">💾 Save</button>
       <button class="btn-sm btn-new" onclick="clearOrder()">🗑 Clear</button>
     </div>
+    <div id="syncBadge" class="sync-badge"></div>
     <div id="savedBills"></div>
   </div>
   <button class="btn btn-primary" id="printBtn" onclick="window.frames[0].focus();window.frames[0].print();">🖨️ Print Receipt</button>
-  <button class="btn" id="paidBtn" style="background:var(--success);color:#fff;margin-top:8px" onclick="markAsPaid()">✅ Mark as Paid</button>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+    <button class="btn" id="paidCashBtn" style="background:var(--success);color:#fff" onclick="markAsPaid('Cash / เงินสด')">💵 Cash Paid</button>
+    <button class="btn" id="paidPpBtn" style="background:var(--primary);color:#fff" onclick="markAsPaid('PromptPay / พร้อมเพย์')">📱 PromptPay Paid</button>
+  </div>
   <iframe></iframe>
 </div>
 <div id="pHist" class="panel">
@@ -582,6 +606,11 @@ footer{text-align:center;padding:12px 0 4px;}
       </select>
     </div>
     <div id="histSummary" class="hist-summary" style="display:none"></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="btn-sm" style="background:var(--pl);color:var(--primary);flex:1;min-width:120px" onclick="downloadHistoryJson()">⬇ JSON</button>
+      <button class="btn-sm" style="background:var(--pl);color:var(--primary);flex:1;min-width:120px" onclick="downloadHistoryCsv()">⬇ CSV</button>
+      <button class="btn-sm" style="background:var(--pl);color:var(--primary);flex:1;min-width:120px" onclick="printHistorySummary()">🖨 Summary</button>
+    </div>
     <div id="paidBills"><p style="color:var(--muted);font-size:.85rem;margin:0">No paid bills yet.</p></div>
   </div>
 </div>
@@ -626,10 +655,10 @@ footer{text-align:center;padding:12px 0 4px;}
 
         // UI text dictionaries (updates visible labels when language switches)
         'const uiDict={',
-        '  EN:{orderTab:"🧾 Order",invoiceTab:"🖨️ Invoice",histTab:"📋 History",addItem:"➕ Add Item",disc:"Discount",sc:"Service",pm:"Payment",print:"🖨️ Print Receipt",paid:"✅ Mark as Paid",',
-        '      histAll:"All (30 days)",histToday:"Today",histWeek:"This Week",histMonth:"This Month",histTotal:"Total",histBills:"bills",histNone:"No paid bills in this period.",histDelConfirm:"Delete this bill from history?",histDel:"Delete"},',
-        '  TH:{orderTab:"🧾 คำสั่งซื้อ",invoiceTab:"🖨️ ใบแจ้งหนี้",histTab:"📋 ประวัติ",addItem:"➕ เพิ่มรายการ",disc:"ส่วนลด",sc:"ค่าบริการ",pm:"ชำระเงิน",print:"🖨️ พิมพ์ใบเสร็จ",paid:"✅ ชำระแล้ว",',
-        '      histAll:"ทั้งหมด (30 วัน)",histToday:"วันนี้",histWeek:"สัปดาห์นี้",histMonth:"เดือนนี้",histTotal:"ยอดรวม",histBills:"บิล",histNone:"ไม่มีบิลที่ชำระในช่วงนี้",histDelConfirm:"ลบบิลนี้ออกจากประวัติ?",histDel:"ลบ"}',
+        '  EN:{orderTab:"🧾 Order",invoiceTab:"🖨️ Invoice",histTab:"📋 History",addItem:"➕ Add Item",disc:"Discount",sc:"Service",pm:"Payment",print:"🖨️ Print Receipt",paidCash:"💵 Cash Paid",paidPp:"📱 PromptPay Paid",',
+        '      histAll:"All (30 days)",histToday:"Today",histWeek:"This Week",histMonth:"This Month",histTotal:"Total",histBills:"bills",histNone:"No paid bills in this period.",histDelConfirm:"Delete this bill from history?",histDel:"Delete",histView:"👁️ View"},',
+        '  TH:{orderTab:"🧾 คำสั่งซื้อ",invoiceTab:"🖨️ ใบแจ้งหนี้",histTab:"📋 ประวัติ",addItem:"➕ เพิ่มรายการ",disc:"ส่วนลด",sc:"ค่าบริการ",pm:"ชำระเงิน",print:"🖨️ พิมพ์ใบเสร็จ",paidCash:"💵 เงินสด",paidPp:"📱 พร้อมเพย์",',
+        '      histAll:"ทั้งหมด (30 วัน)",histToday:"วันนี้",histWeek:"สัปดาห์นี้",histMonth:"เดือนนี้",histTotal:"ยอดรวม",histBills:"บิล",histNone:"ไม่มีบิลที่ชำระในช่วงนี้",histDelConfirm:"ลบบิลนี้ออกจากประวัติ?",histDel:"ลบ",histView:"👁️ ดู"}',
         '};',
 
         // Fetch live menu from server on load (updates embedded snapshot silently)
@@ -667,7 +696,8 @@ footer{text-align:center;padding:12px 0 4px;}
         '  document.getElementById("lSc").textContent=ui.sc;',
         '  document.getElementById("lPm").textContent=ui.pm;',
         '  document.getElementById("printBtn").textContent=ui.print;',
-        '  document.getElementById("paidBtn").textContent=ui.paid;',
+        '  document.getElementById("paidCashBtn").textContent=ui.paidCash;',
+        '  document.getElementById("paidPpBtn").textContent=ui.paidPp;',
         '  document.getElementById("b3").textContent=ui.histTab;',
         '  document.getElementById("fOptAll").textContent=ui.histAll;',
         '  document.getElementById("fOptToday").textContent=ui.histToday;',
@@ -690,13 +720,17 @@ footer{text-align:center;padding:12px 0 4px;}
         '  });',
         '}',
 
-        // Rebuild dropdown options in current language
-        'function up(){',
+        // Rebuild dropdown options in current language.
+        // `forceAll` bypasses the active category filter chip — required when
+        // restoring saved bills / drafts so items saved under any category can
+        // be re-selected even if the user is currently filtering by another one.
+        'function up(forceAll){',
+        '  const showAll=forceAll||f==="ALL";',
         '  document.querySelectorAll(".item-row select").forEach(s=>{',
         '    const cur=s.value;',
         '    s.innerHTML=`<option value="">-- ${l==="EN"?"Select item":"เลือกรายการ"} --</option>`;',
         '    dataset.forEach(d=>{',
-        '      if(f==="ALL"||d.category===f||d.id===cur){',
+        '      if(showAll||d.category===f||d.id===cur){',
         '        const o=document.createElement("option");o.value=d.id;',
         '        o.text=(l==="EN"?d.nameEN:d.nameTH)+` (${CURRENCY}${d.price})`;',
         '        s.appendChild(o);',
@@ -704,6 +738,24 @@ footer{text-align:center;padding:12px 0 4px;}
         '    });',
         '    s.value=cur;',
         '  });',
+        '}',
+        // Restore one item row from a saved bill/draft. Returns true if the
+        // item id could be resolved against the (possibly live) dataset.
+        'function applyRow(row,r){',
+        '  const sel=row.querySelector("select");',
+        '  let item=dataset.find(x=>x.id===r.id);',
+        '  // Item id no longer exists in dataset (menu edit / live reload) —',
+        '  // inject a synthetic option from the saved snapshot so the row is',
+        '  // never silently dropped on recall.',
+        '  if(!item){',
+        '    item={id:r.id,nameEN:r.nameEN||"Unknown",nameTH:r.nameTH||"ไม่ทราบ",price:r.price||0};',
+        '    const o=document.createElement("option");o.value=item.id;',
+        '    o.text=(l==="EN"?item.nameEN:item.nameTH)+` (${CURRENCY}${item.price})`;',
+        '    sel.appendChild(o);',
+        '  }',
+        '  sel.value=r.id;',
+        '  sel.dataset.price=item.price;',
+        '  row.querySelector(".q").value=r.qty;',
         '}',
 
         // Add order row with qty stepper
@@ -721,8 +773,27 @@ footer{text-align:center;padding:12px 0 4px;}
         '  const del=document.createElement("button");del.type="button";del.className="del-btn";del.textContent="✕";',
         '  del.onclick=()=>{row.remove();calc();};',
         '  row.append(sel,step,del);',
-        '  document.getElementById("lines").appendChild(row);up();',
+        '  document.getElementById("lines").appendChild(row);',
         '}',
+        // Add an order row without rebuilding every select (use up() once after a batch)
+        'function addNoUpd(){',
+        '  const id="r_"+Math.random().toString(36).substr(2,5);',
+        '  const row=document.createElement("div");row.className="item-row";row.id=id;',
+        '  const sel=document.createElement("select");sel.onchange=()=>hc(id);',
+        '  const step=document.createElement("div");step.className="qty-stepper";',
+        '  const bM=document.createElement("button");bM.type="button";bM.textContent="−";',
+        '  bM.onclick=()=>{const q=row.querySelector(".q");q.value=Math.max(1,(parseInt(q.value)||1)-1);calc();};',
+        '  const qIn=document.createElement("input");qIn.type="number";qIn.className="q";qIn.value="1";qIn.min="1";qIn.oninput=calc;',
+        '  const bP=document.createElement("button");bP.type="button";bP.textContent="+";',
+        '  bP.onclick=()=>{const q=row.querySelector(".q");q.value=(parseInt(q.value)||0)+1;calc();};',
+        '  step.append(bM,qIn,bP);',
+        '  const del=document.createElement("button");del.type="button";del.className="del-btn";del.textContent="✕";',
+        '  del.onclick=()=>{row.remove();calc();};',
+        '  row.append(sel,step,del);',
+        '  document.getElementById("lines").appendChild(row);',
+        '  return row;',
+        '}',
+        'function add(){ addNoUpd(); up(); }',
 
         'function hc(id){',
         '  const sel=document.getElementById(id).querySelector("select");',
@@ -730,17 +801,21 @@ footer{text-align:center;padding:12px 0 4px;}
         '  sel.dataset.price=item?item.price:0;calc();',
         '}',
 
-        // PromptPay EMV QR payload builder
+        // PromptPay EMV QR payload builder (Tag 30 merchant info + Tag 54 amount + Tag 63 CRC)
+        // Bug fix: CRC must be computed over the payload WITHOUT the "6304" placeholder,
+        // and the Tag 54 length must count only the amount string (e.g. "100.00" => "06").
         'function ppPayload(rawId,amount){',
         '  const id=rawId.replace(/\\D/g,"");if(!id)return"";',
-        '  let acc=id,tag="02";',
-        '  if(id.length===10){acc="0066"+id.slice(1);tag="01";}',
+        '  let acc=id,subTag="02";',
+        '  if(id.length===10){acc="0066"+id.slice(1);subTag="01";}',
         '  const aid="0016A000000677010111";',
-        '  const af=tag+String(acc.length).padStart(2,"0")+acc;',
-        '  const mi="29"+String((aid+af).length).padStart(2,"0")+aid+af;',
-        '  const amt=amount>0?"54"+String(amount.toFixed(2).length).padStart(2,"0")+amount.toFixed(2):"";',
-        '  const raw="000201010212"+mi+"5802TH5303764"+amt+"6304";',
-        '  return raw+crc16(raw);',
+        '  const sub=subTag+String(acc.length).padStart(2,"0")+acc;',
+        '  const miAidAndSub=aid+sub;',
+        '  const mi="29"+String(miAidAndSub.length).padStart(2,"0")+miAidAndSub;',
+        '  const amtStr=amount.toFixed(2);',
+        '  const amt="54"+String(amtStr.length).padStart(2,"0")+amtStr;',
+        '  const noCrc="000201010212"+mi+"5802TH5303764"+amt+"6304";',
+        '  return noCrc+crc16(noCrc);',
         '}',
         'function crc16(s){',
         '  let c=0xFFFF;',
@@ -925,6 +1000,22 @@ footer{text-align:center;padding:12px 0 4px;}
         '}',
 
         // Draft persistence — save/restore order across page reloads
+        'async function syncBillsToServer(bills){',
+        '  const badge=document.getElementById("syncBadge");badge.className="sync-badge busy";badge.textContent=l==="EN"?"Syncing bills…":"กำลังซิงก์บิล…";',
+        '  try{',
+        '    const r=await fetch("/api/deploy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,path:`data/${SLUG}-bills.json`,content:JSON.stringify(bills,null,2),message:`pos(bills): sync ${SLUG}`})});',
+        '    if(r.ok){ badge.className="sync-badge"; badge.textContent=l==="EN"?"Synced":"ซิงก์แล้ว"; setTimeout(()=>badge.className="sync-badge",1500); }',
+        '    else{ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync failed":"ซิงก์ล้มเหลว"; }',
+        '  }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync error":"เกิดข้อผิดพลาด"; }',
+        '}',
+        'async function loadBillsFromServer(){',
+        '  const badge=document.getElementById("syncBadge");badge.className="sync-badge busy";badge.textContent=l==="EN"?"Loading saved bills…":"กำลังโหลดบิลที่บันทึกไว้…";',
+        '  try{',
+        '    const r=await fetch(`/data/${SLUG}-bills.json`);',
+        '    if(r.ok){ const bills=await r.json(); localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills)); renderBills(); badge.className="sync-badge"; badge.textContent=l==="EN"?"Loaded":"โหลดแล้ว"; setTimeout(()=>badge.className="sync-badge",1500); return true; }',
+        '    badge.className="sync-badge"; badge.textContent=""; return false;',
+        '  }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Load error":"โหลดไม่ได้"; return false; }',
+        '}',
         'function saveDraft(){',
         '  const rows=[];',
         '  document.querySelectorAll(".item-row").forEach(row=>{',
@@ -953,16 +1044,15 @@ footer{text-align:center;padding:12px 0 4px;}
         '    document.getElementById("tab").value=d.tab||"Table 01";',
         '    document.getElementById("note").value=d.note||"";',
         '    document.getElementById("lines").innerHTML="";',
+        '    const prevF=f;f="ALL";',
+        '    const added=[];',
         '    d.rows.forEach(r=>{',
-        '      add();',
-        '      const rows=[...document.querySelectorAll(".item-row")];',
-        '      const row=rows[rows.length-1];',
-        '      const sel=row.querySelector("select");',
-        '      sel.value=r.id;',
-        '      const item=dataset.find(x=>x.id===r.id);',
-        '      sel.dataset.price=item?item.price:0;',
-        '      row.querySelector(".q").value=r.qty;',
+        '      const row=addNoUpd(); added.push({row,r});',
         '    });',
+        '    up(true);',
+        '    added.forEach(({row,r})=>applyRow(row,r));',
+        '    f=prevF;',
+        '    if(prevF!=="ALL")fb();',
         '    calc();return true;',
         '  }catch(e){return false;}',
         '}',
@@ -996,6 +1086,8 @@ footer{text-align:center;padding:12px 0 4px;}
         '  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");',
         '  bills.unshift({label,...order,savedAt:new Date().toISOString()});',
         '  localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills.slice(0,30)));',
+        '  // Optimistically persist to server-backed store so bills are available across devices',
+        '  try{ syncBillsToServer(bills.slice(0,30)); }catch(e){}',
         '  clearOrder();',
         '  renderBills();',
         '}',
@@ -1008,22 +1100,22 @@ footer{text-align:center;padding:12px 0 4px;}
         '  document.getElementById("tab").value=b.tab||"";',
         '  document.getElementById("note").value=b.note||"";',
         '  document.getElementById("lines").innerHTML="";',
+        '  const prevF=f;f="ALL";',
+        '  const added=[];',
         '  b.rows.forEach(r=>{',
-        '    add();',
-        '    const rows=[...document.querySelectorAll(".item-row")];',
-        '    const row=rows[rows.length-1];',
-        '    const sel=row.querySelector("select");',
-        '    sel.value=r.id;',
-        '    const item=dataset.find(x=>x.id===r.id);',
-        '    sel.dataset.price=item?item.price:0;',
-        '    row.querySelector(".q").value=r.qty;',
+        '    const row=addNoUpd(); added.push({row,r});',
         '  });',
+        '  up(true);',
+        '  added.forEach(({row,r})=>applyRow(row,r));',
+        '  f=prevF;',
+        '  if(prevF!=="ALL")fb();',
         '  calc();m("calc");',
         '}',
         'function deleteBill(idx){',
         '  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");',
         '  bills.splice(idx,1);',
         '  localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills));',
+        '  try{ syncBillsToServer(bills); }catch(e){}',
         '  renderBills();',
         '}',
         'function renderBills(){',
@@ -1048,9 +1140,10 @@ footer{text-align:center;padding:12px 0 4px;}
         '  add();calc();',
         '  localStorage.removeItem("pos_draft_"+SLUG);',
         '}',
-        'function markAsPaid(){',
+        'function markAsPaid(pmOverride){',
         '  const order=collectOrder();',
         '  if(!order.rows.length){alert(l==="EN"?"No items on this bill.":"ยังไม่มีรายการ");return;}',
+        '  if(pmOverride)order.pm=pmOverride;',
         '  const label=document.getElementById("billLabel").value.trim()||',
         '    ("Bill "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}));',
         '  const paid=getPaidBills(true);',
@@ -1123,6 +1216,7 @@ footer{text-align:center;padding:12px 0 4px;}
         '          </div>',
         '          <div class="paid-card-meta">${new Date(b.paidAt).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})} · ${b.pm||""} · ${b.tab||""}${b.note?" · "+b.note:""}</div>',
         '          <div class="paid-items">${b.rows.map(r=>`${r.qty}× ${l==="EN"?r.nameEN:r.nameTH} (${CURRENCY}${Math.round(r.price)})`).join(", ")}</div>',
+        '          <div style="display:flex;gap:6px;margin-top:8px"><button class="btn-sm" style="background:var(--pl);color:var(--primary)" onclick="viewPaidBill(\'${b.id}\')">${ui.histView}</button></div>',
         '        </div>`).join("");',
         '      return `<div class="hist-day"><span>${day}</span><span>${CURRENCY}${Math.round(dayTotal)}.00</span></div>${cards}`;',
         '    }).join("");',
@@ -1130,9 +1224,82 @@ footer{text-align:center;padding:12px 0 4px;}
         '  }).join("");',
         '}',
 
+        // Open a single paid bill preview in a popup with print button
+        'function viewPaidBill(id){',
+        '  const b=getPaidBills(true).find(x=>x.id===id);if(!b)return;',
+        '  const labels=dict[l];',
+        '  const dStr=new Date(b.paidAt).toLocaleString("en-GB");',
+        '  let rows="";',
+        '  b.rows.forEach(r=>{rows+=`<tr><td style="padding:5px 6px">${l==="EN"?r.nameEN:r.nameTH}</td><td style="text-align:right;padding:5px 6px">${r.qty}</td><td style="text-align:right;padding:5px 6px">${Math.round(r.price)}.00</td><td style="text-align:right;padding:5px 6px;font-weight:600">${Math.round(r.qty*r.price)}.00</td></tr>`;});',
+        '  const win=window.open("","_blank");',
+        '  win.document.write(`<!DOCTYPE html><html><head><title>${b.label}</title><style>body{font-family:sans-serif;padding:18px;color:#222}table{width:100%;border-collapse:collapse;margin:10px 0}th{background:#2563eb;color:#fff;padding:6px;text-align:left}td{border-bottom:1px solid #eee}h2{color:#2563eb}.btns button{padding:8px 14px;margin-right:8px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer}@media print{.btns{display:none}}</style></head><body>',
+        '    <h2>${labels.title}</h2>',
+        '    <div style="font-size:12px;color:#666;margin-bottom:10px">${dStr} · ${b.tab||""} · ${b.pm||""}${b.note?" · "+b.note:""}</div>',
+        '    <table><thead><tr><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Unit</th><th style="text-align:right">Total</th></tr></thead><tbody>${rows}</tbody></table>',
+        '    <div style="text-align:right;font-size:18px;font-weight:800;color:#2563eb;margin-top:8px">${labels.total} ${CURRENCY}${Math.round(b.total||0)}.00</div>',
+        '    <div class="btns"><button onclick="window.print()">🖨 Print</button><button onclick="window.close()">Close</button></div>',
+        '  </body></html>`);',
+        '  win.document.close();',
+        '}',
+        'function downloadBlob(content,filename,mime){',
+        '  const blob=new Blob([content],{type:mime});',
+        '  const url=URL.createObjectURL(blob);',
+        '  const a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);',
+        '}',
+        'function getHistorySelected(){',
+        '  const mode=document.getElementById("histFilter")?document.getElementById("histFilter").value:"all";',
+        '  return filterPaidBills(getPaidBills(),mode);',
+        '}',
+        'function exportFileName(ext){',
+        '  const now=new Date();',
+        '  const stamp=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");',
+        '  return `${SLUG}-bills-${stamp}.${ext}`;',
+        '}',
+        'function downloadHistoryJson(){',
+        '  const bills=getHistorySelected();',
+        '  if(!bills.length){alert(l==="EN"?"No bills to export.":"ไม่มีบิลจะส่งออก");return;}',
+        '  downloadBlob(JSON.stringify({slug:SLUG,exportedAt:new Date().toISOString(),bills},null,2),exportFileName("json"),"application/json");',
+        '}',
+        'function downloadHistoryCsv(){',
+        '  const bills=getHistorySelected();',
+        '  if(!bills.length){alert(l==="EN"?"No bills to export.":"ไม่มีบิลจะส่งออก");return;}',
+        '  const rows=[["billId","label","paidAt","payment","table","note","total","nameEN","qty","price"]];',
+        '  const q=String.fromCharCode(34);',
+        '  const esc=v=>q+String(v||"").split(q).join(q+q)+q;',
+        '  bills.forEach(b=>{',
+        '    b.rows.forEach((r,i)=>{',
+        '      if(i===0)rows.push([esc(b.id),esc(b.label),esc(b.paidAt),esc(b.pm),esc(b.tab),esc(b.note),esc(b.total),esc(r.nameEN),esc(r.qty),esc(r.price)]);',
+        '      else rows.push(["","","","","","","",esc(r.nameEN),esc(r.qty),esc(r.price)]);',
+        '    });',
+        '    if(!b.rows.length)rows.push([esc(b.id),esc(b.label),esc(b.paidAt),esc(b.pm),esc(b.tab),esc(b.note),esc(b.total),"","",""]);',
+        '  });',
+        '  const csv=rows.map(r=>r.join(",")).join("\\n");',
+        '  downloadBlob(csv,exportFileName("csv"),"text/csv");',
+        '}',
+        'function printHistorySummary(){',
+        '  const bills=getHistorySelected();',
+        '  if(!bills.length){alert(l==="EN"?"No bills to print.":"ไม่มีบิลจะพิมพ์");return;}',
+        '  const labels=dict[l];const ui=uiDict[l];',
+        '  const grandTotal=bills.reduce((s,b)=>s+(b.total||0),0);',
+        '  let rows="";',
+        '  bills.forEach(b=>{',
+        '    rows+=`<tr><td style="padding:5px 6px">${b.label}<br><span style="color:#888;font-size:11px">${new Date(b.paidAt).toLocaleString("en-GB")}</span></td><td style="text-align:right;padding:5px 6px">${b.pm||""}</td><td style="text-align:right;padding:5px 6px;font-weight:600">${CURRENCY}${Math.round(b.total||0)}.00</td></tr>`;',
+        '  });',
+        '  const win=window.open("","_blank");',
+        '  win.document.write(`<!DOCTYPE html><html><head><title>${ui.histTotal}</title><style>body{font-family:sans-serif;padding:18px;color:#222}table{width:100%;border-collapse:collapse}th{background:#2563eb;color:#fff;padding:6px;text-align:left}td{border-bottom:1px solid #eee}h2{color:#2563eb}.grand{font-size:18px;font-weight:800;color:#2563eb;text-align:right;margin-top:10px}</style></head><body>',
+        '    <h2>${labels.title}</h2>',
+        '    <div style="font-size:12px;color:#666;margin-bottom:10px">${SLUG} · ${new Date().toLocaleString("en-GB")}</div>',
+        '    <table><thead><tr><th>${ui.histTotal}</th><th style="text-align:right">${ui.pm}</th><th style="text-align:right">${ui.histTotal}</th></tr></thead><tbody>${rows}</tbody></table>',
+        '    <div class="grand">${CURRENCY}${Math.round(grandTotal)}.00 · ${bills.length} ${ui.histBills}</div>',
+        '  </body></html>`);',
+        '  win.document.close();',
+        '  setTimeout(()=>win.print(),400);',
+        '}',
+
         // Init — restore draft after live menu loads so item IDs resolve correctly
         'fb();',
-        'loadLiveMenu().then(()=>{if(!restoreDraft())add();renderBills();renderPaidBills();});'
+        'loadLiveMenu().then(()=>{ loadBillsFromServer().then(()=>{ if(!restoreDraft())add(); renderBills(); renderPaidBills(); }); });',
+        'window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();window.__installEvt=e;const b=document.getElementById("installBtn");if(b){b.style.display="inline-block";b.onclick=()=>{e.prompt();e.userChoice.then(()=>{b.style.display="none";window.__installEvt=null;});};};});'
     ].join('\n');
 
     return html + '\n<script>\n' + script + '\n<\/script>\n</body>\n</html>';
