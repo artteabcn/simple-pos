@@ -1016,6 +1016,23 @@ footer{text-align:center;padding:12px 0 4px;}
         '    badge.className="sync-badge"; badge.textContent=""; return false;',
         '  }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Load error":"โหลดไม่ได้"; return false; }',
         '}',
+        // Paid-bill server sync — mirrors syncBillsToServer but writes data/${SLUG}-paid.json
+        'async function syncPaidBillsToServer(paid){',
+        '  const badge=document.getElementById("syncBadge");badge.className="sync-badge busy";badge.textContent=l==="EN"?"Syncing paid bills…":"กำลังซิงก์บิลที่ชำระ…";',
+        '  try{',
+        '    const r=await fetch("/api/deploy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,path:`data/${SLUG}-paid.json`,content:JSON.stringify(paid,null,2),message:`pos(paid): sync ${SLUG}`})});',
+        '    if(r.ok){ badge.className="sync-badge"; badge.textContent=l==="EN"?"Synced":"ซิงก์แล้ว"; setTimeout(()=>badge.className="sync-badge",1500); }',
+        '    else{ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync failed":"ซิงก์ล้มเหลว"; }',
+        '  }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync error":"เกิดข้อผิดพลาด"; }',
+        '}',
+        // Load paid bills from server and hydrate localStorage before render
+        'async function loadPaidBillsFromServer(){',
+        '  try{',
+        '    const r=await fetch(`/data/${SLUG}-paid.json`);',
+        '    if(r.ok){ const paid=await r.json(); localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(paid||[])); renderPaidBills(); return true; }',
+        '    return false;',
+        '  }catch(e){ return false; }',
+        '}',
         'function saveDraft(){',
         '  const rows=[];',
         '  document.querySelectorAll(".item-row").forEach(row=>{',
@@ -1150,6 +1167,8 @@ footer{text-align:center;padding:12px 0 4px;}
         '  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,8);',
         '  paid.unshift({id,label,...order,paidAt:new Date().toISOString()});',
         '  localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(paid.slice(0,500)));',
+        '  // Persist paid bill to server so history survives across devices / clears',
+        '  try{ syncPaidBillsToServer(paid.slice(0,500)); }catch(e){}',
         '  clearOrder();',
         '  m("hist");',
         '}',
@@ -1163,6 +1182,7 @@ footer{text-align:center;padding:12px 0 4px;}
         '  if(!confirm(uiDict[l].histDelConfirm))return;',
         '  const all=getPaidBills(true).filter(b=>b.id!==id);',
         '  localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(all));',
+        '  try{ syncPaidBillsToServer(all); }catch(e){}',
         '  renderPaidBills();',
         '}',
         'function filterPaidBills(bills,mode){',
@@ -1298,7 +1318,7 @@ footer{text-align:center;padding:12px 0 4px;}
 
         // Init — restore draft after live menu loads so item IDs resolve correctly
         'fb();',
-        'loadLiveMenu().then(()=>{ loadBillsFromServer().then(()=>{ if(!restoreDraft())add(); renderBills(); renderPaidBills(); }); });',
+        'loadLiveMenu().then(()=>{ Promise.all([loadBillsFromServer(),loadPaidBillsFromServer()]).then(()=>{ if(!restoreDraft())add(); renderBills(); renderPaidBills(); }); });',
         'window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();window.__installEvt=e;const b=document.getElementById("installBtn");if(b){b.style.display="inline-block";b.onclick=()=>{e.prompt();e.userChoice.then(()=>{b.style.display="none";window.__installEvt=null;});};};});'
     ].join('\n');
 
