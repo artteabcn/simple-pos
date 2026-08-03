@@ -1,0 +1,28 @@
+[
+  {
+    "label": "Ger",
+    "rows": [
+      {
+        "id": "it_03",
+        "qty": 1,
+        "nameEN": "Bufala",
+        "nameTH": "Bufala",
+        "price": 280
+      },
+      {
+        "id": "it_15",
+        "qty": 1,
+        "nameEN": "Meat",
+        "nameTH": "Meat",
+        "price": 390
+      }
+    ],
+    "disc": "0",
+    "sc": "0",
+    "pm": "Cash / เงินสด",
+    "tab": "Table 01",
+    "note": "2 Guests",
+    "total": 670,
+    "savedAt": "2026-08-03T19:42:30.992Z"
+  }
+]
