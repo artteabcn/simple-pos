@@ -1,0 +1,22 @@
+[
+  {
+    "id": "msdn0592isg8rk",
+    "label": "Bill 02:43",
+    "rows": [
+      {
+        "id": "it_08",
+        "qty": 1,
+        "nameEN": "Lasagne",
+        "nameTH": "Lasagne",
+        "price": 380
+      }
+    ],
+    "disc": "0",
+    "sc": "0",
+    "pm": "PromptPay / พร้อมเพย์",
+    "tab": "Table 01",
+    "note": "2 Guests",
+    "total": 380,
+    "paidAt": "2026-08-03T19:43:33.782Z"
+  }
+]
