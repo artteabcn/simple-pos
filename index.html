@@ -539,7 +539,7 @@ footer{text-align:center;padding:12px 0 4px;}
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>${n} - POS</title>
 <style>${css}</style>
-<link rel="manifest" href="data:application/manifest+json;charset=utf-8,${encodeURIComponent(JSON.stringify({name:n,short_name:n,start_url:"./"+SLUG+".html",display:"standalone",background_color:"#f7fafc",theme_color:"#2563eb",icons:[{src:logo||""||undefined,sizes:"512x512",type:"image/png"}].filter(i=>i.src)}))}">
+<link rel="manifest" href="data:application/manifest+json;charset=utf-8,${encodeURIComponent(JSON.stringify({name:n,short_name:n,start_url:"./"+`${slug}`+".html",display:"standalone",background_color:"#f7fafc",theme_color:"#2563eb",icons:[{src:logo||""||undefined,sizes:"512x512",type:"image/png"}].filter(i=>i.src)}))}">
 <meta name="theme-color" content="#2563eb">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="${n}">
