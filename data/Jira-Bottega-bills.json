@@ -1,5 +1,24 @@
 [
   {
+    "label": "Ray",
+    "rows": [
+      {
+        "id": "it_06",
+        "qty": 1,
+        "nameEN": "Ham",
+        "nameTH": "Ham",
+        "price": 390
+      }
+    ],
+    "disc": "0",
+    "sc": "0",
+    "pm": "Cash / เงินสด",
+    "tab": "Table 01",
+    "note": "2 Guests",
+    "total": 390,
+    "savedAt": "2026-08-04T06:38:38.598Z"
+  },
+  {
     "label": "Ger",
     "rows": [
       {
