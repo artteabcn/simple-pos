@@ -1,5 +1,31 @@
 [
   {
+    "label": "Nico",
+    "rows": [
+      {
+        "id": "it_12",
+        "qty": 1,
+        "nameEN": "Truffel",
+        "nameTH": "Truffel",
+        "price": 390
+      },
+      {
+        "id": "it_07",
+        "qty": 1,
+        "nameEN": "Antipasti",
+        "nameTH": "Antipasti",
+        "price": 550
+      }
+    ],
+    "disc": "0",
+    "sc": "0",
+    "pm": "Cash / เงินสด",
+    "tab": "Table 01",
+    "note": "2 Guests",
+    "total": 940,
+    "savedAt": "2026-08-04T10:40:41.770Z"
+  },
+  {
     "label": "Ray",
     "rows": [
       {
