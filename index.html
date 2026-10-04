@@ -174,20 +174,50 @@ let menuStructure = [
     { id:"cat_1", categoryName:"Main Dishes", visible:true,
       items:[{ id:"m1", nameEN:"Tom Yum Goong", nameTH:"ต้มยำกุ้ง", price:320 }] }
 ];
+// Decode a CSV file: UTF-8 first (strict), then Windows-874 (what Thai Excel exports without "UTF-8 CSV").
+// A leading BOM is stripped so the first header is never "﻿Category".
+function decodeCsvBytes(buf) {
+    let text;
+    try { text = new TextDecoder('utf-8', { fatal: true }).decode(buf); }
+    catch (e) { text = new TextDecoder('windows-874').decode(buf); }
+    return text.replace(/^﻿/, '');
+}
+
+// RFC 4180 parser: quoted fields, commas and line breaks inside quotes, "" as an escaped quote.
+function parseCsv(text) {
+    const rows = []; let row = [], field = '', inQ = false;
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (inQ) {
+            if (ch === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inQ = false; }
+            else field += ch;
+        } else if (ch === '"') inQ = true;
+        else if (ch === ',') { row.push(field); field = ''; }
+        else if (ch === '\n' || ch === '\r') {
+            if (ch === '\r' && text[i + 1] === '\n') i++;
+            row.push(field); field = '';
+            if (row.some(c => c.trim() !== '')) rows.push(row);
+            row = [];
+        } else field += ch;
+    }
+    row.push(field);
+    if (row.some(c => c.trim() !== '')) rows.push(row);
+    return rows;
+}
+
 function importCsvMenu(event) {
     const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        const text = e.target.result;
-        const lines = text.split(/\r\n|\n/);
-        if (lines.length < 2) return alert("CSV file appears to be empty.");
+        const rows = parseCsv(decodeCsvBytes(e.target.result));
+        if (rows.length < 2) return alert("CSV file appears to be empty.");
 
-        // Extract and map headers
-        const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+        const headers = rows[0].map(h => h.trim());
         const idxCat = headers.findIndex(h => /category/i.test(h));
-        const idxItem = headers.findIndex(h => /item|name/i.test(h));
+        const idxTH = headers.findIndex(h => /thai|_th$|name_?th|ไทย/i.test(h));
+        const idxItem = headers.findIndex((h, i) => i !== idxTH && /item|name/i.test(h));
         const idxPrice = headers.findIndex(h => /price/i.test(h));
         const idxDesc = headers.findIndex(h => /desc/i.test(h));
 
@@ -196,22 +226,19 @@ function importCsvMenu(event) {
         }
 
         const categoryMap = {};
+        const stamp = Date.now();
 
-        for (let i = 1; i < lines.length; i++) {
-            if (!lines[i].trim()) continue;
-            
-            // Regex to handle comma-separated values inside double quotes safely
-            const cols = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
-            const cleanCols = cols.map(c => c.trim().replace(/^"|"$/g, ''));
-
-            const cat = idxCat !== -1 && cleanCols[idxCat] ? cleanCols[idxCat] : "General";
-            const name = cleanCols[idxItem] || "Unnamed Item";
-            const price = parseFloat(cleanCols[idxPrice]) || 0;
-            const desc = idxDesc !== -1 && cleanCols[idxDesc] ? cleanCols[idxDesc] : "";
+        for (let i = 1; i < rows.length; i++) {
+            const cols = rows[i].map(c => c.trim());
+            const cat = idxCat !== -1 && cols[idxCat] ? cols[idxCat] : "General";
+            const name = cols[idxItem] || "Unnamed Item";
+            const nameTH = idxTH !== -1 && cols[idxTH] ? cols[idxTH] : name;
+            const price = parseFloat((cols[idxPrice] || '').replace(/[^0-9.]/g, '')) || 0;
+            const desc = idxDesc !== -1 && cols[idxDesc] ? cols[idxDesc] : "";
 
             if (!categoryMap[cat]) {
                 categoryMap[cat] = {
-                    id: "cat_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4),
+                    id: "cat_" + stamp + "_" + Math.random().toString(36).substr(2, 4),
                     categoryName: cat,
                     visible: true,
                     items: []
@@ -221,7 +248,7 @@ function importCsvMenu(event) {
             const newItem = {
                 id: "it_" + String(i).padStart(2, '0'),
                 nameEN: name,
-                nameTH: name,
+                nameTH: nameTH,
                 price: price
             };
             if (desc) newItem.description = desc;
@@ -237,7 +264,7 @@ function importCsvMenu(event) {
         alert(`Successfully imported ${totalItems} menu items across ${menuStructure.length} categories!`);
     };
 
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
 }
 function saveToLocalStorage() {
     localStorage.setItem('cf_secure_pos_data', JSON.stringify({
@@ -278,6 +305,11 @@ function loadFromLocalStorage() {
     renderStudio();
 }
 
+function escAttr(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+}
+const SLUG_RE = /^[A-Za-z0-9][A-Za-z0-9-]{1,63}$/;
+
 function renderStudio() {
     const container = document.getElementById('categoryContainer');
     container.innerHTML = '';
@@ -286,7 +318,7 @@ function renderStudio() {
         catDiv.className = 'category-block';
         catDiv.innerHTML = `
             <div class="category-header">
-                <input type="text" value="${cat.categoryName}" style="font-weight:bold;width:55%"
+                <input type="text" value="${escAttr(cat.categoryName)}" style="font-weight:bold;width:55%"
                     oninput="menuStructure[${ci}].categoryName=this.value;saveToLocalStorage()">
                 <div style="display:flex;gap:12px;align-items:center">
                     <label style="margin:0;display:flex;align-items:center;gap:4px;font-size:.8rem">
@@ -306,9 +338,9 @@ function renderStudio() {
             const row = document.createElement('div');
             row.className = 'item-row';
             row.innerHTML = `
-                <input type="text" placeholder="English" value="${item.nameEN||''}"
+                <input type="text" placeholder="English" value="${escAttr(item.nameEN)}"
                     oninput="menuStructure[${ci}].items[${ii}].nameEN=this.value;saveToLocalStorage()">
-                <input type="text" placeholder="ภาษาไทย" value="${item.nameTH||''}"
+                <input type="text" placeholder="ภาษาไทย" value="${escAttr(item.nameTH)}"
                     oninput="menuStructure[${ci}].items[${ii}].nameTH=this.value;saveToLocalStorage()">
                 <input type="number" placeholder="Price" value="${item.price}"
                     oninput="menuStructure[${ci}].items[${ii}].price=parseFloat(this.value)||0;saveToLocalStorage()">
@@ -348,7 +380,7 @@ async function secureApiPost(endpoint, body) {
 
 async function deployToCloudflarePagesSecure() {
     const slug = document.getElementById('shopSlug').value;
-    if (!slug) return alert("⚠️ Enter a valid Shop ID Slug first.");
+    if (!SLUG_RE.test(slug)) return alert("⚠️ Shop ID must be 2-64 characters: letters, numbers and hyphens only.");
     const manifest = {
         bizName:      document.getElementById('bizName').value,
         bizTax:       document.getElementById('bizTax').value,
@@ -389,7 +421,7 @@ async function deployToCloudflarePagesSecure() {
 
 async function recallShopFromGitSecure() {
     const slug = document.getElementById('shopSlug').value;
-    if (!slug) return alert("⚠️ Enter a Shop ID Slug.");
+    if (!SLUG_RE.test(slug)) return alert("⚠️ Enter a valid Shop ID (letters, numbers, hyphens).");
     try {
         const res = await secureApiPost("/api/recall", { shopSlug:slug });
         if (!res.ok) return alert("📂 No configuration found for this slug.");
@@ -417,6 +449,11 @@ async function recallShopFromGitSecure() {
    ═══════════════════════════════════════════════════════════════════ */
 function buildStandaloneAppHtml(m, menuJson, slug) {
     const safe = s => (s||'').replace(/`/g,"'").replace(/\\/g,'\\\\').replace(/"/g,'\\"');
+    // H = HTML-escape raw text; hs = HTML-escape, then make safe inside a generated JS string/template
+    const H   = s => String(s==null?'':s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const hs  = s => safe(H(s));
+    const okUrl = u => /^(https?:\/\/|\/)[^\s"'<>`\\]*$/.test(u||'') ? u : '';
+    m = Object.assign({}, m, { bizLogo: okUrl(m.bizLogo) });
     const n   = safe(m.bizName);
     const tx  = safe(m.bizTax);
     const ad  = safe(m.bizAddress);
@@ -531,23 +568,24 @@ footer{text-align:center;padding:12px 0 4px;}
 .paid-del{background:none;border:none;color:var(--danger);font-size:1rem;line-height:1;cursor:pointer;padding:2px 4px;flex-shrink:0;}`;
 
     /* ── HTML shell ────────────────────────────────────────────────── */
-    const logoTag = logo ? `<img src="${logo}" class="logo-img" alt="logo">` : '';
+    const logoTag = m.bizLogo ? `<img src="${H(m.bizLogo)}" class="logo-img" alt="logo">` : '';
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>${n} - POS</title>
+<title>${H(m.bizName)} - POS</title>
 <style>${css}</style>
-<link rel="manifest" href="data:application/manifest+json;charset=utf-8,${encodeURIComponent(JSON.stringify({name:n,short_name:n,start_url:"./"+`${slug}`+".html",display:"standalone",background_color:"#f7fafc",theme_color:"#2563eb",icons:[{src:logo||""||undefined,sizes:"512x512",type:"image/png"}].filter(i=>i.src)}))}">
+<script src="/assets/qr.js"></script>
+<link rel="manifest" href="data:application/manifest+json;charset=utf-8,${encodeURIComponent(JSON.stringify({name:m.bizName||"POS",short_name:(m.bizName||"POS").slice(0,12),start_url:"./"+`${slug}`+".html",display:"standalone",background_color:"#f7fafc",theme_color:"#2563eb",icons:[{src:logo||""||undefined,sizes:"512x512",type:"image/png"}].filter(i=>i.src)}))}">
 <meta name="theme-color" content="#2563eb">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="${n}">
+<meta name="apple-mobile-web-app-title" content="${H(m.bizName)}">
 </head>
 <body>
 <div class="app">
 <header>
-  <div class="hdr-left">${logoTag}<h1 class="shop-name">${n}</h1></div>
+  <div class="hdr-left">${logoTag}<h1 class="shop-name">${H(m.bizName)}</h1></div>
   <div class="lang-toggle">
     <button id="lEN" class="lang-btn active" onclick="sl('EN')">EN</button>
     <button id="lTH" class="lang-btn" onclick="sl('TH')">ไทย</button>
@@ -661,11 +699,14 @@ footer{text-align:center;padding:12px 0 4px;}
         '      histAll:"ทั้งหมด (30 วัน)",histToday:"วันนี้",histWeek:"สัปดาห์นี้",histMonth:"เดือนนี้",histTotal:"ยอดรวม",histBills:"บิล",histNone:"ไม่มีบิลที่ชำระในช่วงนี้",histDelConfirm:"ลบบิลนี้ออกจากประวัติ?",histDel:"ลบ",histView:"👁️ ดู"}',
         '};',
 
+        // HTML-escape for every piece of user text that goes into innerHTML / document.write
+        `function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}`,
+
         // Fetch live menu from server on load (updates embedded snapshot silently)
         // Returns a resolved promise so callers can .then() after dataset is ready
         'async function loadLiveMenu(){',
         '  try{',
-        '    const r=await fetch(`/data/${SLUG}-menu.json`);',
+        '    const r=await fetch(`/data/${SLUG}-menu.json`,{cache:"no-store"});',
         '    if(r.ok){dataset=await r.json();fb();up();}',
         '  }catch(e){}',
         '  return true;',
@@ -679,8 +720,8 @@ footer{text-align:center;padding:12px 0 4px;}
         '  document.getElementById("b1").className=p==="calc"?"active":"";',
         '  document.getElementById("b2").className=p==="doc"?"active":"";',
         '  document.getElementById("b3").className=p==="hist"?"active":"";',
-        '  if(p==="doc")calc();',
-        '  if(p==="hist")renderPaidBills();',
+        '  if(p==="doc"){calc();renderBills();pullKind("bills").then(ok=>{if(ok)renderBills();});}',
+        '  if(p==="hist"){renderPaidBills();pullKind("paid").then(ok=>{if(ok)renderPaidBills();});}',
         '}',
 
         // Language switcher — updates ALL visible UI strings immediately
@@ -858,7 +899,7 @@ footer{text-align:center;padding:12px 0 4px;}
         '  let rows="";',
         '  items.forEach(i=>{',
         '    rows+=`<tr>',
-        '      <td style="padding:5px 6px">${l==="EN"?i.nEN:i.nTH}</td>',
+        '      <td style="padding:5px 6px">${esc(l==="EN"?i.nEN:i.nTH)}</td>',
         '      <td style="text-align:right;padding:5px 6px">${i.q}</td>',
         '      <td style="text-align:right;padding:5px 6px">${Math.round(i.p)}.00</td>',
         '      <td style="text-align:right;padding:5px 6px;font-weight:600">${Math.round(i.t)}.00</td>',
@@ -875,29 +916,31 @@ footer{text-align:center;padding:12px 0 4px;}
 
         // PromptPay QR
         '  const ppData=PP_ID?ppPayload(PP_ID,total):"";',
+        // QR is drawn locally from /assets/qr.js (no third-party QR service); falls back to text only
+        '  let qrSvg="";',
+        '  try{if(ppData&&window.QR)qrSvg=window.QR.svg(ppData,200);}catch(e){}',
         '  const ppSection=ppData?`',
         '    <div style="text-align:center;margin:14px 0;padding:12px;border:1px solid #e2e8f0;border-radius:8px">',
-        '      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=10&data=${encodeURIComponent(ppData)}"',
-        '           width="200" height="200" alt="PromptPay QR" style="display:block;margin:0 auto">',
+        '      <div style="width:200px;height:200px;margin:0 auto">${qrSvg}</div>',
         '      <div style="font-size:11px;color:#555;margin-top:6px;font-weight:600">พร้อมเพย์ · PromptPay · ${PP_ID}</div>',
         '      <div style="font-size:14px;color:#2563eb;font-weight:800;margin-top:4px">${CURRENCY}${Math.round(total)}.00</div>',
         '    </div>`:"";',
 
         // Logo in receipt
-        `  const logoHtml=LOGO_URL?\`<div style="text-align:center;margin-bottom:10px"><img src="${logo}" style="max-height:56px;width:auto" alt="logo"></div>\`:"";`,
+        `  const logoHtml=LOGO_URL?\`<div style="text-align:center;margin-bottom:10px"><img src="${hs(m.bizLogo)}" style="max-height:56px;width:auto" alt="logo"></div>\`:"";`,
 
         // Full srcdoc receipt
         '  const empty=`<tr><td colspan="4" style="text-align:center;padding:14px;color:#aaa">-- Empty --</td></tr>`;',
         '  const doc=`<!DOCTYPE html><html><body style="font-family:sans-serif;font-size:13px;padding:14px;color:#222;margin:0">',
         '  ${logoHtml}',
         `  <table style="width:100%;margin-bottom:10px"><tr>`,
-        `    <td style="vertical-align:top;padding-right:10px"><strong style="font-size:15px">${n}</strong><br>`,
-        `    <span style="color:#666">${tx}</span><br><span style="color:#666">${ad}</span><br><span style="color:#666">${ph}</span></td>`,
+        `    <td style="vertical-align:top;padding-right:10px"><strong style="font-size:15px">${hs(m.bizName)}</strong><br>`,
+        `    <span style="color:#666">${hs(m.bizTax)}</span><br><span style="color:#666">${hs(m.bizAddress)}</span><br><span style="color:#666">${hs(m.bizTel)}</span></td>`,
         '    <td style="text-align:right;vertical-align:top"><strong style="font-size:14px">${labels.title}</strong><br>',
         '    <span style="color:#666;font-size:11px">Ref: REC-CF · ${dStr}</span></td>',
         '  </tr></table>',
         '  <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:12px;color:#555">',
-        '    <span>📍 ${tab}</span><span>👥 ${note}</span>',
+        '    <span>📍 ${esc(tab)}</span><span>👥 ${esc(note)}</span>',
         '  </div>',
         '  <table style="width:100%;border-collapse:collapse;margin-bottom:12px">',
         '    <thead><tr style="background:#2563eb;color:#fff">',
@@ -915,7 +958,7 @@ footer{text-align:center;padding:12px 0 4px;}
         '    <tr style="background:#eff6ff"><td style="color:#2563eb;font-weight:800;font-size:15px;padding:5px 6px">${labels.total}</td>',
         '      <td style="text-align:right;color:#2563eb;font-weight:800;font-size:15px;padding:5px 6px">${Math.round(total)}.00</td></tr>',
         '  </table>',
-        '  <div style="margin-top:10px;font-size:12px;color:#555"><strong>${labels.payment}</strong> ${pm}</div>',
+        '  <div style="margin-top:10px;font-size:12px;color:#555"><strong>${labels.payment}</strong> ${esc(pm)}</div>',
         '  ${ppSection}',
         '  </body></html>`;',
         '  document.querySelector("iframe").srcdoc=doc;',
@@ -950,9 +993,9 @@ footer{text-align:center;padding:12px 0 4px;}
         '  const cats=getCategories();',
         '  editItems.forEach((item,i)=>{',
         '    const card=document.createElement("div");card.className="edit-item-card";',
-        '    const catOptions=cats.map(c=>`<option value="${c}" ${item.category===c?"selected":""}>${c}</option>`).join("");',
+        '    const catOptions=cats.map(c=>`<option value="${esc(c)}" ${item.category===c?"selected":""}>${esc(c)}</option>`).join("");',
         '    card.innerHTML=`',
-        '      <div class="edit-item-row"><input value="${item.nameEN||""}" placeholder="English name" oninput="editItems[${i}].nameEN=this.value"><input value="${item.nameTH||""}" placeholder="ชื่อภาษาไทย" oninput="editItems[${i}].nameTH=this.value"></div>',
+        '      <div class="edit-item-row"><input value="${esc(item.nameEN)}" placeholder="English name" oninput="editItems[${i}].nameEN=this.value"><input value="${esc(item.nameTH)}" placeholder="ชื่อภาษาไทย" oninput="editItems[${i}].nameTH=this.value"></div>',
         '      <div class="edit-item-row three">',
         '        <select onchange="editItems[${i}].category=this.value"><option value="">-- Category --</option>${catOptions}</select>',
         '        <input type="number" value="${item.price||0}" placeholder="Price" oninput="editItems[${i}].price=parseFloat(this.value)||0">',
@@ -980,7 +1023,7 @@ footer{text-align:center;padding:12px 0 4px;}
         '      if(!catMap[item.category])catMap[item.category]={id:"cat_"+Date.now()+Math.random().toString(36).substr(2,3),categoryName:item.category,visible:true,items:[]};',
         '      catMap[item.category].items.push({id:item.id,nameEN:item.nameEN,nameTH:item.nameTH,price:item.price});',
         '    });',
-        `    const manifest={bizName:"${n}",bizTax:"${tx}",bizAddress:"${ad}",bizTel:"${ph}",bizCurrency:CURRENCY,bizLogo:LOGO_URL,bizPromptpay:PP_ID,bizVatMode:VAT_MODE,menuStructure:Object.values(catMap)};`,
+        `    const manifest={bizName:"${n}",bizTax:"${tx}",bizAddress:"${ad}",bizTel:"${ph}",bizCurrency:CURRENCY,bizLogo:LOGO_URL,bizPromptpay:PP_ID,bizPin:SHOP_PIN,bizVatMode:VAT_MODE,menuStructure:Object.values(catMap)};`,
         '    const apiPost=(path,content,msg)=>fetch("/api/deploy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,path,content,message:msg})});',
         '    const r1=await apiPost(`data/${SLUG}-menu.json`,menuJson,"pos(edit): menu update from POS terminal");',
         '    const r2=await apiPost(`data/${SLUG}-manifest.json`,JSON.stringify(manifest,null,2),"pos(edit): manifest sync from POS terminal");',
@@ -999,40 +1042,73 @@ footer{text-align:center;padding:12px 0 4px;}
         '  }',
         '}',
 
-        // Draft persistence — save/restore order across page reloads
-        'async function syncBillsToServer(bills){',
-        '  const badge=document.getElementById("syncBadge");badge.className="sync-badge busy";badge.textContent=l==="EN"?"Syncing bills…":"กำลังซิงก์บิล…";',
-        '  try{',
-        '    const r=await fetch("/api/deploy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,path:`data/${SLUG}-bills.json`,content:JSON.stringify(bills,null,2),message:`pos(bills): sync ${SLUG}`})});',
-        '    if(r.ok){ badge.className="sync-badge"; badge.textContent=l==="EN"?"Synced":"ซิงก์แล้ว"; setTimeout(()=>badge.className="sync-badge",1500); }',
-        '    else{ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync failed":"ซิงก์ล้มเหลว"; }',
-        '  }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync error":"เกิดข้อผิดพลาด"; }',
+        // ── Bills / paid-bill storage with merge-sync ───────────────────────────
+        // Every record has {id, updatedAt}. Deleting writes a tombstone ({deleted:true}) so the
+        // delete reaches the other devices instead of the bill coming back. Client and server merge
+        // by id, newest updatedAt wins, so two devices never overwrite each other's bills.
+        'const KEYS={bills:"pos_bills_"+SLUG,paid:"pos_paid_"+SLUG};',
+        'const CAPS={bills:30,paid:500};',
+        'const syncTimers={};',
+        'function stampItem(b){',
+        '  if(!b.id){const s=(b.label||"")+"|"+(b.paidAt||b.savedAt||"")+"|"+(b.total||0);let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;b.id="L"+(h>>>0).toString(36);}',
+        '  b.id=String(b.id).replace(/[^A-Za-z0-9_-]/g,"");',
+        '  if(!b.updatedAt)b.updatedAt=b.paidAt||b.savedAt||new Date(0).toISOString();',
+        '  return b;',
         '}',
-        'async function loadBillsFromServer(){',
-        '  const badge=document.getElementById("syncBadge");badge.className="sync-badge busy";badge.textContent=l==="EN"?"Loading saved bills…":"กำลังโหลดบิลที่บันทึกไว้…";',
-        '  try{',
-        '    const r=await fetch(`/data/${SLUG}-bills.json`);',
-        '    if(r.ok){ const bills=await r.json(); localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills)); renderBills(); badge.className="sync-badge"; badge.textContent=l==="EN"?"Loaded":"โหลดแล้ว"; setTimeout(()=>badge.className="sync-badge",1500); return true; }',
-        '    badge.className="sync-badge"; badge.textContent=""; return false;',
-        '  }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Load error":"โหลดไม่ได้"; return false; }',
+        'function newId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}',
+        'function sortKey(x){return x.paidAt||x.savedAt||x.updatedAt||"";}',
+        'function mergeLists(a,b,cap){',
+        '  const map={};',
+        '  a.concat(b).forEach(x=>{stampItem(x);const o=map[x.id];if(!o||x.updatedAt>o.updatedAt)map[x.id]=x;});',
+        '  const all=Object.values(map).sort((p,q)=>sortKey(q).localeCompare(sortKey(p)));',
+        '  const cutoff=Date.now()-30*24*60*60*1000;',
+        '  const live=all.filter(x=>!x.deleted).slice(0,cap);',
+        '  const dead=all.filter(x=>x.deleted&&new Date(x.updatedAt).getTime()>cutoff);',
+        '  return live.concat(dead).sort((p,q)=>sortKey(q).localeCompare(sortKey(p)));',
         '}',
-        // Paid-bill server sync — mirrors syncBillsToServer but writes data/${SLUG}-paid.json
-        'async function syncPaidBillsToServer(paid){',
-        '  const badge=document.getElementById("syncBadge");badge.className="sync-badge busy";badge.textContent=l==="EN"?"Syncing paid bills…":"กำลังซิงก์บิลที่ชำระ…";',
-        '  try{',
-        '    const r=await fetch("/api/deploy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,path:`data/${SLUG}-paid.json`,content:JSON.stringify(paid,null,2),message:`pos(paid): sync ${SLUG}`})});',
-        '    if(r.ok){ badge.className="sync-badge"; badge.textContent=l==="EN"?"Synced":"ซิงก์แล้ว"; setTimeout(()=>badge.className="sync-badge",1500); }',
-        '    else{ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync failed":"ซิงก์ล้มเหลว"; }',
-        '  }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync error":"เกิดข้อผิดพลาด"; }',
+        'function readList(kind){try{return JSON.parse(localStorage.getItem(KEYS[kind])||"[]").map(stampItem);}catch(e){return[];}}',
+        'function writeList(kind,list){localStorage.setItem(KEYS[kind],JSON.stringify(list));}',
+        'function liveList(kind){return readList(kind).filter(x=>!x.deleted);}',
+        'function commitList(kind,list){writeList(kind,mergeLists(list,[],CAPS[kind]));scheduleSync(kind);}',
+        'function tomb(b){return{id:b.id,deleted:true,updatedAt:new Date().toISOString(),paidAt:b.paidAt,savedAt:b.savedAt};}',
+        'function setBadge(cls,txt){const b=document.getElementById("syncBadge");if(!b)return;b.className="sync-badge"+(cls?" "+cls:"");b.textContent=txt||"";}',
+        // Debounced: a burst of edits becomes one server write (one git commit), not one per click
+        'function scheduleSync(kind){',
+        '  clearTimeout(syncTimers[kind]);',
+        '  syncTimers[kind]=setTimeout(()=>syncKind(kind),2500);',
         '}',
-        // Load paid bills from server and hydrate localStorage before render
-        'async function loadPaidBillsFromServer(){',
+        'async function syncKind(kind){',
+        '  clearTimeout(syncTimers[kind]);',
+        '  setBadge("busy",l==="EN"?"Syncing…":"กำลังซิงก์…");',
         '  try{',
-        '    const r=await fetch(`/data/${SLUG}-paid.json`);',
-        '    if(r.ok){ const paid=await r.json(); localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(paid||[])); renderPaidBills(); return true; }',
+        '    const r=await fetch("/api/sync",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,kind,items:readList(kind)})});',
+        '    if(!r.ok)throw new Error("HTTP "+r.status);',
+        '    const j=await r.json();',
+        '    writeList(kind,mergeLists(readList(kind),j.items||[],CAPS[kind]));',
+        '    setBadge("busy",l==="EN"?"Synced":"ซิงก์แล้ว");setTimeout(()=>setBadge("",""),1500);',
+        '    if(kind==="bills")renderBills();else renderPaidBills();',
+        '    return true;',
+        '  }catch(e){',
+        '    setBadge("err",l==="EN"?"Sync failed - will retry":"ซิงก์ล้มเหลว จะลองใหม่");',
+        '    syncTimers[kind]=setTimeout(()=>syncKind(kind),30000);',
         '    return false;',
-        '  }catch(e){ return false; }',
+        '  }',
         '}',
+        // Pull the fresh server copy (GitHub API, not the static Pages copy), merge it with the local
+        // one, and push back anything the server does not have yet (e.g. bills made while offline).
+        'async function pullKind(kind){',
+        '  try{',
+        '    const r=await fetch("/api/data?shop="+encodeURIComponent(SLUG)+"&kind="+kind,{cache:"no-store"});',
+        '    if(!r.ok)return false;',
+        '    const server=await r.json();if(!Array.isArray(server))return false;',
+        '    const merged=mergeLists(readList(kind),server,CAPS[kind]);',
+        '    writeList(kind,merged);',
+        '    const known={};server.forEach(x=>{stampItem(x);known[x.id]=x.updatedAt;});',
+        '    if(merged.some(x=>known[x.id]!==x.updatedAt))scheduleSync(kind);',
+        '    return true;',
+        '  }catch(e){return false;}',
+        '}',
+        'window.addEventListener("online",()=>{scheduleSync("bills");scheduleSync("paid");});',
         'function saveDraft(){',
         '  const rows=[];',
         '  document.querySelectorAll(".item-row").forEach(row=>{',
@@ -1093,24 +1169,22 @@ footer{text-align:center;padding:12px 0 4px;}
         '    pm:document.getElementById("pm").value,',
         '    tab:document.getElementById("tab").value,',
         '    note:document.getElementById("note").value,',
-        '    total:parseFloat(document.getElementById("totalBox").textContent)||0};',
+        '    total:parseFloat(document.getElementById("totalBox").textContent.replace(/[^0-9.]/g,""))||0};',
         '}',
         'function saveBill(){',
         '  const order=collectOrder();',
         '  if(!order.rows.length){alert(l==="EN"?"No items to save.":"ยังไม่มีรายการ");return;}',
         '  const label=document.getElementById("billLabel").value.trim()||',
         '    ("Bill "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}));',
-        '  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");',
-        '  bills.unshift({label,...order,savedAt:new Date().toISOString()});',
-        '  localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills.slice(0,30)));',
-        '  // Optimistically persist to server-backed store so bills are available across devices',
-        '  try{ syncBillsToServer(bills.slice(0,30)); }catch(e){}',
+        '  const now=new Date().toISOString();',
+        '  const bills=readList("bills");',
+        '  bills.unshift({id:newId(),label,...order,savedAt:now,updatedAt:now});',
+        '  commitList("bills",bills);',
         '  clearOrder();',
         '  renderBills();',
         '}',
         'function recallBill(idx){',
-        '  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");',
-        '  const b=bills[idx];if(!b)return;',
+        '  const b=liveList("bills")[idx];if(!b)return;',
         '  document.getElementById("disc").value=b.disc||"0";',
         '  document.getElementById("sc").value=b.sc||"0";',
         '  if(b.pm)document.getElementById("pm").value=b.pm;',
@@ -1129,20 +1203,18 @@ footer{text-align:center;padding:12px 0 4px;}
         '  calc();m("calc");',
         '}',
         'function deleteBill(idx){',
-        '  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");',
-        '  bills.splice(idx,1);',
-        '  localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills));',
-        '  try{ syncBillsToServer(bills); }catch(e){}',
+        '  const b=liveList("bills")[idx];if(!b)return;',
+        '  commitList("bills",readList("bills").map(x=>x.id===b.id?tomb(x):x));',
         '  renderBills();',
         '}',
         'function renderBills(){',
         '  const el=document.getElementById("savedBills");',
-        '  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");',
+        '  const bills=liveList("bills");',
         '  if(!bills.length){el.innerHTML=`<p style="color:var(--muted);font-size:.85rem;margin:4px 0 0">${l==="EN"?"No saved bills yet.":"ยังไม่มีบิลที่บันทึกไว้"}</p>`;return;}',
         '  el.innerHTML=bills.map((b,i)=>`',
         '    <div class="bill-row">',
         '      <div class="bill-info">',
-        '        <strong>${b.label}</strong>',
+        '        <strong>${esc(b.label)}</strong>',
         '        <span class="bill-meta">${new Date(b.savedAt).toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</span>',
         '      </div>',
         '      <button class="btn-sm btn-recall" onclick="recallBill(${i})">↩ Recall</button>',
@@ -1163,26 +1235,22 @@ footer{text-align:center;padding:12px 0 4px;}
         '  if(pmOverride)order.pm=pmOverride;',
         '  const label=document.getElementById("billLabel").value.trim()||',
         '    ("Bill "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}));',
-        '  const paid=getPaidBills(true);',
-        '  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,8);',
-        '  paid.unshift({id,label,...order,paidAt:new Date().toISOString()});',
-        '  localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(paid.slice(0,500)));',
-        '  // Persist paid bill to server so history survives across devices / clears',
-        '  try{ syncPaidBillsToServer(paid.slice(0,500)); }catch(e){}',
+        '  const now=new Date().toISOString();',
+        '  const paid=readList("paid");',
+        '  paid.unshift({id:newId(),label,...order,paidAt:now,updatedAt:now});',
+        '  commitList("paid",paid);',
         '  clearOrder();',
         '  m("hist");',
         '}',
         'function getPaidBills(unfiltered){',
-        '  const all=JSON.parse(localStorage.getItem("pos_paid_"+SLUG)||"[]");',
+        '  const all=liveList("paid");',
         '  if(unfiltered)return all;',
         '  const cutoff=Date.now()-30*24*60*60*1000;',
         '  return all.filter(b=>new Date(b.paidAt).getTime()>cutoff);',
         '}',
         'function deletePaidBill(id){',
         '  if(!confirm(uiDict[l].histDelConfirm))return;',
-        '  const all=getPaidBills(true).filter(b=>b.id!==id);',
-        '  localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(all));',
-        '  try{ syncPaidBillsToServer(all); }catch(e){}',
+        '  commitList("paid",readList("paid").map(x=>x.id===id?tomb(x):x));',
         '  renderPaidBills();',
         '}',
         'function filterPaidBills(bills,mode){',
@@ -1228,14 +1296,14 @@ footer{text-align:center;padding:12px 0 4px;}
         '      const cards=dayBills.map(b=>`',
         '        <div class="paid-card">',
         '          <div class="paid-card-header">',
-        '            <span class="paid-card-label">${b.label}</span>',
+        '            <span class="paid-card-label">${esc(b.label)}</span>',
         '            <span style="display:flex;align-items:center;gap:4px">',
         '              <span class="paid-card-total">${CURRENCY}${Math.round(b.total||0)}.00</span>',
         '              <button class="paid-del" onclick="deletePaidBill(\'${b.id}\')" title="${ui.histDel}">✕</button>',
         '            </span>',
         '          </div>',
-        '          <div class="paid-card-meta">${new Date(b.paidAt).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})} · ${b.pm||""} · ${b.tab||""}${b.note?" · "+b.note:""}</div>',
-        '          <div class="paid-items">${b.rows.map(r=>`${r.qty}× ${l==="EN"?r.nameEN:r.nameTH} (${CURRENCY}${Math.round(r.price)})`).join(", ")}</div>',
+        '          <div class="paid-card-meta">${new Date(b.paidAt).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})} · ${esc(b.pm)} · ${esc(b.tab)}${b.note?" · "+esc(b.note):""}</div>',
+        '          <div class="paid-items">${b.rows.map(r=>`${r.qty}× ${esc(l==="EN"?r.nameEN:r.nameTH)} (${CURRENCY}${Math.round(r.price)})`).join(", ")}</div>',
         '          <div style="display:flex;gap:6px;margin-top:8px"><button class="btn-sm" style="background:var(--pl);color:var(--primary)" onclick="viewPaidBill(\'${b.id}\')">${ui.histView}</button></div>',
         '        </div>`).join("");',
         '      return `<div class="hist-day"><span>${day}</span><span>${CURRENCY}${Math.round(dayTotal)}.00</span></div>${cards}`;',
@@ -1250,11 +1318,11 @@ footer{text-align:center;padding:12px 0 4px;}
         '  const labels=dict[l];',
         '  const dStr=new Date(b.paidAt).toLocaleString("en-GB");',
         '  let rows="";',
-        '  b.rows.forEach(r=>{rows+=`<tr><td style="padding:5px 6px">${l==="EN"?r.nameEN:r.nameTH}</td><td style="text-align:right;padding:5px 6px">${r.qty}</td><td style="text-align:right;padding:5px 6px">${Math.round(r.price)}.00</td><td style="text-align:right;padding:5px 6px;font-weight:600">${Math.round(r.qty*r.price)}.00</td></tr>`;});',
-        '  const win=window.open("","_blank");',
-        '  win.document.write(`<!DOCTYPE html><html><head><title>${b.label}</title><style>body{font-family:sans-serif;padding:18px;color:#222}table{width:100%;border-collapse:collapse;margin:10px 0}th{background:#2563eb;color:#fff;padding:6px;text-align:left}td{border-bottom:1px solid #eee}h2{color:#2563eb}.btns button{padding:8px 14px;margin-right:8px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer}@media print{.btns{display:none}}</style></head><body>',
+        '  b.rows.forEach(r=>{rows+=`<tr><td style="padding:5px 6px">${esc(l==="EN"?r.nameEN:r.nameTH)}</td><td style="text-align:right;padding:5px 6px">${r.qty}</td><td style="text-align:right;padding:5px 6px">${Math.round(r.price)}.00</td><td style="text-align:right;padding:5px 6px;font-weight:600">${Math.round(r.qty*r.price)}.00</td></tr>`;});',
+        '  const win=window.open("","_blank");if(!win)return;',
+        '  win.document.write(`<!DOCTYPE html><html><head><title>${esc(b.label)}</title><style>body{font-family:sans-serif;padding:18px;color:#222}table{width:100%;border-collapse:collapse;margin:10px 0}th{background:#2563eb;color:#fff;padding:6px;text-align:left}td{border-bottom:1px solid #eee}h2{color:#2563eb}.btns button{padding:8px 14px;margin-right:8px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer}@media print{.btns{display:none}}</style></head><body>',
         '    <h2>${labels.title}</h2>',
-        '    <div style="font-size:12px;color:#666;margin-bottom:10px">${dStr} · ${b.tab||""} · ${b.pm||""}${b.note?" · "+b.note:""}</div>',
+        '    <div style="font-size:12px;color:#666;margin-bottom:10px">${dStr} · ${esc(b.tab)} · ${esc(b.pm)}${b.note?" · "+esc(b.note):""}</div>',
         '    <table><thead><tr><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Unit</th><th style="text-align:right">Total</th></tr></thead><tbody>${rows}</tbody></table>',
         '    <div style="text-align:right;font-size:18px;font-weight:800;color:#2563eb;margin-top:8px">${labels.total} ${CURRENCY}${Math.round(b.total||0)}.00</div>',
         '    <div class="btns"><button onclick="window.print()">🖨 Print</button><button onclick="window.close()">Close</button></div>',
@@ -1303,9 +1371,9 @@ footer{text-align:center;padding:12px 0 4px;}
         '  const grandTotal=bills.reduce((s,b)=>s+(b.total||0),0);',
         '  let rows="";',
         '  bills.forEach(b=>{',
-        '    rows+=`<tr><td style="padding:5px 6px">${b.label}<br><span style="color:#888;font-size:11px">${new Date(b.paidAt).toLocaleString("en-GB")}</span></td><td style="text-align:right;padding:5px 6px">${b.pm||""}</td><td style="text-align:right;padding:5px 6px;font-weight:600">${CURRENCY}${Math.round(b.total||0)}.00</td></tr>`;',
+        '    rows+=`<tr><td style="padding:5px 6px">${esc(b.label)}<br><span style="color:#888;font-size:11px">${new Date(b.paidAt).toLocaleString("en-GB")}</span></td><td style="text-align:right;padding:5px 6px">${esc(b.pm)}</td><td style="text-align:right;padding:5px 6px;font-weight:600">${CURRENCY}${Math.round(b.total||0)}.00</td></tr>`;',
         '  });',
-        '  const win=window.open("","_blank");',
+        '  const win=window.open("","_blank");if(!win)return;',
         '  win.document.write(`<!DOCTYPE html><html><head><title>${ui.histTotal}</title><style>body{font-family:sans-serif;padding:18px;color:#222}table{width:100%;border-collapse:collapse}th{background:#2563eb;color:#fff;padding:6px;text-align:left}td{border-bottom:1px solid #eee}h2{color:#2563eb}.grand{font-size:18px;font-weight:800;color:#2563eb;text-align:right;margin-top:10px}</style></head><body>',
         '    <h2>${labels.title}</h2>',
         '    <div style="font-size:12px;color:#666;margin-bottom:10px">${SLUG} · ${new Date().toLocaleString("en-GB")}</div>',
@@ -1318,11 +1386,12 @@ footer{text-align:center;padding:12px 0 4px;}
 
         // Init — restore draft after live menu loads so item IDs resolve correctly
         'fb();',
-        'loadLiveMenu().then(()=>{ Promise.all([loadBillsFromServer(),loadPaidBillsFromServer()]).then(()=>{ if(!restoreDraft())add(); renderBills(); renderPaidBills(); }); });',
+        'loadLiveMenu().then(()=>{ Promise.all([pullKind("bills"),pullKind("paid")]).then(()=>{ if(!restoreDraft())add(); renderBills(); renderPaidBills(); }); });',
         'window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();window.__installEvt=e;const b=document.getElementById("installBtn");if(b){b.style.display="inline-block";b.onclick=()=>{e.prompt();e.userChoice.then(()=>{b.style.display="none";window.__installEvt=null;});};};});'
     ].join('\n');
 
-    return html + '\n<script>\n' + script + '\n<\/script>\n</body>\n</html>';
+    // "</" -> "<\/" so no user text (menu names, shop name) can close the script tag early
+    return html + '\n<script>\n' + script.replace(/<\//g, '<\\/') + '\n<\/script>\n</body>\n</html>';
 }
 
 /* ── Logo upload helpers ──────────────────────────────────────── */
@@ -1404,7 +1473,7 @@ async function loadShopList() {
             box.innerHTML = '<div class="shop-empty">No shops deployed yet.</div>';
             return;
         }
-        shops.forEach(shop => {
+        shops.filter(shop => SLUG_RE.test(shop.slug)).forEach(shop => {
             const card = document.createElement('div');
             card.className = 'shop-card';
             card.innerHTML = `

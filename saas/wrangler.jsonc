@@ -1,0 +1,16 @@
+{
+  // Cloudflare Worker (with static assets) built by @astrojs/cloudflare.
+  "name": "simple-pos",
+  "compatibility_date": "2026-10-01",
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "simple-pos",
+      // database_id is filled in by Cloudflare when the database is created (automatic provisioning)
+      "migrations_dir": "migrations"
+    }
+  ]
+  // Secrets (set in the Cloudflare dashboard or with `wrangler secret put`, never committed):
+  //   STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+}
