@@ -21,6 +21,7 @@ const GIVE_UP_AFTER = 30; // about a minute
 function Claim(): ReactNode {
   const { t, locale } = useI18n();
   const [phase, setPhase] = useState<Phase>("working");
+  const [customisation, setCustomisation] = useState(false);
   const started = useRef(false);
 
   useEffect(() => {
@@ -41,7 +42,8 @@ function Claim(): ReactNode {
             body: JSON.stringify({ sessionId }),
           });
           if (res.status === 200) {
-            const b = (await res.json()) as { slug: string; token: string; name: string };
+            const b = (await res.json()) as { slug: string; token: string; name: string; customisation?: boolean };
+            setCustomisation(b.customisation === true);
             saveLink(localStorage, { slug: b.slug, token: b.token, name: b.name });
             setPhase("ready");
             return;
@@ -77,6 +79,13 @@ function Claim(): ReactNode {
           </div>
           <h1 className="text-3xl font-extrabold text-stone-900 dark:text-stone-50">{t.welcome.readyTitle}</h1>
           <p className="text-base text-stone-600 dark:text-stone-400">{t.welcome.readyBody}</p>
+          {customisation && (
+            <a href={`/${locale}/customize/`} className="w-full rounded-2xl border-2 border-brand/40 bg-brand/10 p-4 text-left">
+              <span className="block text-lg font-bold text-stone-900 dark:text-stone-50">{t.welcome.customTitle}</span>
+              <span className="block text-base text-stone-700 dark:text-stone-300">{t.welcome.customBody}</span>
+              <span className="mt-2 block text-base font-bold text-brand dark:text-teal-300">{t.welcome.customCta} →</span>
+            </a>
+          )}
           <Button size="lg" variant="primary" block onClick={() => (window.location.href = `/${locale}/app/#sell`)}>{t.welcome.open}</Button>
         </>
       )}

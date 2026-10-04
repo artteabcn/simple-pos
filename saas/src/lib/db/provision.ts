@@ -29,7 +29,7 @@ export type PaidInput = {
 };
 
 export type ProvisionResult =
-  | { status: "created"; shopId: string; slug: string; email: string; locale: string }
+  | { status: "created"; shopId: string; slug: string; shopName: string; email: string; locale: string; customisation: boolean }
   | { status: "duplicate"; shopId: string }
   | { status: "unknown_session" }
   | { status: "amount_mismatch" };
@@ -80,13 +80,13 @@ export async function provisionPaidSession(db: Db, input: PaidInput, clock: Cloc
     }),
     db.update(signups).set({ status: "paid", updatedAt: nowIso }).where(eq(signups.id, signup.id)),
   ]);
-  return { status: "created", shopId, slug, email: signup.email, locale: signup.locale };
+  return { status: "created", shopId, slug, shopName: signup.shopName, email: signup.email, locale: signup.locale, customisation: signup.customisation };
 }
 
 export type ClaimResult =
   | { status: "pending" }
   | { status: "already_claimed" }
-  | { status: "ok"; slug: string; name: string; token: string };
+  | { status: "ok"; slug: string; name: string; token: string; customisation: boolean };
 
 /**
  * Hands the first device key to the person who just paid (they hold the Stripe session id).
@@ -107,5 +107,5 @@ export async function claimShop(db: Db, sessionId: string, clock: Clock): Promis
 
   await revokeAllDevices(db, shop.id, clock.now);
   const d = await createDevice(db, shop.id, "First device", clock);
-  return { status: "ok", slug: shop.slug, name: shop.name, token: d.token };
+  return { status: "ok", slug: shop.slug, name: shop.name, token: d.token, customisation: shop.customisation };
 }

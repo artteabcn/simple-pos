@@ -219,7 +219,10 @@
     "claimedBody": "Open it on the device where you started.",
     "missingTitle": "Nothing to set up here",
     "missingBody": "Start from the beginning to open your till.",
-    "startAgain": "Start"
+    "startAgain": "Start",
+    "customTitle": "You added curated customisation",
+    "customBody": "Tell us what you need and we will get started.",
+    "customCta": "Tell us what you need"
   },
   "login": {
     "title": "Sign in",
@@ -363,10 +366,43 @@
     },
     "footer": {
       "note": "Simple POS by Arkadya.tech",
-      "signIn": "Sign in"
+      "signIn": "Sign in",
+      "customize": "Request customisation",
+      "line": "LINE"
     },
     "mock": {
       "total": "Total"
     }
+  },
+  "custom": {
+    "title": "Tell us what you need",
+    "subtitle": "Curated customisation: we adapt your menu, receipts and look to your shop. Tell us the basics and we will get back to you.",
+    "lineTitle": "Prefer to chat?",
+    "lineBody": "Message us on LINE and we will help you step by step.",
+    "lineButton": "Chat with us on LINE",
+    "name": "Your name",
+    "shopName": "Shop name",
+    "email": "Your email",
+    "contact": "Phone or LINE ID",
+    "contactHint": "So we can reach you quickly",
+    "needsLegend": "What do you need?",
+    "details": "Anything else we should know?",
+    "detailsHint": "For example: how many items, which languages, opening hours.",
+    "needs": {
+      "menu": "Set up my menu",
+      "receipt": "Logo and receipt look",
+      "languages": "Languages and wording",
+      "import": "Move my items from a spreadsheet or old system",
+      "training": "Show my staff how to use it",
+      "other": "Something else"
+    },
+    "send": "Send request",
+    "sending": "Sending…",
+    "needOne": "Tick at least one box, or write a few words",
+    "sentTitle": "Thank you, we got your request",
+    "sentBody": "We will contact you by email or on LINE. A copy is on its way to your inbox.",
+    "errorMany": "You already sent a few requests. Please wait a little, or message us on LINE.",
+    "errorGeneric": "Could not send your request. Please try again, or message us on LINE.",
+    "backToTill": "Back to my till"
   }
 }

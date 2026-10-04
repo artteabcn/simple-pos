@@ -7,7 +7,7 @@ import { attachStripeSession, reserveSignup } from "../lib/db/signups";
 export async function createPaidShop(
   db: Db,
   clock: Clock,
-  o: { slug?: string; email?: string; name?: string; session?: string } = {},
+  o: { slug?: string; email?: string; name?: string; session?: string; paymentIntent?: string } = {},
 ) {
   const slug = o.slug ?? "baan-mali";
   const email = o.email ?? "mali@example.com";
@@ -15,7 +15,7 @@ export async function createPaidShop(
   const r = await reserveSignup(db, { shopName: o.name ?? "Baan Mali", slug, email, customisation: false, locale: "en" }, clock);
   if (!r.ok) throw new Error("slug taken");
   await attachStripeSession(db, r.signupId, session, clock.now);
-  const p = await provisionPaidSession(db, { sessionId: session, paymentIntent: null, amountTotal: 49_900, currency: "thb" }, clock);
+  const p = await provisionPaidSession(db, { sessionId: session, paymentIntent: o.paymentIntent ?? `pi_${slug}`, amountTotal: 49_900, currency: "thb" }, clock);
   if (p.status !== "created") throw new Error(`not created: ${p.status}`);
   const c = await claimShop(db, session, clock);
   if (c.status !== "ok") throw new Error("claim failed");

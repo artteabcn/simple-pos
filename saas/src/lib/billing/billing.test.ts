@@ -89,6 +89,10 @@ describe("events", () => {
   it("an async payment that succeeds later does", () => {
     expect(interpretEvent({ ...obj({ payment_status: "paid", amount_total: 1, currency: "thb" }), type: "checkout.session.async_payment_succeeded" }).kind).toBe("paid");
   });
+  it("a refund is passed on with the amounts", () => {
+    expect(interpretEvent({ id: "evt", type: "charge.refunded", data: { object: { id: "ch_1", payment_intent: "pi_9", amount: 49900, amount_refunded: 49900 } } })).toEqual({ kind: "refunded", paymentIntent: "pi_9", amount: 49900, amountRefunded: 49900 });
+    expect(interpretEvent({ id: "evt", type: "charge.refunded", data: { object: { id: "ch_1", payment_intent: null } } }).kind).toBe("ignored");
+  });
   it("expired / failed releases the reservation; other events are ignored", () => {
     expect(interpretEvent({ ...obj({}), type: "checkout.session.expired" }).kind).toBe("expired");
     expect(interpretEvent({ ...obj({}), type: "checkout.session.async_payment_failed" }).kind).toBe("expired");

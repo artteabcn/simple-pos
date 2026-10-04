@@ -20,7 +20,7 @@ const post = (path, body, headers = {}) => fetch(BASE + path, { method: "POST", 
 const event = (id, type, obj) => JSON.stringify({ id, type, data: { object: { id: SESSION, ...obj } } });
 const webhook = (body, sig) => post("/api/stripe/webhook", body, sig === null ? {} : { "stripe-signature": sig ?? sign(body) });
 
-sql("DELETE FROM manager_sessions; DELETE FROM login_links; DELETE FROM devices; DELETE FROM records; DELETE FROM payments; DELETE FROM shops; DELETE FROM signups; DELETE FROM stripe_events;");
+sql("DELETE FROM customization_requests; DELETE FROM manager_sessions; DELETE FROM login_links; DELETE FROM devices; DELETE FROM records; DELETE FROM payments; DELETE FROM shops; DELETE FROM signups; DELETE FROM stripe_events;");
 // ---- seed: a signup that Stripe checkout would have created (we do not call Stripe here)
 const now = new Date().toISOString(), later = new Date(Date.now() + 3600e3).toISOString();
 sql(`INSERT OR REPLACE INTO signups (id, slug, shop_name, email, customisation, locale, amount_expected, stripe_session_id, status, expires_at, created_at, updated_at)

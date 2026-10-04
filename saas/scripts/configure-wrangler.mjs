@@ -3,7 +3,7 @@
 //   DB_ID=... DOMAIN=pos.example.com node scripts/configure-wrangler.mjs
 import { readFileSync, writeFileSync } from "node:fs";
 
-export function configure(text, { dbId, domain, emailFrom, replyTo }) {
+export function configure(text, { dbId, domain, emailFrom, replyTo, teamEmail }) {
   // wrangler.jsonc only has whole-line comments; drop them and read the rest as JSON
   const config = JSON.parse(text.split("\n").filter((l) => !l.trim().startsWith("//")).join("\n"));
   if (dbId) config.d1_databases[0].database_id = dbId;
@@ -13,6 +13,7 @@ export function configure(text, { dbId, domain, emailFrom, replyTo }) {
   }
   if (emailFrom) config.vars = { ...config.vars, EMAIL_FROM: emailFrom };
   if (replyTo) config.vars = { ...config.vars, EMAIL_REPLY_TO: replyTo };
+  if (teamEmail) config.vars = { ...config.vars, TEAM_EMAIL: teamEmail };
   return config;
 }
 
@@ -23,6 +24,7 @@ if ((process.argv[1] ?? "").endsWith("configure-wrangler.mjs")) {
     domain: process.env.DOMAIN,
     emailFrom: process.env.EMAIL_FROM,
     replyTo: process.env.EMAIL_REPLY_TO,
+    teamEmail: process.env.TEAM_EMAIL,
   });
   writeFileSync(file, JSON.stringify(out, null, 2) + "\n");
   console.log("wrangler.jsonc updated:", JSON.stringify({ db: out.d1_databases[0].database_id ?? "(auto)", routes: out.routes, vars: Object.keys(out.vars ?? {}) }));

@@ -2,11 +2,13 @@ import type { Locale } from "../i18n/utils";
 
 export type MailEnv = {
   RESEND_API_KEY?: string;
+  /** Where team notifications go (new shop, request, refund). */
+  TEAM_EMAIL?: string;
   EMAIL_FROM?: string;
   EMAIL_REPLY_TO?: string;
 };
 
-export type Mail = { to: string; subject: string; html: string };
+export type Mail = { to: string; subject: string; html: string; replyTo?: string };
 
 const esc = (s: string): string =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
@@ -60,9 +62,51 @@ export function loginMail(to: string, locale: Locale, links: ShopLink[]): Mail {
   return { to, subject: c.subject, html: shell(c.title, c.body, links.map((l) => ({ label: c.open(l.name), href: l.url })), FOOTER[locale]) };
 }
 
-export function welcomeMail(to: string, locale: Locale, url: string): Mail {
+const CUSTOM: Record<Locale, { ask: string; line: string; confirmSubject: string; confirmTitle: string; confirmBody: string }> = {
+  en: { ask: "Tell us what you need", line: "Chat with us on LINE", confirmSubject: "We received your request - Simple POS", confirmTitle: "Thank you, we got your request", confirmBody: "We will contact you by email or on LINE. You can also message us on LINE at any time." },
+  th: { ask: "บอกเราว่าคุณต้องการอะไร", line: "แชทกับเราทาง LINE", confirmSubject: "เราได้รับคำขอของคุณแล้ว - Simple POS", confirmTitle: "ขอบคุณ เราได้รับคำขอของคุณแล้ว", confirmBody: "เราจะติดต่อกลับทางอีเมลหรือ LINE คุณสามารถส่งข้อความหาเราทาง LINE ได้ทุกเมื่อ" },
+  fr: { ask: "Dites-nous ce qu'il vous faut", line: "Écrivez-nous sur LINE", confirmSubject: "Nous avons reçu votre demande - Simple POS", confirmTitle: "Merci, nous avons bien reçu votre demande", confirmBody: "Nous vous contacterons par e-mail ou sur LINE. Vous pouvez aussi nous écrire sur LINE à tout moment." },
+  de: { ask: "Sagen Sie uns, was Sie brauchen", line: "Schreiben Sie uns auf LINE", confirmSubject: "Wir haben Ihre Anfrage erhalten - Simple POS", confirmTitle: "Vielen Dank, wir haben Ihre Anfrage erhalten", confirmBody: "Wir melden uns per E-Mail oder auf LINE. Sie können uns auch jederzeit auf LINE schreiben." },
+};
+
+export type WelcomeOptions = { customizeUrl?: string; lineUrl?: string };
+
+/** The welcome email. Owners who bought the customisation add-on also get a button to describe what they need. */
+export function welcomeMail(to: string, locale: Locale, url: string, opts: WelcomeOptions = {}): Mail {
   const c = WELCOME[locale];
-  return { to, subject: c.subject, html: shell(c.title, c.body, [{ label: c.open, href: url }], FOOTER[locale]) };
+  const buttons: Button[] = [{ label: c.open, href: url }];
+  if (opts.customizeUrl) buttons.push({ label: CUSTOM[locale].ask, href: opts.customizeUrl });
+  if (opts.customizeUrl && opts.lineUrl) buttons.push({ label: CUSTOM[locale].line, href: opts.lineUrl });
+  return { to, subject: c.subject, html: shell(c.title, c.body, buttons, FOOTER[locale]) };
+}
+
+/** Sent to the person who filled in the customisation form. */
+export function requestConfirmMail(to: string, locale: Locale, lineUrl: string): Mail {
+  const c = CUSTOM[locale];
+  return { to, subject: c.confirmSubject, html: shell(c.confirmTitle, c.confirmBody, [{ label: c.line, href: lineUrl }], FOOTER[locale]) };
+}
+
+const REFUND: Record<Locale, { subject: string; title: string; body: string }> = {
+  en: { subject: "Your Simple POS payment was refunded", title: "Your payment was refunded", body: "Your payment has been refunded, so your till has been switched off. Your sales are kept safe. If this is a mistake, write to hello@arkadya.tech or message us on LINE." },
+  th: { subject: "คืนเงินค่า Simple POS ของคุณแล้ว", title: "เราคืนเงินให้คุณแล้ว", body: "เราคืนเงินการชำระของคุณแล้ว เครื่องคิดเงินของคุณจึงถูกปิดใช้งาน ข้อมูลการขายของคุณยังถูกเก็บไว้อย่างปลอดภัย หากเกิดความผิดพลาด โปรดเขียนถึง hello@arkadya.tech หรือส่งข้อความหาเราทาง LINE" },
+  fr: { subject: "Votre paiement Simple POS a été remboursé", title: "Votre paiement a été remboursé", body: "Votre paiement a été remboursé, votre caisse a donc été désactivée. Vos ventes restent conservées en sécurité. S'il s'agit d'une erreur, écrivez à hello@arkadya.tech ou contactez-nous sur LINE." },
+  de: { subject: "Ihre Simple-POS-Zahlung wurde erstattet", title: "Ihre Zahlung wurde erstattet", body: "Ihre Zahlung wurde erstattet, daher wurde Ihre Kasse abgeschaltet. Ihre Verkäufe bleiben sicher gespeichert. Falls das ein Irrtum ist, schreiben Sie an hello@arkadya.tech oder auf LINE." },
+};
+
+/** Sent to the owner after a full refund. */
+export function refundOwnerMail(to: string, locale: Locale, lineUrl: string): Mail {
+  const c = REFUND[locale];
+  return { to, subject: c.subject, html: shell(c.title, c.body, [{ label: CUSTOM[locale].line, href: lineUrl }], FOOTER[locale]) };
+}
+
+/** Internal note for the team (English): who paid, who asked for what, who was refunded. All values escaped. */
+export function teamMail(to: string, subject: string, lines: [label: string, value: string][], replyTo?: string): Mail & { replyTo?: string } {
+  const rows = lines
+    .filter(([, v]) => v !== "")
+    .map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;color:#78716c;vertical-align:top;white-space:nowrap">${esc(k)}</td><td style="padding:4px 0;white-space:pre-wrap">${esc(v)}</td></tr>`)
+    .join("");
+  const html = `<!doctype html><html><body style="margin:0;background:#fafaf9;font-family:Arial,sans-serif;color:#1c1917"><table cellpadding="0" cellspacing="0" style="margin:24px auto;max-width:560px;background:#fff;border-radius:12px;padding:24px;font-size:15px;line-height:1.5"><tr><td style="font-size:18px;font-weight:700;color:#0f766e;padding-bottom:12px">${esc(subject)}</td></tr><tr><td><table cellpadding="0" cellspacing="0">${rows}</table></td></tr></table></body></html>`;
+  return { to, subject, html, replyTo };
 }
 
 export type SendResult = { sent: boolean };
@@ -82,7 +126,7 @@ export async function sendMail(env: MailEnv, mail: Mail, fetchFn: typeof fetch =
         to: [mail.to],
         subject: mail.subject,
         html: mail.html,
-        ...(env.EMAIL_REPLY_TO ? { reply_to: env.EMAIL_REPLY_TO } : {}),
+        ...(mail.replyTo ?? env.EMAIL_REPLY_TO ? { reply_to: mail.replyTo ?? env.EMAIL_REPLY_TO } : {}),
       }),
     });
     if (!res.ok) console.error("Resend error", res.status);

@@ -120,18 +120,32 @@ export type PaidSession = {
   currency: string;
 };
 export type ExpiredSession = { kind: "expired"; sessionId: string };
+export type RefundedCharge = { kind: "refunded"; paymentIntent: string; amount: number; amountRefunded: number };
 export type IgnoredEvent = { kind: "ignored" };
 
 type StripeEvent = {
   id: string;
   type: string;
-  data?: { object?: { id?: string; payment_status?: string; payment_intent?: string | null; amount_total?: number; currency?: string } };
+  data?: {
+    object?: {
+      id?: string;
+      payment_status?: string;
+      payment_intent?: string | null;
+      amount_total?: number;
+      currency?: string;
+      amount?: number;
+      amount_refunded?: number;
+    };
+  };
 };
 
 /** Reduces a Stripe event to what the shop provisioning cares about. */
-export function interpretEvent(e: StripeEvent): PaidSession | ExpiredSession | IgnoredEvent {
+export function interpretEvent(e: StripeEvent): PaidSession | ExpiredSession | RefundedCharge | IgnoredEvent {
   const o = e.data?.object;
   if (!o?.id) return { kind: "ignored" };
+  if (e.type === "charge.refunded" && o.payment_intent) {
+    return { kind: "refunded", paymentIntent: o.payment_intent, amount: o.amount ?? 0, amountRefunded: o.amount_refunded ?? 0 };
+  }
   const paid =
     e.type === "checkout.session.async_payment_succeeded" ||
     (e.type === "checkout.session.completed" && o.payment_status === "paid");

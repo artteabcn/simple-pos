@@ -1,3 +1,21 @@
+CREATE TABLE `customization_requests` (
+	`id` text PRIMARY KEY NOT NULL,
+	`shop_id` text,
+	`name` text NOT NULL,
+	`email` text NOT NULL,
+	`shop_name` text DEFAULT '' NOT NULL,
+	`contact` text DEFAULT '' NOT NULL,
+	`needs_json` text DEFAULT '[]' NOT NULL,
+	`details` text DEFAULT '' NOT NULL,
+	`locale` text DEFAULT 'en' NOT NULL,
+	`status` text DEFAULT 'new' NOT NULL,
+	`created_at` text NOT NULL,
+	`updated_at` text NOT NULL,
+	FOREIGN KEY (`shop_id`) REFERENCES `shops`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE INDEX `requests_email_idx` ON `customization_requests` (`email`,`created_at`);--> statement-breakpoint
+CREATE INDEX `requests_status_idx` ON `customization_requests` (`status`,`created_at`);--> statement-breakpoint
 CREATE TABLE `devices` (
 	`id` text PRIMARY KEY NOT NULL,
 	`shop_id` text NOT NULL,

@@ -219,7 +219,10 @@
     "claimedBody": "Ouvrez-la sur l'appareil où vous avez commencé.",
     "missingTitle": "Rien à configurer ici",
     "missingBody": "Recommencez depuis le début pour ouvrir votre caisse.",
-    "startAgain": "Commencer"
+    "startAgain": "Commencer",
+    "customTitle": "Vous avez choisi la personnalisation sur mesure",
+    "customBody": "Dites-nous ce qu'il vous faut et nous nous mettons au travail.",
+    "customCta": "Dites-nous ce qu'il vous faut"
   },
   "login": {
     "title": "Connexion",
@@ -363,10 +366,43 @@
     },
     "footer": {
       "note": "Simple POS par Arkadya.tech",
-      "signIn": "Se connecter"
+      "signIn": "Se connecter",
+      "customize": "Demander une personnalisation",
+      "line": "LINE"
     },
     "mock": {
       "total": "Total"
     }
+  },
+  "custom": {
+    "title": "Dites-nous ce qu'il vous faut",
+    "subtitle": "Personnalisation sur mesure : nous adaptons votre menu, vos tickets et l'apparence à votre boutique. Décrivez l'essentiel et nous revenons vers vous.",
+    "lineTitle": "Vous préférez discuter ?",
+    "lineBody": "Écrivez-nous sur LINE et nous vous aidons pas à pas.",
+    "lineButton": "Écrivez-nous sur LINE",
+    "name": "Votre nom",
+    "shopName": "Nom de la boutique",
+    "email": "Votre e-mail",
+    "contact": "Téléphone ou identifiant LINE",
+    "contactHint": "Pour vous joindre rapidement",
+    "needsLegend": "De quoi avez-vous besoin ?",
+    "details": "Autre chose à nous dire ?",
+    "detailsHint": "Par exemple : nombre d'articles, langues, horaires d'ouverture.",
+    "needs": {
+      "menu": "Configurer mon menu",
+      "receipt": "Logo et apparence du ticket",
+      "languages": "Langues et formulations",
+      "import": "Reprendre mes articles depuis un tableur ou un ancien système",
+      "training": "Former mon personnel",
+      "other": "Autre chose"
+    },
+    "send": "Envoyer la demande",
+    "sending": "Envoi…",
+    "needOne": "Cochez au moins une case, ou écrivez quelques mots",
+    "sentTitle": "Merci, nous avons bien reçu votre demande",
+    "sentBody": "Nous vous contacterons par e-mail ou sur LINE. Une copie arrive dans votre boîte mail.",
+    "errorMany": "Vous avez déjà envoyé plusieurs demandes. Patientez un peu, ou écrivez-nous sur LINE.",
+    "errorGeneric": "Impossible d'envoyer votre demande. Réessayez, ou écrivez-nous sur LINE.",
+    "backToTill": "Retour à ma caisse"
   }
 }

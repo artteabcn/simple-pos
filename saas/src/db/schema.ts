@@ -73,6 +73,28 @@ export const managerSessions = sqliteTable(
   (t) => [index("manager_sessions_device_idx").on(t.deviceId)],
 );
 
+/** "Curated customisation" requests: what the owner needs, so the team can get back to them. */
+export const customizationRequests = sqliteTable(
+  "customization_requests",
+  {
+    id: text("id").primaryKey(),
+    /** Linked automatically when the email belongs to a paying shop. */
+    shopId: text("shop_id").references(() => shops.id),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    shopName: text("shop_name").notNull().default(""),
+    /** Phone number or LINE id, whatever the owner prefers. */
+    contact: text("contact").notNull().default(""),
+    needsJson: text("needs_json").notNull().default("[]"),
+    details: text("details").notNull().default(""),
+    locale: text("locale").notNull().default("en"),
+    status: text("status", { enum: ["new", "in_progress", "done"] }).notNull().default("new"),
+    createdAt: text("created_at").notNull().$defaultFn(now),
+    updatedAt: text("updated_at").notNull().$defaultFn(now).$onUpdateFn(now),
+  },
+  (t) => [index("requests_email_idx").on(t.email, t.createdAt), index("requests_status_idx").on(t.status, t.createdAt)],
+);
+
 /** A started checkout. Reserves the web address for a while so two people cannot pay for the same one. */
 export const signups = sqliteTable(
   "signups",
@@ -147,6 +169,7 @@ export const records = sqliteTable(
 
 export type ShopRow = typeof shops.$inferSelect;
 export type DeviceRow = typeof devices.$inferSelect;
+export type CustomizationRequestRow = typeof customizationRequests.$inferSelect;
 export type SignupRow = typeof signups.$inferSelect;
 export type PaymentRow = typeof payments.$inferSelect;
 export type RecordRow = typeof records.$inferSelect;

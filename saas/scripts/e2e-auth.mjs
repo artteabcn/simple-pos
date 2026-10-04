@@ -22,7 +22,7 @@ const cfg = (name, at) => ({ profile: { name, taxId: "", tel: "", address: "", c
 
 // ---- a paid shop (as the Stripe webhook would create it)
 const now = new Date().toISOString(), later = new Date(Date.now() + 3600e3).toISOString();
-sql(`DELETE FROM manager_sessions; DELETE FROM login_links; DELETE FROM devices; DELETE FROM records; DELETE FROM payments; DELETE FROM shops; DELETE FROM signups; DELETE FROM stripe_events;
+sql(`DELETE FROM customization_requests; DELETE FROM manager_sessions; DELETE FROM login_links; DELETE FROM devices; DELETE FROM records; DELETE FROM payments; DELETE FROM shops; DELETE FROM signups; DELETE FROM stripe_events;
 INSERT INTO signups (id,slug,shop_name,email,customisation,locale,amount_expected,stripe_session_id,status,expires_at,created_at,updated_at) VALUES ('sg_a','auth-cafe','Auth Cafe','owner@example.com',0,'th',49900,'${SESSION}','pending','${later}','${now}','${now}');`);
 const evt = JSON.stringify({ id: "evt_auth_1", type: "checkout.session.completed", data: { object: { id: SESSION, payment_status: "paid", amount_total: 49900, currency: "thb", payment_intent: "pi_a" } } });
 let r = await fetch(BASE + "/api/stripe/webhook", { method: "POST", headers: { "content-type": "application/json", "stripe-signature": sign(evt) }, body: evt });
@@ -123,7 +123,7 @@ r = await get("/sitemap.xml");
 txt = await r.text();
 const locs = [...txt.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
 const dates = [...txt.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1]);
-ok(r.status === 200 && r.headers.get("content-type").includes("xml") && locs.length === 12 && locs.every((u) => !/app|welcome|verify|api/.test(u)), "sitemap.xml: 12 public pages only (3 pages x 4 languages)", { n: locs.length });
+ok(r.status === 200 && r.headers.get("content-type").includes("xml") && locs.length === 16 && locs.every((u) => !/app|welcome|verify|api/.test(u)), "sitemap.xml: 16 public pages only (4 pages x 4 languages)", { n: locs.length });
 ok(dates.every((d) => d <= new Date().toISOString().slice(0, 10)), "sitemap.xml: no date in the future", dates[0]);
 r = await get("/llms.txt");
 txt = await r.text();
@@ -141,6 +141,49 @@ b = await r.json();
 ok(r.status === 200 && b.ok === true, "health check: site up and database reachable", b);
 r = await get("/does-not-exist.txt");
 ok(r.status === 404, "a missing file is a real 404 (not a 200 fallback page)", r.status);
+
+// ---- customisation request form, bot trap, rate limit
+const reqBody = (over = {}) => ({ name: "Mali", email: "request-test@example.com", shopName: "Baan Mali", contact: "@mali", needs: ["menu"], details: "40 items", locale: "en", ...over });
+r = await post("/api/customization", reqBody({ needs: [], details: "" }));
+ok(r.status === 400, "request form: empty request refused", r.status);
+r = await post("/api/customization", reqBody({ email: "nope" }));
+ok(r.status === 400, "request form: bad email refused", r.status);
+r = await post("/api/customization", reqBody({ needs: ["hack"] }));
+ok(r.status === 400, "request form: unknown option refused", r.status);
+for (let i = 0; i < 6; i++) r = await post("/api/customization", reqBody({ email: "bot@example.com", website: "http://spam.example" }));
+ok(r.status === 200, "request form: a bot that fills the hidden box looks successful (and is never rate limited because nothing is saved)", r.status);
+let codes = [];
+for (let i = 0; i < 4; i++) codes.push((await post("/api/customization", reqBody())).status);
+ok(codes.join(",") === "200,200,200,429", "request form: three requests an hour per address, then 429", codes);
+r = await post("/api/customization", reqBody({ email: "owner@example.com", shopName: "" }));
+ok(r.status === 200, "request form: an existing owner's request is accepted", r.status);
+
+// ---- request page and LINE link
+r = await get("/en/customize/");
+html = await r.text();
+ok(r.status === 200 && html.includes("<html lang=\"en\"") && !html.includes("noindex"), "customize page: served in English and open to search", r.status);
+r = await get("/th/customize/");
+ok(r.status === 200, "customize page: Thai version served", r.status);
+html = await (await get("/en/")).text();
+ok(html.includes("line.me/R/ti/p/%40214pknvg") && html.includes("/en/customize/"), "landing page links to the request page and to LINE", null);
+txt = await (await get("/llms.txt")).text();
+ok(txt.includes("/en/customize/") && txt.includes("line.me/R/ti/p/%40214pknvg"), "llms.txt mentions the request page and LINE", null);
+
+// ---- a refund arriving through a signed webhook
+r = await get("/sitemap.xml");
+const sm = await r.text();
+ok([...sm.matchAll(/<loc>/g)].length === 16 && sm.includes("/th/customize/"), "sitemap.xml now lists 16 public pages (4 x 4 languages)", null);
+const refundEvt = JSON.stringify({ id: "evt_auth_refund", type: "charge.refunded", data: { object: { id: "ch_auth", payment_intent: "pi_a", amount: 49900, amount_refunded: 49900 } } });
+r = await fetch(BASE + "/api/stripe/webhook", { method: "POST", headers: { "content-type": "application/json", "stripe-signature": sign(refundEvt) }, body: refundEvt });
+b = await r.json();
+ok(r.status === 200 && b.result === "suspended", "refund: a full refund through a signed webhook switches the shop off", b);
+ok((await sync(A)).status === 401 && (await sync(B)).status === 401, "refund: every device key of that shop stopped working", null);
+r = await post("/api/auth/request", { email: "owner@example.com", locale: "en" });
+b = await r.json();
+ok(r.status === 200 && !b.devLinks, "refund: no sign-in link is issued for a switched-off shop", b);
+r = await fetch(BASE + "/api/stripe/webhook", { method: "POST", headers: { "content-type": "application/json", "stripe-signature": sign(refundEvt) }, body: refundEvt });
+b = await r.json();
+ok(b.duplicate === true, "refund: the same refund event again does nothing", b);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

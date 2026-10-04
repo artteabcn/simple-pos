@@ -21,6 +21,7 @@ env:
   DOMAIN: ${{ vars.DOMAIN || 'pos.arkadya.tech' }}
   EMAIL_FROM: ${{ vars.EMAIL_FROM || 'Simple POS <no-reply@arkadya.tech>' }}
   EMAIL_REPLY_TO: ${{ vars.EMAIL_REPLY_TO || 'hello@arkadya.tech' }}
+  TEAM_EMAIL: ${{ vars.TEAM_EMAIL || 'hello@arkadya.tech' }}
   CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
   CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
@@ -85,7 +86,7 @@ jobs:
               -d "enabled_events[]=checkout.session.completed" \
               -d "enabled_events[]=checkout.session.async_payment_succeeded" \
               -d "enabled_events[]=checkout.session.async_payment_failed" \
-              -d "enabled_events[]=checkout.session.expired" | node -e "process.stdout.write(JSON.parse(require('fs').readFileSync(0,'utf8')).secret||'')")
+              -d "enabled_events[]=checkout.session.expired" \n              -d "enabled_events[]=charge.refunded" | node -e "process.stdout.write(JSON.parse(require('fs').readFileSync(0,'utf8')).secret||'')")
             echo "::add-mask::$SECRET"
             echo "whsec=$SECRET" >> "$GITHUB_OUTPUT"
             echo "Created Stripe webhook"

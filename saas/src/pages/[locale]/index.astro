@@ -4,7 +4,7 @@ import { INTL_TAG, LOCALES, useTranslations, type Locale } from "../../i18n/util
 import { formatMoney } from "../../lib/pos/calc";
 import { itemName } from "../../lib/pos/state";
 import { sampleMenu } from "../../lib/pos/sample";
-import { PRICE_ADDON_BAHT, PRICE_SETUP_BAHT, SITE_URL } from "../../lib/site";
+import { LINE_URL, PRICE_ADDON_BAHT, PRICE_SETUP_BAHT, SITE_URL } from "../../lib/site";
 
 export const prerender = true;
 
@@ -171,6 +171,7 @@ const jsonLd = [
             </div>
             <p class="shrink-0 text-lg font-extrabold text-brand">+{money(PRICE_ADDON_BAHT)}</p>
           </div>
+          <a href={`/${locale}/customize/`} class="mt-3 flex min-h-11 items-center justify-center text-base font-semibold text-brand underline-offset-4 hover:underline">{L.footer.customize}</a>
           <a href={`/${locale}/start/`} class="bg-brand hover:bg-brand-strong mt-6 flex min-h-14 items-center justify-center rounded-xl text-lg font-bold text-white transition-[background-color,transform] active:scale-[0.98]">{L.price.cta}</a>
         </div>
       </div>
@@ -199,6 +200,8 @@ const jsonLd = [
       <nav class="flex gap-5" aria-label="Simple POS">
         <a href={`/${locale}/login/`} class="font-semibold text-stone-800 hover:text-brand">{L.footer.signIn}</a>
         <a href={`/${locale}/start/`} class="font-semibold text-stone-800 hover:text-brand">{L.nav.cta}</a>
+        <a href={`/${locale}/customize/`} class="font-semibold text-stone-800 hover:text-brand">{L.footer.customize}</a>
+        <a href={LINE_URL} target="_blank" rel="noopener noreferrer" class="font-semibold text-stone-800 hover:text-brand">{L.footer.line}</a>
       </nav>
     </div>
   </footer>

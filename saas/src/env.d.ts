@@ -12,6 +12,8 @@ interface Env {
   /** Sender, e.g. "Simple POS <no-reply@arkadya.tech>". A plain variable, not a secret. */
   EMAIL_FROM?: string;
   EMAIL_REPLY_TO?: string;
+  /** Where the team is told about new shops, requests and refunds (default hello@arkadya.tech). */
+  TEAM_EMAIL?: string;
   /** Public address of the site; defaults to the address the request came to. */
   PUBLIC_SITE_URL?: string;
   /** Local development only: return sign-in links in the API reply when no email key is set. Never set in production. */
