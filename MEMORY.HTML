@@ -35,11 +35,11 @@
 
 <section id="roadmap"><h2>Roadmap</h2>
 <table><tr><th>Step</th><th>What</th><th>Status</th></tr>
-<tr><td>0</td><td>Harden the legacy app: merge-sync bills, fresh reads, PIN kept, escaping, self-hosted QR, CSV import, charset headers (branch <code>fix/saas-hardening</code>)</td><td class="ok">done, committed, not pushed</td></tr>
+<tr><td>0</td><td>Harden the legacy app: merge-sync bills, fresh reads, PIN kept, escaping, self-hosted QR, CSV import, charset headers (branch <code>fix/saas-hardening</code>)</td><td class="ok">done, pushed</td></tr>
 <tr><td>1</td><td>Move to one workspace and the Astro foundation; typed, tested business logic; 4 languages (branch <code>feat/saas-foundation</code>)</td><td class="ok">done, pushed</td></tr>
 <tr><td>2</td><td>Friendlier interface for non-technical owners: tap-to-sell tiles, cash change calculator, PromptPay QR, undo for deletes, first-run wizard, plain wording (branch <code>feat/saas-ui</code>, route <code>/&lt;locale&gt;/app/</code>)</td><td class="ok">built and verified in a browser (EN, TH, DE; phone and desktop); data is still local to the device until step 3</td></tr>
 <tr><td>3</td><td>Stripe Checkout (499 THB, +299 THB add-on) and D1 replacing GitHub as database; till sync across devices (branch <code>feat/saas-payments-d1</code>)</td><td class="ok">built; tested with a real SQLite, a local D1 on the Worker runtime and a browser. Not yet run against real Stripe or a remote D1 (owner steps below)</td></tr>
-<tr><td>4</td><td>Landing page, login, server-checked PIN (also closes the open <code>/api/deploy</code> hole)</td><td class="muted">planned</td></tr></table></section>
+<tr><td>4</td><td>Landing page (4 languages, search and AI discoverability), sign-in by emailed link, per-device keys, server-checked manager PIN, welcome email via Resend, deploy workflow (branch <code>feat/saas-auth-landing</code>)</td><td class="ok">built; 113 tests, 64 local end-to-end checks and a browser walkthrough. Not yet deployed (owner steps above)</td></tr></table></section>
 
 <section id="infra"><h2>Infrastructure</h2>
 <ul><li>Hosting: Cloudflare Pages, deploys from GitHub <code>artteabcn/simple-pos</code>, branch <code>main</code>. Pages Functions in <code>functions/</code> (legacy).</li>
@@ -65,6 +65,10 @@
 <tr><td><code>src/lib/pos/state.ts</code></td><td>Pure reducers: order, saved bills, payment, delete + undo (tombstones), menu edits, history ranges, CSV export. No UI, fully tested</td></tr>
 <tr><td><code>src/lib/pos/store.ts</code></td><td>Browser store (localStorage key <code>spos:v1</code>), validated with Zod on load, debounced save, <code>usePos()</code> hook. Step 3 replaces persistence with D1 sync</td></tr>
 <tr><td><code>src/lib/pos/csv.ts</code>, <code>sample.ts</code></td><td>Menu import (BOM, UTF-8 / Windows-874, RFC 4180) and the sample menu</td></tr>
+<tr><td><code>src/pages/[locale]/index.astro</code></td><td>The landing page: static HTML (no JavaScript), hero with a drawn till, steps, features, price, FAQ, JSON-LD (Organization, WebSite, SoftwareApplication with the 499 THB offer, FAQPage). Text lives in the <code>landing</code> block of the four language files</td></tr>
+<tr><td><code>src/pages/robots.txt.ts</code>, <code>sitemap.xml.ts</code>, <code>llms.txt.ts</code>, <code>llms-full.txt.ts</code></td><td>Built from <code>src/lib/site.ts</code> (domain, prices, last-modified date) and the same dictionary text, so they cannot drift from the site. robots blocks the API and private pages and names AI crawlers explicitly</td></tr>
+<tr><td><code>design/make-og.mjs</code></td><td>Renders <code>public/og.png</code> (1200x630, Thai, QR to the site) with headless Edge; decode the PNG to prove the QR scans</td></tr>
+<tr><td><code>src/lib/db/{devices,login,pin}.ts</code>, <code>src/lib/email.ts</code></td><td>Per-device keys, email sign-in links, manager PIN with lockout, Resend emails (4 languages, escaped)</td></tr>
 <tr><td><code>src/components/pos/*</code></td><td>Screens: SellScreen, CartPanel (CartLines + CartTotals), PaySheet, SavedScreen, HistoryScreen, ShopScreen, SetupWizard; shared ui.tsx (Button, Field, Sheet, Toast with Undo), Print.tsx (receipt printed from a hidden area, no pop-up), i18n.tsx</td></tr></table>
 <p><b>UI rules used:</b> one teal accent on warm neutrals, 48 px minimum tap targets, labels above fields, icons from lucide-react (no emoji), motion limited to transform/opacity and disabled by <code>prefers-reduced-motion</code>, dark mode via <code>prefers-color-scheme</code>. Menu items keep <code>nameEN</code> and <code>nameTH</code>; Thai screens show the Thai name, other languages the English one. Group names are the owner's own text and are not translated.</p></section>
 
@@ -74,20 +78,23 @@
 <li>Records carry <code>id</code> and <code>updatedAt</code>; deletes are tombstones kept 30 days; newest <code>updatedAt</code> wins; caps: 30 saved bills, 500 paid bills.</li>
 <li>Shop slug: letters, numbers, hyphens, 2-64 chars (used in URLs and keys). Logo URL: http(s) or site-relative only.</li></ul></section>
 
-<section id="deploy"><h2>Going live: owner steps for the SaaS (step 3)</h2>
+<section id="deploy"><h2>Going live: owner steps for the SaaS</h2>
+<p>Deployment is one GitHub Actions workflow, <code>.github/workflows/deploy-saas.yml</code>, modelled on Resumai's (<code>CVarkadya/.github/workflows/deploy.yml</code>). On a push to <code>main</code> that touches <code>saas/</code> (or a manual run) it: type-checks and tests, creates the D1 database if missing, writes the database id, domain and email sender into <code>wrangler.jsonc</code> (<code>saas/scripts/configure-wrangler.mjs</code>), applies migrations to the remote D1, builds, deploys the Worker, creates the Stripe webhook once (its signing secret is captured and stored as a Worker secret), sets the Worker secrets, and smoke-tests <code>/api/health</code> and <code>/robots.txt</code>.</p>
 <ol>
-<li><b>Stripe (test mode first).</b> Dashboard: Developers, Webhooks, add endpoint <code>https://&lt;your-domain&gt;/api/stripe/webhook</code> with events <code>checkout.session.completed</code>, <code>checkout.session.async_payment_succeeded</code>, <code>checkout.session.async_payment_failed</code>, <code>checkout.session.expired</code>. Copy the signing secret. Enable PromptPay under Settings, Payment methods if wanted (Checkout shows whatever is enabled there).</li>
-<li><b>Create the Worker from GitHub</b> (Cloudflare, Workers and Pages, Create, Import a repository). Root directory <code>saas</code>, build command <code>npm run build</code>, deploy command <code>npx wrangler deploy</code> (the build writes <code>.wrangler/deploy/config.json</code>, which points wrangler at <code>dist/server</code>; verified with <code>wrangler deploy --dry-run</code>: 307 KB gzipped, bindings DB, ASSETS and SESSION). The D1 database (and the unused session KV) are created automatically on first deploy.</li>
-<li><b>Set the secrets</b> in the Worker's settings as Secrets (not plain variables): <code>STRIPE_SECRET_KEY</code> (the <code>sk_test_</code> key at first) and <code>STRIPE_WEBHOOK_SECRET</code>.</li>
-<li><b>Apply the database migration</b> (from <code>saas/</code>): <code>npx wrangler d1 migrations apply DB --remote</code>. Run this <b>before</b> sending anyone to <code>/start</code>, and again whenever a new file appears in <code>saas/migrations/</code>.</li>
-<li><b>Test the whole path</b> with Stripe's test card 4242 4242 4242 4242: <code>/en/start</code>, pay, land on the thank-you page, open the till, make a sale, a second device has no till key yet, so it stays "only on this device" until sign-in exists (step 4).</li>
-<li>Only then switch to live keys and a live-mode webhook secret.</li>
+<li><b>Add repository secrets</b> to <code>artteabcn/simple-pos</code> (Settings, Secrets and variables, Actions). GitHub cannot copy secrets from another repository, so the values must come from the owner's own files: <code>CLOUDFLARE_API_TOKEN</code> and <code>CLOUDFLARE_ACCOUNT_ID</code> (the Arkadyaproperties account that already hosts Resumai), <code>STRIPE_SECRET_KEY</code>, <code>RESEND_API_KEY</code>, and a new random <code>APP_SECRET</code> (any long random string; it protects manager PINs). Names only here, never values. The Cloudflare token needs Workers, D1 and zone (custom domain) permissions in addition to what Pages needed.</li>
+<li><b>Optional repository variables</b> (defaults in brackets): <code>DOMAIN</code> [pos.arkadya.tech], <code>EMAIL_FROM</code> [Simple POS &lt;no-reply@arkadya.tech&gt;], <code>EMAIL_REPLY_TO</code> [hello@arkadya.tech]. The domain is a placeholder until confirmed; it must be a hostname in a zone of the same Cloudflare account. The share image QR points at it: after changing it, re-run <code>node design/make-og.mjs</code> with <code>PUBLIC_SITE_URL</code> set and commit <code>public/og.png</code>.</li>
+<li><b>Stripe account mode.</b> Resumai's notes say the shared Stripe account only has live keys, so every "test" payment is a real one. For a first end-to-end test, put a Stripe <i>test</i> secret key (sk_test_...) in <code>STRIPE_SECRET_KEY</code> and pay with card 4242 4242 4242 4242; the workflow creates the webhook in whichever mode the key belongs to. Switch to the live key afterwards and re-run the workflow (it creates the live-mode webhook and stores its secret). PromptPay appears at checkout only if it is enabled in the Stripe dashboard (it already is for Resumai).</li>
+<li><b>Merge to <code>main</code></b> (or run the workflow manually on a branch) and watch it with <code>gh run list</code>. The first run takes a few minutes.</li>
+<li><b>Try it</b>: <code>/en/start</code>, pay, thank-you page, the welcome email arrives with a sign-in link, open the till, make a sale, then sign in on a second device with <code>/en/login</code>.</li>
 </ol>
-<p class="warn">Open question for the owner: the exact Cloudflare build and deploy command fields differ slightly by dashboard version; if the deploy step complains, run <code>npm run build</code> then <code>npx wrangler deploy</code> from <code>saas/</code> once locally to confirm.</p></section>
+<p class="warn">If the workflow's "Ensure D1" or "Deploy" step complains about a Cloudflare permission, the API token is missing a permission (Workers Scripts: Edit, D1: Edit, Zone/DNS for the custom domain). Claude's environments cannot reach Cloudflare or Stripe, so this workflow is the only automated path.</p></section>
 
 <section id="data"><h2>Database (D1, Drizzle: <code>saas/src/db/schema.ts</code>)</h2>
 <table><tr><th>Table</th><th>Purpose</th></tr>
-<tr><td><code>shops</code></td><td>One row per paying shop: slug, name, owner email, status, add-on flag, hash of the till key, settings JSON (profile + menu) with its edit time</td></tr>
+<tr><td><code>shops</code></td><td>One row per paying shop: slug, name, owner email, status, add-on flag, settings JSON (profile + menu) with its edit time, manager PIN hash and lockout state</td></tr>
+<tr><td><code>devices</code></td><td>One row per phone or tablet that may sync a shop: hash of its own key, name, last seen, revoked at</td></tr>
+<tr><td><code>login_links</code></td><td>One-time email sign-in links (hash of the token, 15 minute expiry, used at)</td></tr>
+<tr><td><code>manager_sessions</code></td><td>"The PIN was entered on this device" proofs, 30 minutes, tied to the device</td></tr>
 <tr><td><code>signups</code></td><td>A started checkout; holds the address for an hour; records the expected amount (49,900 or 79,800 satang)</td></tr>
 <tr><td><code>payments</code></td><td>One row per Stripe payment; unique session id makes provisioning idempotent</td></tr>
 <tr><td><code>stripe_events</code></td><td>Handled Stripe event ids (webhooks are retried)</td></tr>
@@ -105,7 +112,14 @@
 <tr><td><code>POST /api/stripe/webhook</code></td><td>Verifies the Stripe signature (HMAC, 5 minute tolerance), handles each event once, creates the shop only for a confirmed payment of the expected amount</td></tr>
 <tr><td><code>POST /api/claim</code></td><td>The thank-you page trades the Stripe session id for the till key (shown once). 202 = not confirmed yet, 409 = already set up</td></tr>
 <tr><td><code>POST /api/till/sync</code></td><td>Bearer till key. Sends changes, receives everyone else's; settings are last-edit-wins, bills merge per record; all input validated with Zod; 1 MB cap</td></tr></table>
-<p><b>Till key:</b> 256 random bits, only its SHA-256 is stored. It lets a device sync one shop and nothing else. Until step 4 (login) it is the only way a device is connected; if the owner closes the thank-you page before it is stored, claiming again issues a new key as long as the till has never synced.</p></section>
+<table><tr><th>Route (step 4)</th><th>What it does</th></tr>
+<tr><td><code>POST /api/auth/request</code></td><td>Emails one sign-in link per shop of that address; the answer is identical for unknown addresses; 10 links per address per hour</td></tr>
+<tr><td><code>POST /api/auth/verify</code></td><td>Trades a link (token in the URL fragment, single use) for a new device key</td></tr>
+<tr><td><code>POST /api/till/pin/unlock</code></td><td>Manager PIN check; 5 wrong tries lock it for 15 minutes on every device; returns a 30 minute proof</td></tr>
+<tr><td><code>POST /api/till/pin/set</code></td><td>Sets or changes the PIN (4 to 6 digits); needs the proof or the current PIN once one exists</td></tr>
+<tr><td><code>GET /api/health</code></td><td>Site up and database reachable (used by the deploy smoke test)</td></tr></table>
+<p><b>Manager PIN rule:</b> with a PIN set, only a device holding a valid proof may change settings, menu or prices; everyone can still sell and sync bills. The PIN is stored as an HMAC with <code>APP_SECRET</code>, never in plain form.</p>
+<p><b>Till key (now per device):</b> 256 random bits, only its SHA-256 is stored. It lets a device sync one shop and nothing else. A device gets its key either from the thank-you page (first device) or from an emailed sign-in link. If the owner closes the thank-you page before the key is stored, claiming again replaces the unused key as long as the shop has never synced; the welcome email with a sign-in link covers the rest.</p></section>
 
 <section id="i18n"><h2>Languages</h2>
 <p>Thai, English, French, German. Every string is added to all four JSON files at once. Start in the device language (<code>navigator.languages</code> / Accept-Language), a manual choice wins. Check long-word wrapping in German and Thai.</p></section>
@@ -121,7 +135,7 @@
 #   STRIPE_SECRET_KEY=sk_test_local_dummy   STRIPE_WEBHOOK_SECRET=whsec_local_test_secret_123
 # start `npm run dev -- --host 127.0.0.1 --port 4321` inside the mirror folder, then:
 node scripts/e2e-local.mjs   # 22 checks: signed webhooks, claim, sync, deletes, security</pre>
-<p>Automated: 89 unit and integration tests (Node SQLite as D1, two simulated tills syncing through the real server code).</p>
+<p>Automated: 113 unit and integration tests (Node SQLite as D1, two simulated tills syncing through the real server code, PIN lockout, sign-in links, emails). Local end-to-end on the real Worker runtime: <code>node scripts/e2e-local.mjs</code> (22 checks) and <code>node scripts/e2e-auth.mjs</code> (42 checks: sign-in links, devices, PIN, landing page, robots, sitemap, llms.txt, share image). Add <code>APP_SECRET=...</code> and <code>DEV_ECHO_LINKS=1</code> to <code>.dev.vars</code> for the second script (the flag returns sign-in links in the API reply only when no Resend key is set).</p>
 <p>Legacy hardening was verified with a Node harness that runs the real Pages Function against an in-memory GitHub fake, plus a browser run with hostile shop names; a PromptPay QR was decoded with OpenCV to prove it scans.</p></section>
 
 <section id="gotchas"><h2>Gotchas</h2>
@@ -134,13 +148,25 @@ node scripts/e2e-local.mjs   # 22 checks: signed webhooks, claim, sync, deletes,
 <li>Production migrations and merges to <code>main</code> are done by the owner. A push 403 usually means the wrong GitHub account is active.</li></ul></section>
 
 <section id="open"><h2>Open items</h2>
-<ul><li>Rebuild Jira-Bottega and wassanamart in the legacy Studio after <code>fix/saas-hardening</code> is merged to <code>main</code> (owner).</li>
-<li>Step 3 leftovers: no confirmation email yet (Resend); no refund handling (a refund in Stripe does not suspend the shop); history is capped to 500 paid bills per till and shown for 30 days (the server keeps everything, a longer history and export view is still to build); sync returns at most 5,000 changed records per call (fine for now, needs paging for very large first syncs); no rate limiting on the API (add a Cloudflare rate-limit rule on <code>/api/*</code>); the customisation add-on only sets a flag on the shop (who does the work and how the owner is notified is a business process to decide).</li>
-<li>Copy to review before launch (not legal advice, drafted by the assistant): the sign-up page text including "One payment" and the add-on description, the "Payment is handled securely by Stripe" line, and the receipt wording.</li>
-<li>Step 2 leftovers: logo upload (needs asset storage, step 3), PIN protection of My shop (step 4, server-checked), PWA manifest and install button, German/French wording review by a native speaker.</li>
-<li>Existing paid bills of 1,000 THB or more were stored with a wrong total (comma parsing bug, now fixed); history sums for those are wrong.</li>
-<li>Retire the duplicate folder <code>Desktop\SimplePos</code> (no code the repo lacks).</li>
-<li>Owner to supply: Stripe account (test mode first), final legal text and price wording.</li></ul></section>
+<p class="bad">Before taking real payments (owner)</p>
+<ul>
+<li><b>Legal pages</b>: terms of sale and privacy policy do not exist yet. Needed before charging customers (Thai Online Solutions Co., Ltd. is the entity named in Resumai's legal text; confirm it is also the operator of Simple POS). Draft on a branch, owner reviews, then publish. Link them from the landing footer and the sign-up page.</li>
+<li><b>Domain</b>: <code>pos.arkadya.tech</code> is a placeholder. Confirm it (or set the <code>DOMAIN</code> variable), then regenerate and commit <code>public/og.png</code> so the QR points at it.</li>
+<li><b>GitHub secrets</b> in <code>artteabcn/simple-pos</code> (names in the deploy section) and a Cloudflare token with Workers, D1 and custom-domain permissions.</li>
+<li><b>Stripe</b>: test the full path with a test key first (the shared account is live-only, so any other test is a real payment). Check statement descriptor and the "activate account" list in the Stripe dashboard.</li>
+<li><b>Review wording</b> (drafted by the assistant, not legal advice): "One payment, no monthly fee", the 499 / 299 THB descriptions, the receipt and VAT wording, the FAQ answer about tax invoices, and all French, German and Thai text (needs a native reader; Thai was written to be plain and friendly, not formal).</li>
+<li><b>Who delivers the 299 THB customisation</b> and how the owner is told: today it only sets a flag on the shop (<code>shops.customisation</code>). Decide the process (e.g. an email to hello@arkadya.tech from the webhook).</li>
+</ul>
+<p class="warn">Next engineering steps</p>
+<ul>
+<li><b>Cutover of the two legacy shops</b> (Jira-Bottega, wassanamart): import their menus and paid bills into SaaS shops, then retire the legacy app. The legacy <code>/api/deploy</code> endpoint is unauthenticated and stays a hole until then; rebuild both shops in the legacy Studio after <code>fix/saas-hardening</code> is merged if they must keep running meanwhile.</li>
+<li><b>Devices screen</b>: list devices and switch one off (the table and <code>revokedAt</code> exist; there is no screen or endpoint yet). Until then a lost phone is handled by the PIN (settings stay locked) and by support revoking in D1.</li>
+<li><b>Refunds</b>: a refund in Stripe does not suspend the shop. Resumai listens to <code>charge.refunded</code>; decide the policy first.</li>
+<li><b>Rate limiting</b>: add a Cloudflare rate-limit rule on <code>/api/auth/request</code>, <code>/api/checkout</code> and <code>/api/till/pin/*</code> (the app limits per address/shop, not per IP).</li>
+<li><b>History</b> is capped to 500 paid bills per till and shown for 30 days; the server keeps everything. A longer history and an accountant export view are still to build. Sync returns at most 5,000 changed records per call (needs paging for very large first syncs).</li>
+<li><b>PWA</b>: manifest and install button for the till, and a service worker for true offline start (sales are already kept offline once the page has loaded).</li>
+<li><b>Logo upload</b> for receipts (needs asset storage).</li>
+</ul></section>
 
 <section id="files"><h2>File map</h2>
 <pre>/                      legacy app (index.html, functions/, shops/, data/, assets/qr.js, _headers)

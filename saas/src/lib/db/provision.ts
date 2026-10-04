@@ -1,7 +1,7 @@
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { CURRENCY } from "../billing/pricing";
 import { schema, type Clock, type Db } from "./index";
-import { generateToken, hashToken } from "./token";
+import { createDevice, revokeAllDevices } from "./devices";
 
 const { payments, shops, signups, stripeEvents } = schema;
 
@@ -29,7 +29,7 @@ export type PaidInput = {
 };
 
 export type ProvisionResult =
-  | { status: "created"; shopId: string; slug: string }
+  | { status: "created"; shopId: string; slug: string; email: string; locale: string }
   | { status: "duplicate"; shopId: string }
   | { status: "unknown_session" }
   | { status: "amount_mismatch" };
@@ -80,7 +80,7 @@ export async function provisionPaidSession(db: Db, input: PaidInput, clock: Cloc
     }),
     db.update(signups).set({ status: "paid", updatedAt: nowIso }).where(eq(signups.id, signup.id)),
   ]);
-  return { status: "created", shopId, slug };
+  return { status: "created", shopId, slug, email: signup.email, locale: signup.locale };
 }
 
 export type ClaimResult =
@@ -89,9 +89,10 @@ export type ClaimResult =
   | { status: "ok"; slug: string; name: string; token: string };
 
 /**
- * Hands the till key to the person who just paid (they hold the Stripe session id).
- * The key is shown once. If they closed the page before saving it and the till has never synced,
- * claiming again issues a fresh key; after the first sync the owner has to sign in instead (step 4).
+ * Hands the first device key to the person who just paid (they hold the Stripe session id).
+ * The key is shown once. If they closed the page before saving it and the shop has never synced,
+ * claiming again switches off the unused key and issues a fresh one; after the first sync the owner
+ * signs in with the emailed link instead.
  */
 export async function claimShop(db: Db, sessionId: string, clock: Clock): Promise<ClaimResult> {
   const row = await db
@@ -102,20 +103,9 @@ export async function claimShop(db: Db, sessionId: string, clock: Clock): Promis
     .get();
   if (!row) return { status: "pending" };
   const shop = row.shop;
-  if (shop.tokenClaimedAt && shop.lastSyncAt) return { status: "already_claimed" };
+  if (shop.lastSyncAt) return { status: "already_claimed" };
 
-  const token = generateToken();
-  const nowIso = clock.now.toISOString();
-  await db
-    .update(shops)
-    .set({ tokenHash: await hashToken(token), tokenClaimedAt: nowIso, updatedAt: nowIso })
-    .where(and(eq(shops.id, shop.id)));
-  return { status: "ok", slug: shop.slug, name: shop.name, token };
-}
-
-export async function shopByToken(db: Db, token: string) {
-  if (!token.startsWith("tk_") || token.length > 100) return null;
-  const hash = await hashToken(token);
-  const shop = await db.select().from(shops).where(eq(shops.tokenHash, hash)).get();
-  return shop && shop.status === "active" ? shop : null;
+  await revokeAllDevices(db, shop.id, clock.now);
+  const d = await createDevice(db, shop.id, "First device", clock);
+  return { status: "ok", slug: shop.slug, name: shop.name, token: d.token };
 }

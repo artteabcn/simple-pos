@@ -10,6 +10,10 @@
 - Payments: a shop is created only by a correctly signed Stripe webhook for the expected amount (`src/lib/db/provision.ts`); never from the browser. Prices live only in `src/lib/billing/pricing.ts` (satang).
 - Till API calls need the shop's till key (`Authorization: Bearer tk_...`); only its SHA-256 is stored. Validate every request body with Zod; never trust client input.
 - Keep `.dev.vars` local and gitignored (test values only). Real keys only as Cloudflare Secrets.
+- Sign-in is by emailed one-time link (token in the URL fragment, single use, 15 min); each device has its own key (`devices` table). Never answer differently for unknown email addresses. Emails go through Resend from `no-reply@arkadya.tech` (`src/lib/email.ts`), all text escaped, all four languages.
+- Manager PIN is checked on the server (HMAC with `APP_SECRET`, lockout after 5 tries). Settings changes from a device without a valid manager proof are refused by `syncShop`; never move that check to the browser.
+- Shared accounts live in `C:\\OneDrive\\Desktop\\ArkadyaApps` and the sibling project `CVarkadya` (Resumai): same Cloudflare account (Arkadyaproperties) and the same Stripe account, which only has **live** keys (a "test" payment is real). Never open the `*API*.txt`, `*token*.txt` or `Stripe*.txt` files there; the owner puts values into GitHub secrets herself. Deployment is `.github/workflows/deploy-saas.yml` (the only automated path: Claude's environment cannot reach Cloudflare or Stripe).
+- Search and AI discoverability files (`robots.txt`, `sitemap.xml`, `llms*.txt`, JSON-LD, share image) are generated from `src/lib/site.ts` and the dictionaries. Change the domain with `PUBLIC_SITE_URL`, then regenerate `public/og.png`. Private pages (`/app`, `/welcome`, `/login/verify`) are `noindex` and blocked in robots.
 - OneDrive: never run `npm install`/builds inside the repo. Use `saas\scripts\mirror.ps1 <install|test|build|check|dev>`.
 - Never parse a formatted amount ("2,400.00") back into a number; keep numbers as numbers (`src/lib/pos/calc.ts`).
 - All bill/paid records need `id` + `updatedAt`; deletes are tombstones (`src/lib/pos/merge.ts`).

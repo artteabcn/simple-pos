@@ -28,7 +28,11 @@ export function storedConfig(shop: ShopRow): SyncConfig | undefined {
   }
 }
 
-export async function syncShop(db: Db, shop: ShopRow, req: SyncRequest, clock: Clock): Promise<SyncResponse> {
+/**
+ * `manager` says whether this request carries a valid manager proof. When the shop has a PIN, only a
+ * manager may change prices, the menu or settings; everyone else can still sell and sync bills.
+ */
+export async function syncShop(db: Db, shop: ShopRow, req: SyncRequest, clock: Clock, manager = false): Promise<SyncResponse> {
   const nowIso = clock.now.toISOString();
   const stored = storedConfig(shop);
   let configOut: SyncConfig | undefined;
@@ -37,7 +41,12 @@ export async function syncShop(db: Db, shop: ShopRow, req: SyncRequest, clock: C
   const stmts: Stmt[] = [];
 
   // Settings: newest edit wins. A till with older (or no) settings is handed the stored ones.
-  if (req.config && req.config.updatedAt > shop.configUpdatedAt) {
+  const mayEdit = !shop.pinHash || manager;
+  let configRejected = false;
+  if (req.config && req.config.updatedAt > shop.configUpdatedAt && !mayEdit) {
+    configRejected = true;
+    if (stored) configOut = stored;
+  } else if (req.config && req.config.updatedAt > shop.configUpdatedAt) {
     stmts.push(
       db
         .update(shops)
@@ -111,7 +120,8 @@ export async function syncShop(db: Db, shop: ShopRow, req: SyncRequest, clock: C
     .orderBy(asc(records.syncedAt))
     .limit(MAX_CHANGES);
 
-  const out: SyncResponse = { serverTime: nowIso, saved: [], paid: [] };
+  const out: SyncResponse = { serverTime: nowIso, pinSet: !!shop.pinHash, saved: [], paid: [] };
+  if (configRejected) out.configRejected = true;
   for (const r of rows) {
     let parsed: z.ZodSafeParseResult<BillRecord>;
     try {

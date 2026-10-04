@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import { INTL_TAG, LOCALES, type Locale } from "../i18n/utils";
+import { OG_IMAGE, SITE_URL } from "../lib/site";
 
 interface Props {
   locale: Locale;
@@ -8,9 +9,18 @@ interface Props {
   description?: string;
   /** Private pages (the till, the thank-you page) are kept out of search results. */
   noindex?: boolean;
+  /** Structured data objects (JSON-LD) for this page. */
+  jsonLd?: object[];
 }
-const { locale, title, description = "", noindex = false } = Astro.props;
-const path = Astro.url.pathname.replace(/^\/(en|th|fr|de)(?=\/|$)/, "");
+const { locale, title, description = "", noindex = false, jsonLd = [] } = Astro.props;
+// "/th/start/" -> "start/"; every page exists in all four languages under the same path
+const rest = Astro.url.pathname.replace(/^\/(en|th|fr|de)\//, "");
+const url = (l: Locale): string => `${SITE_URL}/${l}/${rest}`;
+const canonical = url(locale);
+const image = `${SITE_URL}${OG_IMAGE.path}`;
+const ogLocale: Record<Locale, string> = { en: "en_GB", th: "th_TH", fr: "fr_FR", de: "de_DE" };
+// "<" inside a JSON-LD block could close the script early, so it is written as <
+const ld = (o: object): string => JSON.stringify(o).replace(/</g, "\\u003c");
 ---
 
 <!doctype html>
@@ -18,13 +28,30 @@ const path = Astro.url.pathname.replace(/^\/(en|th|fr|de)(?=\/|$)/, "");
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="theme-color" content="#0f766e" />
-    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
-    <link rel="canonical" href={new URL(`/${locale}${path}`, Astro.site ?? Astro.url).href} />
-    {LOCALES.map((l) => <link rel="alternate" hreflang={INTL_TAG[l]} href={`/${l}${path}`} />)}
+    {noindex ? <meta name="robots" content="noindex, nofollow" /> : <link rel="canonical" href={canonical} />}
+    {!noindex && LOCALES.map((l) => <link rel="alternate" hreflang={INTL_TAG[l]} href={url(l)} />)}
+    {!noindex && <link rel="alternate" hreflang="x-default" href={url("en")} />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Simple POS" />
+    <meta property="og:title" content={title} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={ogLocale[locale]} />
+    <meta property="og:image" content={image} />
+    <meta property="og:image:width" content={String(OG_IMAGE.width)} />
+    <meta property="og:image:height" content={String(OG_IMAGE.height)} />
+    <meta property="og:image:alt" content="Simple POS" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    {description && <meta name="twitter:description" content={description} />}
+    <meta name="twitter:image" content={image} />
+    {jsonLd.map((o) => <script type="application/ld+json" set:html={ld(o)} />)}
   </head>
   <body class="min-h-screen font-sans antialiased">
     <slot />

@@ -22,6 +22,10 @@ export type SyncRequest = z.infer<typeof SyncRequestSchema>;
 
 export type SyncResponse = {
   serverTime: string;
+  /** Whether the shop has a manager PIN (the till then asks for it before My shop). */
+  pinSet: boolean;
+  /** The settings in this request were not saved because the manager PIN was not entered. */
+  configRejected?: boolean;
   /** Present only when the server has newer settings than the till sent. */
   config?: SyncConfig;
   saved: BillRecord[];
@@ -31,6 +35,8 @@ export type SyncResponse = {
 /** The till does not trust the network either: the reply is validated before it touches local data. */
 export const SyncResponseSchema = z.object({
   serverTime: IsoSchema,
+  pinSet: z.boolean(),
+  configRejected: z.boolean().optional(),
   config: SyncConfigSchema.optional(),
   saved: z.array(RecordSchema),
   paid: z.array(RecordSchema),

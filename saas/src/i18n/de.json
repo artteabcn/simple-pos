@@ -1,85 +1,372 @@
 {
-  "app": { "name": "Simple POS", "tagline": "Eine einfache Kasse für kleine Restaurants und Läden" },
-  "nav": { "sell": "Verkaufen", "saved": "Gemerkt", "history": "Verlauf", "shop": "Mein Laden" },
+  "app": {
+    "name": "Simple POS",
+    "tagline": "Eine einfache Kasse für kleine Restaurants und Läden"
+  },
+  "nav": {
+    "sell": "Verkaufen",
+    "saved": "Gemerkt",
+    "history": "Verlauf",
+    "shop": "Mein Laden"
+  },
   "common": {
-    "save": "Speichern", "cancel": "Abbrechen", "delete": "Löschen", "close": "Schließen", "add": "Hinzufügen", "edit": "Bearbeiten",
-    "undo": "Rückgängig", "done": "Fertig", "back": "Zurück", "next": "Weiter", "optional": "optional", "language": "Sprache",
-    "loading": "Wird geladen…", "required": "Bitte ausfüllen", "itemOne": "1 Artikel", "itemMany": "{n} Artikel",
-    "billOne": "1 Rechnung", "billMany": "{n} Rechnungen", "or": "oder"
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "close": "Schließen",
+    "add": "Hinzufügen",
+    "edit": "Bearbeiten",
+    "undo": "Rückgängig",
+    "done": "Fertig",
+    "back": "Zurück",
+    "next": "Weiter",
+    "optional": "optional",
+    "language": "Sprache",
+    "loading": "Wird geladen…",
+    "required": "Bitte ausfüllen",
+    "itemOne": "1 Artikel",
+    "itemMany": "{n} Artikel",
+    "billOne": "1 Rechnung",
+    "billMany": "{n} Rechnungen",
+    "or": "oder"
   },
   "sell": {
-    "search": "Speisekarte durchsuchen", "all": "Alle", "order": "Aktuelle Bestellung", "emptyOrder": "Artikel antippen, um ihn hinzuzufügen",
-    "viewOrder": "Bestellung ansehen", "charge": "{amount} kassieren", "keepForLater": "Für später merken", "printBill": "Rechnung drucken",
-    "clearOrder": "Bestellung leeren", "billName": "Tisch oder Kunde", "billNameHint": "Zum Beispiel: Tisch 3",
-    "removed": "{name} entfernt", "cleared": "Bestellung geleert", "kept": "Bestellung gemerkt", "discount": "Rabatt",
-    "service": "Servicegebühr", "none": "Keiner", "subtotal": "Zwischensumme", "total": "Gesamt",
-    "vatIncluded": "inkl. 7 % MwSt.", "vatAdded": "MwSt. 7 %", "noResults": "Nichts gefunden",
-    "emptyMenuTitle": "Ihre Speisekarte ist leer", "emptyMenuBody": "Fügen Sie hinzu, was Sie verkaufen, und tippen Sie es hier an, um zu verkaufen.",
-    "emptyMenuAction": "Artikel hinzufügen", "decrease": "Einen weniger", "increase": "Einen mehr", "removeLine": "Aus der Bestellung entfernen"
+    "search": "Speisekarte durchsuchen",
+    "all": "Alle",
+    "order": "Aktuelle Bestellung",
+    "emptyOrder": "Artikel antippen, um ihn hinzuzufügen",
+    "viewOrder": "Bestellung ansehen",
+    "charge": "{amount} kassieren",
+    "keepForLater": "Für später merken",
+    "printBill": "Rechnung drucken",
+    "clearOrder": "Bestellung leeren",
+    "billName": "Tisch oder Kunde",
+    "billNameHint": "Zum Beispiel: Tisch 3",
+    "removed": "{name} entfernt",
+    "cleared": "Bestellung geleert",
+    "kept": "Bestellung gemerkt",
+    "discount": "Rabatt",
+    "service": "Servicegebühr",
+    "none": "Keiner",
+    "subtotal": "Zwischensumme",
+    "total": "Gesamt",
+    "vatIncluded": "inkl. 7 % MwSt.",
+    "vatAdded": "MwSt. 7 %",
+    "noResults": "Nichts gefunden",
+    "emptyMenuTitle": "Ihre Speisekarte ist leer",
+    "emptyMenuBody": "Fügen Sie hinzu, was Sie verkaufen, und tippen Sie es hier an, um zu verkaufen.",
+    "emptyMenuAction": "Artikel hinzufügen",
+    "decrease": "Einen weniger",
+    "increase": "Einen mehr",
+    "removeLine": "Aus der Bestellung entfernen"
   },
   "pay": {
-    "title": "Zahlung annehmen", "method": "Wie bezahlt der Kunde?", "cash": "Bar", "promptpay": "PromptPay", "card": "Karte",
-    "received": "Erhaltenes Bargeld", "exact": "Passend", "other": "Anderer Betrag", "change": "Rückgeld",
-    "notEnough": "Das ist weniger als der Gesamtbetrag", "scan": "Bitten Sie den Kunden, diesen Code zu scannen, und tippen Sie dann unten auf die Schaltfläche.",
+    "title": "Zahlung annehmen",
+    "method": "Wie bezahlt der Kunde?",
+    "cash": "Bar",
+    "promptpay": "PromptPay",
+    "card": "Karte",
+    "received": "Erhaltenes Bargeld",
+    "exact": "Passend",
+    "other": "Anderer Betrag",
+    "change": "Rückgeld",
+    "notEnough": "Das ist weniger als der Gesamtbetrag",
+    "scan": "Bitten Sie den Kunden, diesen Code zu scannen, und tippen Sie dann unten auf die Schaltfläche.",
     "promptpayMissing": "Tragen Sie unter Mein Laden Ihre PromptPay-Nummer ein, um hier einen Zahlungscode anzuzeigen.",
     "cardNote": "Kassieren Sie am Kartenterminal und tippen Sie dann unten auf die Schaltfläche.",
-    "confirm": "Zahlung erhalten", "paid": "Bezahlt", "thanks": "Vielen Dank!", "printReceipt": "Beleg drucken", "newOrder": "Neue Bestellung",
+    "confirm": "Zahlung erhalten",
+    "paid": "Bezahlt",
+    "thanks": "Vielen Dank!",
+    "printReceipt": "Beleg drucken",
+    "newOrder": "Neue Bestellung",
     "amountDue": "Zu zahlender Betrag"
   },
   "saved": {
-    "title": "Gemerkte Rechnungen", "empty": "Keine gemerkten Rechnungen", "emptyBody": "Gemerkte Bestellungen warten hier, zum Beispiel ein Tisch, der noch nicht bezahlt hat.",
-    "open": "Öffnen", "deleted": "Gemerkte Rechnung entfernt"
+    "title": "Gemerkte Rechnungen",
+    "empty": "Keine gemerkten Rechnungen",
+    "emptyBody": "Gemerkte Bestellungen warten hier, zum Beispiel ein Tisch, der noch nicht bezahlt hat.",
+    "open": "Öffnen",
+    "deleted": "Gemerkte Rechnung entfernt"
   },
   "history": {
-    "title": "Verlauf", "today": "Heute", "week": "Diese Woche", "month": "Diesen Monat", "last30": "Letzte 30 Tage",
-    "total": "Einnahmen", "none": "Keine Zahlungen in diesem Zeitraum", "noneBody": "Bezahlte Rechnungen erscheinen hier.",
-    "view": "Ansehen", "deleted": "Rechnung aus dem Verlauf entfernt", "exportCsv": "Tabelle herunterladen", "printSummary": "Zusammenfassung drucken",
-    "paidWith": "Bezahlt mit", "time": "Uhrzeit", "deleteBill": "Rechnung entfernen"
+    "title": "Verlauf",
+    "today": "Heute",
+    "week": "Diese Woche",
+    "month": "Diesen Monat",
+    "last30": "Letzte 30 Tage",
+    "total": "Einnahmen",
+    "none": "Keine Zahlungen in diesem Zeitraum",
+    "noneBody": "Bezahlte Rechnungen erscheinen hier.",
+    "view": "Ansehen",
+    "deleted": "Rechnung aus dem Verlauf entfernt",
+    "exportCsv": "Tabelle herunterladen",
+    "printSummary": "Zusammenfassung drucken",
+    "paidWith": "Bezahlt mit",
+    "time": "Uhrzeit",
+    "deleteBill": "Rechnung entfernen"
   },
   "shop": {
-    "title": "Mein Laden", "details": "Angaben zum Laden", "name": "Name des Ladens", "address": "Adresse", "phone": "Telefonnummer",
-    "taxId": "Steuernummer", "payments": "Zahlungen erhalten", "promptpay": "PromptPay-Nummer",
+    "title": "Mein Laden",
+    "details": "Angaben zum Laden",
+    "name": "Name des Ladens",
+    "address": "Adresse",
+    "phone": "Telefonnummer",
+    "taxId": "Steuernummer",
+    "payments": "Zahlungen erhalten",
+    "promptpay": "PromptPay-Nummer",
     "promptpayHint": "Ihre Handynummer oder 13-stellige ID. Kunden können einen Code auf dem Bildschirm scannen.",
     "promptpayInvalid": "Geben Sie eine 10-stellige Handynummer oder eine 13-stellige ID ein",
-    "vat": "MwSt.", "vatInclusive": "Preise enthalten bereits die MwSt.", "vatExclusive": "MwSt. auf die Preise aufschlagen", "vatNone": "MwSt. nicht anzeigen",
-    "menu": "Speisekarte", "addItem": "Artikel hinzufügen", "itemName": "Name", "itemNameTh": "Name auf Thai", "itemNameThHint": "Wird angezeigt, wenn die App auf Thai läuft",
-    "price": "Preis", "category": "Gruppe", "categoryHint": "Zum Beispiel: Getränke", "noCategory": "Keine Gruppe", "newGroup": "Neue Gruppe…", "deleteItem": "Artikel entfernen",
-    "itemRemoved": "{name} entfernt", "importCsv": "Aus einer Tabelle importieren", "csvTemplate": "Beispieldatei herunterladen",
-    "importDone": "{n} Artikel hinzugefügt", "importFail": "Die Datei braucht eine Spalte für den Artikelnamen und eine für den Preis.",
-    "saved": "Gespeichert", "editItem": "Artikel bearbeiten", "newItem": "Neuer Artikel", "emptyMenu": "Noch keine Artikel"
+    "vat": "MwSt.",
+    "vatInclusive": "Preise enthalten bereits die MwSt.",
+    "vatExclusive": "MwSt. auf die Preise aufschlagen",
+    "vatNone": "MwSt. nicht anzeigen",
+    "menu": "Speisekarte",
+    "addItem": "Artikel hinzufügen",
+    "itemName": "Name",
+    "itemNameTh": "Name auf Thai",
+    "itemNameThHint": "Wird angezeigt, wenn die App auf Thai läuft",
+    "price": "Preis",
+    "category": "Gruppe",
+    "categoryHint": "Zum Beispiel: Getränke",
+    "noCategory": "Keine Gruppe",
+    "newGroup": "Neue Gruppe…",
+    "deleteItem": "Artikel entfernen",
+    "itemRemoved": "{name} entfernt",
+    "importCsv": "Aus einer Tabelle importieren",
+    "csvTemplate": "Beispieldatei herunterladen",
+    "importDone": "{n} Artikel hinzugefügt",
+    "importFail": "Die Datei braucht eine Spalte für den Artikelnamen und eine für den Preis.",
+    "saved": "Gespeichert",
+    "editItem": "Artikel bearbeiten",
+    "newItem": "Neuer Artikel",
+    "emptyMenu": "Noch keine Artikel"
   },
   "setup": {
-    "step": "Schritt {n} von {m}", "welcomeTitle": "Richten wir Ihren Laden ein", "welcomeBody": "Das dauert etwa zwei Minuten. Sie können alles später ändern.",
-    "nameTitle": "Wie heißt Ihr Laden?", "nameHint": "Der Name erscheint oben und auf Ihren Belegen.",
-    "menuTitle": "Ihre Speisekarte", "menuBody": "Wählen Sie, wie Sie anfangen möchten.", "menuSample": "Mit einer Beispielkarte starten",
-    "menuSampleBody": "Ein paar typische Artikel, die Sie ändern oder löschen können.", "menuImport": "Aus einer Tabelle importieren",
-    "menuImportBody": "Eine CSV-Datei mit Artikelnamen und Preisen.", "menuEmpty": "Ich füge die Artikel selbst hinzu",
-    "menuEmptyBody": "Mit einer leeren Karte starten.", "payTitle": "Zahlungen erhalten", "payBody": "Optional. Das geht auch später unter Mein Laden.",
-    "finish": "Mit dem Verkaufen beginnen", "sampleCategoryDrinks": "Getränke", "sampleCategoryMains": "Hauptgerichte", "sampleCategorySnacks": "Snacks"
+    "step": "Schritt {n} von {m}",
+    "welcomeTitle": "Richten wir Ihren Laden ein",
+    "welcomeBody": "Das dauert etwa zwei Minuten. Sie können alles später ändern.",
+    "nameTitle": "Wie heißt Ihr Laden?",
+    "nameHint": "Der Name erscheint oben und auf Ihren Belegen.",
+    "menuTitle": "Ihre Speisekarte",
+    "menuBody": "Wählen Sie, wie Sie anfangen möchten.",
+    "menuSample": "Mit einer Beispielkarte starten",
+    "menuSampleBody": "Ein paar typische Artikel, die Sie ändern oder löschen können.",
+    "menuImport": "Aus einer Tabelle importieren",
+    "menuImportBody": "Eine CSV-Datei mit Artikelnamen und Preisen.",
+    "menuEmpty": "Ich füge die Artikel selbst hinzu",
+    "menuEmptyBody": "Mit einer leeren Karte starten.",
+    "payTitle": "Zahlungen erhalten",
+    "payBody": "Optional. Das geht auch später unter Mein Laden.",
+    "finish": "Mit dem Verkaufen beginnen",
+    "sampleCategoryDrinks": "Getränke",
+    "sampleCategoryMains": "Hauptgerichte",
+    "sampleCategorySnacks": "Snacks"
   },
   "receipt": {
-    "title": "Kassenbeleg", "bill": "Rechnung", "taxId": "Steuernr.", "item": "Artikel", "qty": "Anz.", "price": "Preis", "amount": "Betrag",
-    "thanks": "Vielen Dank, bis bald!", "cashReceived": "Bar erhalten", "change": "Rückgeld"
+    "title": "Kassenbeleg",
+    "bill": "Rechnung",
+    "taxId": "Steuernr.",
+    "item": "Artikel",
+    "qty": "Anz.",
+    "price": "Preis",
+    "amount": "Betrag",
+    "thanks": "Vielen Dank, bis bald!",
+    "cashReceived": "Bar erhalten",
+    "change": "Rückgeld"
   },
-  "install": { "button": "App installieren" },
+  "install": {
+    "button": "App installieren"
+  },
   "sync": {
-    "saved": "Gespeichert", "saving": "Wird gespeichert…", "offline": "Offline: Ihre Verkäufe bleiben erhalten", "error": "Noch nicht gespeichert, neuer Versuch läuft",
-    "local": "Nur auf diesem Gerät", "unauthorized": "Bitte verbinden Sie dieses Gerät erneut"
+    "saved": "Gespeichert",
+    "saving": "Wird gespeichert…",
+    "offline": "Offline: Ihre Verkäufe bleiben erhalten",
+    "error": "Noch nicht gespeichert, neuer Versuch läuft",
+    "local": "Nur auf diesem Gerät",
+    "unauthorized": "Bitte verbinden Sie dieses Gerät erneut",
+    "signIn": "Anmelden",
+    "locked": "Menüänderungen brauchen die Manager-PIN"
   },
   "start": {
-    "title": "Eröffnen Sie Ihre eigene Kasse", "subtitle": "Einmal bezahlen. Ihre Verkäufe, Ihre Speisekarte und Ihre Belege auf jedem Handy oder Tablet.",
-    "shopName": "Name des Ladens", "shopNameHint": "So, wie Ihre Kunden ihn kennen", "email": "Ihre E-Mail", "emailHint": "Für Ihr Konto und Ihren Zahlungsbeleg",
-    "addOn": "Individuelle Anpassung", "addOnBody": "Wir passen Speisekarte, Belege und Aussehen an Ihren Laden an.",
-    "setupLine": "Einmalige Einrichtung", "total": "Gesamt heute", "pay": "Weiter zur Zahlung", "secure": "Die Zahlung wird sicher über Stripe abgewickelt.",
-    "cancelled": "Die Zahlung wurde abgebrochen. Es wurde nichts abgebucht.", "errorInvalid": "Bitte prüfen Sie Ladenname und E-Mail.",
-    "errorUnavailable": "Die Zahlung ist gerade nicht möglich. Bitte versuchen Sie es in ein paar Minuten erneut.", "errorNetwork": "Keine Verbindung. Bitte versuchen Sie es erneut.",
-    "haveTill": "Sie haben schon eine Kasse? Öffnen", "working": "Einen Moment…"
+    "title": "Eröffnen Sie Ihre eigene Kasse",
+    "subtitle": "Einmal bezahlen. Ihre Verkäufe, Ihre Speisekarte und Ihre Belege auf jedem Handy oder Tablet.",
+    "shopName": "Name des Ladens",
+    "shopNameHint": "So, wie Ihre Kunden ihn kennen",
+    "email": "Ihre E-Mail",
+    "emailHint": "Für Ihr Konto und Ihren Zahlungsbeleg",
+    "addOn": "Individuelle Anpassung",
+    "addOnBody": "Wir passen Speisekarte, Belege und Aussehen an Ihren Laden an.",
+    "setupLine": "Einmalige Einrichtung",
+    "total": "Gesamt heute",
+    "pay": "Weiter zur Zahlung",
+    "secure": "Die Zahlung wird sicher über Stripe abgewickelt.",
+    "cancelled": "Die Zahlung wurde abgebrochen. Es wurde nichts abgebucht.",
+    "errorInvalid": "Bitte prüfen Sie Ladenname und E-Mail.",
+    "errorUnavailable": "Die Zahlung ist gerade nicht möglich. Bitte versuchen Sie es in ein paar Minuten erneut.",
+    "errorNetwork": "Keine Verbindung. Bitte versuchen Sie es erneut.",
+    "haveTill": "Sie haben schon eine Kasse? Öffnen",
+    "working": "Einen Moment…"
   },
   "welcome": {
-    "working": "Ihre Kasse wird eingerichtet…", "workingBody": "Ihre Zahlung ist bestätigt. Das dauert nur wenige Sekunden.",
-    "readyTitle": "Ihre Kasse ist bereit", "readyBody": "Ihre Verkäufe und Ihre Speisekarte werden ab jetzt in Ihrem Konto gespeichert.", "open": "Meine Kasse öffnen",
-    "slow": "Das dauert länger als gewöhnlich. Ihre Zahlung ist sicher. Laden Sie diese Seite in einer Minute neu.", "reload": "Neu laden",
-    "claimedTitle": "Diese Kasse ist bereits eingerichtet", "claimedBody": "Öffnen Sie sie auf dem Gerät, auf dem Sie begonnen haben.",
-    "missingTitle": "Hier gibt es nichts einzurichten", "missingBody": "Beginnen Sie von vorn, um Ihre Kasse zu eröffnen.", "startAgain": "Starten"
+    "working": "Ihre Kasse wird eingerichtet…",
+    "workingBody": "Ihre Zahlung ist bestätigt. Das dauert nur wenige Sekunden.",
+    "readyTitle": "Ihre Kasse ist bereit",
+    "readyBody": "Ihre Verkäufe und Ihre Speisekarte werden ab jetzt in Ihrem Konto gespeichert.",
+    "open": "Meine Kasse öffnen",
+    "slow": "Das dauert länger als gewöhnlich. Ihre Zahlung ist sicher. Laden Sie diese Seite in einer Minute neu.",
+    "reload": "Neu laden",
+    "claimedTitle": "Diese Kasse ist bereits eingerichtet",
+    "claimedBody": "Öffnen Sie sie auf dem Gerät, auf dem Sie begonnen haben.",
+    "missingTitle": "Hier gibt es nichts einzurichten",
+    "missingBody": "Beginnen Sie von vorn, um Ihre Kasse zu eröffnen.",
+    "startAgain": "Starten"
+  },
+  "login": {
+    "title": "Anmelden",
+    "subtitle": "Wir senden Ihnen einen Link per E-Mail. Ein Passwort brauchen Sie nicht.",
+    "email": "Ihre E-Mail",
+    "send": "Link per E-Mail senden",
+    "sentTitle": "Prüfen Sie Ihre E-Mails",
+    "sentBody": "Wenn diese Adresse zu einem Laden gehört, ist ein Anmeldelink unterwegs. Er funktioniert einmal und 15 Minuten lang.",
+    "spam": "Noch nichts da? Schauen Sie im Spam-Ordner nach.",
+    "another": "Andere E-Mail verwenden",
+    "newHere": "Neu hier? Eröffnen Sie Ihre eigene Kasse",
+    "working": "Sie werden angemeldet…",
+    "okTitle": "Sie sind angemeldet",
+    "okBody": "Dieses Gerät ist jetzt mit Ihrer Kasse verbunden.",
+    "open": "Meine Kasse öffnen",
+    "badTitle": "Dieser Link ist abgelaufen oder wurde schon benutzt",
+    "badBody": "Fordern Sie einen neuen an, das dauert nur Sekunden.",
+    "newLink": "Neuen Link anfordern"
+  },
+  "pin": {
+    "gateTitle": "Manager-PIN",
+    "gateBody": "Geben Sie die PIN ein, um Menü, Preise und Einstellungen zu ändern.",
+    "label": "PIN",
+    "unlock": "Entsperren",
+    "wrong": "Falsche PIN. Noch {n} Versuche.",
+    "locked": "Zu viele Versuche. Versuchen Sie es in {m} Minuten erneut.",
+    "error": "Die PIN konnte nicht geprüft werden. Prüfen Sie Ihre Verbindung.",
+    "lock": "Mein Laden sperren",
+    "setupTitle": "Schützen Sie Mein Laden mit einer PIN",
+    "setupBody": "Das Personal kann weiter verkaufen, aber nur wer die PIN kennt, kann Menü, Preise und Einstellungen ändern.",
+    "newPin": "Neue PIN (4 bis 6 Ziffern)",
+    "confirmPin": "Noch einmal eingeben",
+    "save": "PIN speichern",
+    "mismatch": "Die beiden PINs stimmen nicht überein",
+    "invalid": "Verwenden Sie 4 bis 6 Ziffern",
+    "saved": "PIN gespeichert",
+    "changeTitle": "PIN ändern",
+    "on": "PIN-Schutz ist aktiv"
+  },
+  "landing": {
+    "nav": {
+      "cta": "Meine Kasse öffnen"
+    },
+    "hero": {
+      "eyebrow": "Für kleine Restaurants und Läden",
+      "title": "Eine einfache Kasse, die Ihr ganzes Team bedienen kann",
+      "body": "Artikel antippen, Rechnung erstellen, bar oder per PromptPay kassieren, Beleg drucken. Sie läuft auf jedem Handy oder Tablet, und Ihre Verkäufe liegen sicher in Ihrem Konto.",
+      "cta": "Meine Kasse öffnen",
+      "secondary": "So funktioniert es",
+      "note": "Einmal bezahlen, keine monatlichen Gebühren."
+    },
+    "how": {
+      "title": "Von der Anmeldung zum ersten Verkauf in wenigen Minuten",
+      "steps": [
+        {
+          "title": "Erzählen Sie uns von Ihrem Laden",
+          "body": "Geben Sie den Namen Ihres Ladens ein und bezahlen Sie einmal. Ihre Kasse wird sofort angelegt."
+        },
+        {
+          "title": "Speisekarte anlegen",
+          "body": "Starten Sie mit einem Beispiel, tippen Sie Ihre Artikel ein oder importieren Sie sie aus einer Tabelle."
+        },
+        {
+          "title": "Antippen und verkaufen",
+          "body": "Artikel antippen, Rechnung erstellen. Bar kassieren und das Rückgeld sehen, oder einen PromptPay-Code mit dem genauen Betrag zeigen."
+        },
+        {
+          "title": "Einnahmen im Blick",
+          "body": "Heute, diese Woche, diesen Monat. Laden Sie Ihre Verkäufe jederzeit als Tabelle herunter."
+        }
+      ]
+    },
+    "why": {
+      "title": "Gebaut für den Alltag kleiner Läden",
+      "items": [
+        {
+          "title": "Verkauft weiter, wenn das Internet ausfällt",
+          "body": "Verkäufe werden zuerst auf dem Gerät gespeichert und an Ihr Konto gesendet, sobald die Verbindung zurück ist."
+        },
+        {
+          "title": "PromptPay-Codes mit dem genauen Betrag",
+          "body": "Der Kunde scannt, Sie bestätigen. Kein Betrag, der in einer Banking-App getippt werden muss."
+        },
+        {
+          "title": "Personal verkauft, nur Sie ändern Preise",
+          "body": "Schützen Sie Speisekarte und Einstellungen mit einer Manager-PIN."
+        },
+        {
+          "title": "Tische, die noch nicht bezahlt haben",
+          "body": "Merken Sie eine Bestellung vor und öffnen Sie sie wieder, wenn der Tisch zahlen möchte."
+        },
+        {
+          "title": "Thai, Englisch, Französisch und Deutsch",
+          "body": "Sprache mit einem Tipp wechseln. Ihre eigenen Artikelnamen bleiben, wie Sie sie eingegeben haben."
+        },
+        {
+          "title": "Ihre Verkäufe gehören Ihnen",
+          "body": "Laden Sie alles jederzeit als Tabelle herunter."
+        }
+      ]
+    },
+    "price": {
+      "title": "Ein Preis. Kein Abo.",
+      "name": "Einmalige Einrichtung",
+      "amount": "Einmal bezahlen, Ihre Kasse behalten.",
+      "includes": [
+        "Ihre eigene Kasse auf jedem Handy oder Tablet",
+        "Unbegrenzt Verkäufe und Rechnungen",
+        "PromptPay-Codes und Belege",
+        "Thai, Englisch, Französisch und Deutsch",
+        "Manager-PIN und Anmeldung per E-Mail"
+      ],
+      "addOnTitle": "Individuelle Anpassung",
+      "addOnBody": "Wir passen Speisekarte, Belege und Aussehen an Ihren Laden an.",
+      "cta": "Meine Kasse öffnen"
+    },
+    "faq": {
+      "title": "Fragen, die Inhaber stellen",
+      "items": [
+        {
+          "q": "Brauche ich ein Kartenterminal?",
+          "a": "Nein. Die Kasse nimmt Bargeld an und zeigt PromptPay-Codes. Wenn Sie auch Karten akzeptieren, kassieren Sie an Ihrem eigenen Kartenterminal und tippen auf Karte, um den Verkauf zu erfassen."
+        },
+        {
+          "q": "Was, wenn das Internet ausfällt?",
+          "a": "Verkaufen Sie einfach weiter. Die Kasse speichert jeden Verkauf auf dem Gerät und sendet ihn an Ihr Konto, sobald die Verbindung zurück ist."
+        },
+        {
+          "q": "Kann mein Personal die Preise ändern?",
+          "a": "Nicht, wenn Sie eine Manager-PIN festlegen. Es kann weiter verkaufen, Rechnungen vormerken und Belege drucken."
+        },
+        {
+          "q": "Was, wenn ich mein Handy verliere?",
+          "a": "Ihre Verkäufe und Ihre Speisekarte sind in Ihrem Konto gespeichert. Melden Sie sich auf einem anderen Gerät mit einem Link an, den wir Ihnen per E-Mail senden."
+        },
+        {
+          "q": "Ist der Beleg eine Steuerrechnung?",
+          "a": "Die Kasse druckt einen Beleg mit Name, Adresse, Steuernummer und MwSt. Ihres Ladens. Fragen Sie Ihren Steuerberater, ob Sie mehr brauchen."
+        }
+      ]
+    },
+    "footer": {
+      "note": "Simple POS von Arkadya.tech",
+      "signIn": "Anmelden"
+    },
+    "mock": {
+      "total": "Gesamt"
+    }
   }
 }

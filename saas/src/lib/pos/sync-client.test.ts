@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createTestDb, testClock } from "../../test/d1";
 import type { Db } from "../db";
-import { claimShop, provisionPaidSession, shopByToken } from "../db/provision";
+import { claimShop, provisionPaidSession } from "../db/provision";
+import { authenticateDevice } from "../db/devices";
 import { attachStripeSession, reserveSignup } from "../db/signups";
 import { syncShop } from "../db/sync";
+import { setPin } from "../db/pin";
+import { schema } from "../db";
 import { SyncRequestSchema } from "../validations/sync";
 import { addToOrder, deleteRecord, liveBills, patchProfile, payOrder, setShop, upsertItem } from "./state";
 import { createStore, type PosStore } from "./store";
@@ -14,12 +17,14 @@ let clock: ReturnType<typeof testClock>;
 let token: string;
 let requests: number;
 let serverMode: "ok" | "error" | "unauthorized";
+let managerProof: string | null;
 
 beforeEach(async () => {
   db = createTestDb().db;
   clock = testClock();
   requests = 0;
   serverMode = "ok";
+  managerProof = null;
   const r = await reserveSignup(db, { shopName: "Baan Mali", slug: "baan-mali", email: "m@x.co", customisation: false, locale: "en" }, clock);
   if (!r.ok) throw new Error("reserve");
   await attachStripeSession(db, r.signupId, "cs_1", clock.now);
@@ -39,11 +44,12 @@ const fakeFetch = (async (_url: string, init: RequestInit): Promise<Response> =>
   requests++;
   if (serverMode === "error") return new Response("{}", { status: 500 });
   const auth = (init.headers as Record<string, string>).Authorization ?? "";
-  const shop = serverMode === "unauthorized" ? null : await shopByToken(db, auth.replace("Bearer ", ""));
+  const shop = serverMode === "unauthorized" ? null : (await authenticateDevice(db, auth.replace("Bearer ", ""), clock.now))?.shop ?? null;
   if (!shop) return new Response("{}", { status: 401 });
   const parsed = SyncRequestSchema.safeParse(JSON.parse(String(init.body)));
   if (!parsed.success) return new Response("{}", { status: 400 });
-  return Response.json(await syncShop(db, shop, parsed.data, clock));
+  const isManager = (init.headers as Record<string, string>)["X-Manager-Token"] === "mg_ok";
+  return Response.json(await syncShop(db, shop, parsed.data, clock, isManager));
 }) as unknown as typeof fetch;
 
 function device(opts: { linked?: boolean; online?: () => boolean } = {}) {
@@ -59,6 +65,7 @@ function device(opts: { linked?: boolean; online?: () => boolean } = {}) {
     setTimeout: (fn) => timers.push(fn) - 1,
     clearTimeout: () => undefined, // pending callbacks are run explicitly by the tests
     isOnline: opts.online ?? (() => true),
+    getManagerToken: () => managerProof,
     onWake: (fn) => ((wake = fn), () => undefined),
     debounceMs: 2000,
     pollMs: 30_000,
@@ -218,5 +225,50 @@ describe("trouble on the way", () => {
     serverMode = "unauthorized";
     await a.engine.syncNow();
     expect(a.engine.getStatus().phase).toBe("unauthorized");
+    const asked = requests;
+    await a.engine.syncNow();
+    await a.engine.syncNow();
+    expect(requests).toBe(asked); // it does not keep asking with a key the server refused
+    expect(a.engine.getStatus().phase).toBe("unauthorized");
+  });
+});
+
+describe("manager PIN through the client", () => {
+  it("a staff till's menu change is held back and reported; accepted once unlocked", async () => {
+    const owner = device();
+    owner.store.set((st) => setShop(st, { ...shopConfig }));
+    await owner.settle();
+    await setPin(db, (await db.select().from(schema.shops).get())!, "4821", "secret", clock.now);
+
+    const staff = device();
+    await staff.engine.syncNow();
+    expect(staff.engine.getStatus().pinSet).toBe(true); // learned from the server, so My shop can ask for the PIN
+
+    await new Promise((r) => setTimeout(r, 5));
+    staff.store.set((st) => patchProfile(st, { name: "Staff rename" }));
+    await staff.settle();
+    expect(staff.engine.getStatus().configRejected).toBe(true);
+    expect((await db.select().from(schema.shops).get())?.name).toBe("Baan Mali"); // server unchanged
+    expect(staff.store.get().shop?.profile.name).toBe("Baan Mali"); // and the till was handed the real settings back
+
+    // the manager unlocks (the proof is sent with the next sync) and edits again
+    managerProof = "mg_ok";
+    await new Promise((r) => setTimeout(r, 5));
+    staff.store.set((st) => patchProfile(st, { name: "Manager rename" }));
+    await staff.settle();
+    expect(staff.engine.getStatus().configRejected).toBe(false);
+    expect((await db.select().from(schema.shops).get())?.name).toBe("Manager rename");
+  });
+
+  it("selling is never blocked by the PIN", async () => {
+    const owner = device();
+    owner.store.set((st) => setShop(st, { ...shopConfig }));
+    await owner.settle();
+    await setPin(db, (await db.select().from(schema.shops).get())!, "4821", "secret", clock.now);
+    const staff = device();
+    await staff.engine.syncNow();
+    sell(staff.store, 7);
+    await staff.settle();
+    expect((await db.select().from(schema.records)).length).toBe(1);
   });
 });

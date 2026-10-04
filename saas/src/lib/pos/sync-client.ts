@@ -3,6 +3,7 @@ import type { BillRecord, PosState } from "../validations/pos";
 import { SyncResponseSchema, type SyncRequest, type SyncResponse } from "../validations/sync";
 import { mergeLists } from "./merge";
 import { PAID_CAP, SAVED_CAP } from "./state";
+import { getManager } from "./manager";
 import { getStore, type PosStore } from "./store";
 
 const LINK_KEY = "spos:v1:link";
@@ -28,14 +29,21 @@ export function saveLink(storage: StorageLike, link: Link): void {
 }
 
 export type SyncPhase = "local" | "idle" | "syncing" | "offline" | "error" | "unauthorized";
-export type SyncStatus = { phase: SyncPhase; lastSyncedAt?: string };
+export type SyncStatus = {
+  phase: SyncPhase;
+  lastSyncedAt?: string;
+  /** The shop has a manager PIN (remembered between visits so My shop does not flash open). */
+  pinSet?: boolean;
+  /** The last sync could not save settings because the manager PIN had not been entered. */
+  configRejected?: boolean;
+};
 
-type Meta = { cursor: string | null; pushedAt: string | null };
+type Meta = { cursor: string | null; pushedAt: string | null; pinSet?: boolean };
 
 function loadMeta(storage: StorageLike | null): Meta {
   try {
     const v = JSON.parse(storage?.getItem(META_KEY) ?? "null") as Partial<Meta> | null;
-    return { cursor: v?.cursor ?? null, pushedAt: v?.pushedAt ?? null };
+    return { cursor: v?.cursor ?? null, pushedAt: v?.pushedAt ?? null, pinSet: v?.pinSet === true };
   } catch {
     return { cursor: null, pushedAt: null };
   }
@@ -68,6 +76,8 @@ export type EngineDeps = {
   fetch: typeof fetch;
   storage: StorageLike | null;
   now: () => Date;
+  /** The manager proof to send along (null when My shop has not been unlocked). */
+  getManagerToken: () => string | null;
   /** Timer functions, injectable for tests. */
   setTimeout: (fn: () => void, ms: number) => unknown;
   clearTimeout: (id: unknown) => void;
@@ -90,7 +100,7 @@ const BACKOFF_MS = [5_000, 15_000, 60_000, 300_000];
 
 export function createSyncEngine(store: PosStore, deps: EngineDeps): SyncEngine {
   const listeners = new Set<() => void>();
-  let status: SyncStatus = { phase: loadLink(deps.storage) ? "idle" : "local" };
+  let status: SyncStatus = { phase: loadLink(deps.storage) ? "idle" : "local", pinSet: loadMeta(deps.storage).pinSet };
   let timer: unknown;
   let poll: unknown;
   let inFlight = false;
@@ -98,9 +108,11 @@ export function createSyncEngine(store: PosStore, deps: EngineDeps): SyncEngine 
   let suppress = false;
   let failures = 0;
   let stopped = false;
+  /** A key the server has refused: no point asking again until the till is signed in with a new one. */
+  let refusedToken: string | null = null;
 
   const setStatus = (next: SyncStatus): void => {
-    status = next;
+    status = { pinSet: status.pinSet, configRejected: status.configRejected, ...next };
     listeners.forEach((l) => l());
   };
 
@@ -114,6 +126,7 @@ export function createSyncEngine(store: PosStore, deps: EngineDeps): SyncEngine 
     if (stopped) return;
     const link = loadLink(deps.storage);
     if (!link) return setStatus({ phase: "local" });
+    if (link.token === refusedToken) return setStatus({ phase: "unauthorized", lastSyncedAt: status.lastSyncedAt });
     if (!deps.isOnline()) return setStatus({ phase: "offline", lastSyncedAt: status.lastSyncedAt });
     if (inFlight) {
       again = true;
@@ -126,10 +139,15 @@ export function createSyncEngine(store: PosStore, deps: EngineDeps): SyncEngine 
       const body = buildRequest(store.get(), loadMeta(deps.storage));
       const res = await deps.fetch("/api/till/sync", {
         method: "POST",
-        headers: { Authorization: `Bearer ${link.token}`, "Content-Type": "application/json" },
+        headers: {
+          Authorization: `Bearer ${link.token}`,
+          "Content-Type": "application/json",
+          ...(deps.getManagerToken() ? { "X-Manager-Token": deps.getManagerToken() as string } : {}),
+        },
         body: JSON.stringify(body),
       });
       if (res.status === 401) {
+        refusedToken = link.token;
         setStatus({ phase: "unauthorized", lastSyncedAt: status.lastSyncedAt });
         return;
       }
@@ -142,9 +160,9 @@ export function createSyncEngine(store: PosStore, deps: EngineDeps): SyncEngine 
       } finally {
         suppress = false;
       }
-      deps.storage?.setItem(META_KEY, JSON.stringify({ cursor: parsed.data.serverTime, pushedAt: started.toISOString() } satisfies Meta));
+      deps.storage?.setItem(META_KEY, JSON.stringify({ cursor: parsed.data.serverTime, pushedAt: started.toISOString(), pinSet: parsed.data.pinSet } satisfies Meta));
       failures = 0;
-      setStatus({ phase: "idle", lastSyncedAt: deps.now().toISOString() });
+      setStatus({ phase: "idle", lastSyncedAt: deps.now().toISOString(), pinSet: parsed.data.pinSet, configRejected: parsed.data.configRejected === true });
     } catch {
       failures++;
       setStatus({ phase: deps.isOnline() ? "error" : "offline", lastSyncedAt: status.lastSyncedAt });
@@ -215,6 +233,7 @@ export function getSyncEngine(): SyncEngine {
       setTimeout: (fn, ms) => window.setTimeout(fn, ms),
       clearTimeout: (id) => window.clearTimeout(id as number),
       isOnline: () => navigator.onLine !== false,
+      getManagerToken: () => getManager()?.token ?? null,
       onWake: (fn) => {
         const vis = (): void => {
           if (document.visibilityState === "visible") fn();

@@ -5,13 +5,18 @@ import { newId } from "../../lib/pos/store";
 import { categoriesOf, itemName, patchProfile, removeItem, restoreItem, upsertItem } from "../../lib/pos/state";
 import type { PosState } from "../../lib/validations/pos";
 import type { MenuItem, ShopProfile } from "../../lib/validations/shop";
+import type { Link } from "../../lib/pos/sync-client";
 import { VatChoice } from "./Choices";
+import { PinCard } from "./PinCard";
 import { useI18n } from "./i18n";
 import { Button, Field, Sheet, useToast } from "./ui";
 
 type Props = {
   state: PosState;
   set: (fn: (s: PosState) => PosState) => void;
+  /** Present when this till is linked to an account (the PIN needs the account). */
+  link?: Link | null;
+  pinSet?: boolean;
 };
 
 const NEW_GROUP = "__new__";
@@ -55,7 +60,7 @@ function SavedField(props: {
   );
 }
 
-export function ShopScreen({ state, set }: Props): ReactNode {
+export function ShopScreen({ state, set, link = null, pinSet = false }: Props): ReactNode {
   const { t, fmt, locale, money } = useI18n();
   const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -93,6 +98,8 @@ export function ShopScreen({ state, set }: Props): ReactNode {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <h1 className="text-2xl font-extrabold text-stone-900 dark:text-stone-50">{t.shop.title}</h1>
+
+      {link && <PinCard link={link} pinSet={pinSet} />}
 
       <Card title={t.shop.details}>
         <SavedField label={t.shop.name} value={p.name} required onCommit={(v) => patch({ name: v })} />

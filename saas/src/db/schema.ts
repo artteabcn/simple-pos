@@ -12,10 +12,11 @@ export const shops = sqliteTable(
     ownerEmail: text("owner_email").notNull(),
     status: text("status", { enum: ["active", "suspended"] }).notNull().default("active"),
     customisation: integer("customisation", { mode: "boolean" }).notNull().default(false),
-    /** SHA-256 of the till key. The key itself is shown to the owner once and never stored. */
-    tokenHash: text("token_hash"),
-    tokenClaimedAt: text("token_claimed_at"),
     lastSyncAt: text("last_sync_at"),
+    /** Manager PIN: HMAC of the PIN with a server secret (never the PIN itself), plus the lockout state. */
+    pinHash: text("pin_hash"),
+    pinFailures: integer("pin_failures").notNull().default(0),
+    pinLockedUntil: text("pin_locked_until"),
     /** Shop profile and menu as validated JSON; the newest edit wins (configUpdatedAt). */
     profileJson: text("profile_json").notNull().default("{}"),
     menuJson: text("menu_json").notNull().default("[]"),
@@ -23,7 +24,53 @@ export const shops = sqliteTable(
     createdAt: text("created_at").notNull().$defaultFn(now),
     updatedAt: text("updated_at").notNull().$defaultFn(now).$onUpdateFn(now),
   },
-  (t) => [uniqueIndex("shops_slug_unique").on(t.slug), uniqueIndex("shops_token_hash_unique").on(t.tokenHash), index("shops_email_idx").on(t.ownerEmail)],
+  (t) => [uniqueIndex("shops_slug_unique").on(t.slug), index("shops_email_idx").on(t.ownerEmail)],
+);
+
+/** A phone or tablet that may sync one shop. Each has its own key, so one lost device can be switched off alone. */
+export const devices = sqliteTable(
+  "devices",
+  {
+    id: text("id").primaryKey(),
+    shopId: text("shop_id").notNull().references(() => shops.id),
+    /** SHA-256 of the device key. The key itself is shown once and never stored. */
+    tokenHash: text("token_hash").notNull(),
+    name: text("name").notNull().default(""),
+    lastSeenAt: text("last_seen_at"),
+    revokedAt: text("revoked_at"),
+    createdAt: text("created_at").notNull().$defaultFn(now),
+    updatedAt: text("updated_at").notNull().$defaultFn(now).$onUpdateFn(now),
+  },
+  (t) => [uniqueIndex("devices_token_unique").on(t.tokenHash), index("devices_shop_idx").on(t.shopId)],
+);
+
+/** A one-time sign-in link sent by email (one per shop of that owner). Only the hash of its token is kept. */
+export const loginLinks = sqliteTable(
+  "login_links",
+  {
+    id: text("id").primaryKey(),
+    shopId: text("shop_id").notNull().references(() => shops.id),
+    email: text("email").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: text("expires_at").notNull(),
+    usedAt: text("used_at"),
+    createdAt: text("created_at").notNull().$defaultFn(now),
+    updatedAt: text("updated_at").notNull().$defaultFn(now).$onUpdateFn(now),
+  },
+  (t) => [uniqueIndex("login_links_token_unique").on(t.tokenHash), index("login_links_email_idx").on(t.email, t.createdAt)],
+);
+
+/** Short-lived "the manager PIN was entered on this device" proof, needed to change prices, menu and settings. */
+export const managerSessions = sqliteTable(
+  "manager_sessions",
+  {
+    tokenHash: text("token_hash").primaryKey(),
+    deviceId: text("device_id").notNull().references(() => devices.id),
+    expiresAt: text("expires_at").notNull(),
+    createdAt: text("created_at").notNull().$defaultFn(now),
+    updatedAt: text("updated_at").notNull().$defaultFn(now).$onUpdateFn(now),
+  },
+  (t) => [index("manager_sessions_device_idx").on(t.deviceId)],
 );
 
 /** A started checkout. Reserves the web address for a while so two people cannot pay for the same one. */
@@ -99,6 +146,7 @@ export const records = sqliteTable(
 );
 
 export type ShopRow = typeof shops.$inferSelect;
+export type DeviceRow = typeof devices.$inferSelect;
 export type SignupRow = typeof signups.$inferSelect;
 export type PaymentRow = typeof payments.$inferSelect;
 export type RecordRow = typeof records.$inferSelect;

@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { AlertTriangle, Bookmark, Check, History, Loader2, Smartphone, Store, ShoppingBag, WifiOff } from "lucide-react";
+import { AlertTriangle, Bookmark, Check, History, Loader2, Lock, Smartphone, Store, ShoppingBag, WifiOff } from "lucide-react";
 import { clsx } from "clsx";
 import { LOCALES, type Locale } from "../../i18n/utils";
 import { liveBills } from "../../lib/pos/state";
 import { usePos } from "../../lib/pos/store";
-import { loadLink, useSyncStatus, type SyncPhase } from "../../lib/pos/sync-client";
+import { useManager } from "../../lib/pos/manager";
+import { loadLink, useSyncStatus, type Link, type SyncStatus } from "../../lib/pos/sync-client";
 import { HistoryScreen } from "./HistoryScreen";
+import { PinGate } from "./PinGate";
 import { I18nProvider, useI18n } from "./i18n";
 import { PrintProvider } from "./Print";
 import { SavedScreen } from "./SavedScreen";
@@ -19,18 +21,19 @@ const TABS: Tab[] = ["sell", "saved", "history", "shop"];
 const ICONS = { sell: ShoppingBag, saved: Bookmark, history: History, shop: Store } as const;
 const LANGUAGE_NAMES: Record<Locale, string> = { en: "English", th: "ไทย", fr: "Français", de: "Deutsch" };
 
-const hasLink = (): boolean => {
+const getLink = (): Link | null => {
   try {
-    return loadLink(localStorage) !== null;
+    return loadLink(localStorage);
   } catch {
-    return false;
+    return null;
   }
 };
 
 /** One quiet line that tells the owner whether their sales are safe (so they never have to wonder). */
-function SyncLine({ phase }: { phase: SyncPhase }): ReactNode {
-  const { t } = useI18n();
-  const map: Record<SyncPhase, { text: string; icon: ReactNode; tone: string }> = {
+function SyncLine({ status }: { status: SyncStatus }): ReactNode {
+  const { t, locale } = useI18n();
+  const phase = status.phase;
+  const map: Record<SyncStatus["phase"], { text: string; icon: ReactNode; tone: string }> = {
     local: { text: t.sync.local, icon: <Smartphone size={16} aria-hidden="true" />, tone: "text-stone-600 dark:text-stone-400" },
     idle: { text: t.sync.saved, icon: <Check size={16} strokeWidth={2.5} aria-hidden="true" />, tone: "text-brand dark:text-teal-300" },
     syncing: { text: t.sync.saving, icon: <Loader2 size={16} className="animate-spin" aria-hidden="true" />, tone: "text-stone-600 dark:text-stone-400" },
@@ -38,13 +41,20 @@ function SyncLine({ phase }: { phase: SyncPhase }): ReactNode {
     error: { text: t.sync.error, icon: <AlertTriangle size={16} aria-hidden="true" />, tone: "text-amber-800 dark:text-amber-300" },
     unauthorized: { text: t.sync.unauthorized, icon: <AlertTriangle size={16} aria-hidden="true" />, tone: "text-rose-700 dark:text-rose-300" },
   };
-  const s = map[phase];
+  const rejected = status.configRejected === true && phase === "idle";
+  const s = rejected ? { text: t.sync.locked, icon: <Lock size={16} aria-hidden="true" />, tone: "text-amber-800 dark:text-amber-300" } : map[phase];
+  const offerSignIn = phase === "local" || phase === "unauthorized";
   return (
-    <div className="mx-auto flex max-w-6xl justify-end px-4 pb-2">
+    <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-end gap-x-3 px-4 pb-2">
       <p role="status" className={clsx("flex min-h-6 items-center gap-1.5 text-sm font-semibold", s.tone)}>
         {s.icon}
         {s.text}
       </p>
+      {offerSignIn && (
+        <a href={`/${locale}/login/`} className="flex min-h-6 items-center text-sm font-bold text-brand underline-offset-4 hover:underline dark:text-teal-300">
+          {t.sync.signIn}
+        </a>
+      )}
     </div>
   );
 }
@@ -84,10 +94,14 @@ function Shell(): ReactNode {
   }, []);
 
   const sync = useSyncStatus();
+  const manager = useManager();
+  const link = getLink();
+  // With a manager PIN on the account, My shop stays locked until the PIN is entered on this device.
+  const locked = link !== null && sync.pinSet === true && manager === null;
   const savedCount = liveBills(state.saved).length;
   const onboarding = state.shop === null;
   // A second device that has just been linked: wait for the first sync instead of flashing the setup wizard.
-  const waitingForShop = onboarding && sync.phase === "idle" && !sync.lastSyncedAt && hasLink();
+  const waitingForShop = onboarding && sync.phase === "idle" && !sync.lastSyncedAt && link !== null;
 
   return (
     <div className="app-shell min-h-dvh pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
@@ -105,7 +119,7 @@ function Shell(): ReactNode {
         </label>
       </header>
 
-      <SyncLine phase={sync.phase} />
+      <SyncLine status={sync} />
 
       <main className="mx-auto max-w-6xl px-4">
         {waitingForShop ? (
@@ -118,8 +132,10 @@ function Shell(): ReactNode {
           <SavedScreen state={state} set={set} goSell={() => go("sell")} />
         ) : tab === "history" ? (
           <HistoryScreen state={state} set={set} />
+        ) : locked && link ? (
+          <PinGate link={link} />
         ) : (
-          <ShopScreen state={state} set={set} />
+          <ShopScreen state={state} set={set} link={link} pinSet={sync.pinSet === true} />
         )}
       </main>
 

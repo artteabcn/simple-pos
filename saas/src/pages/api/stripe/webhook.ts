@@ -1,10 +1,13 @@
 import type { APIRoute } from "astro";
 import { env } from "cloudflare:workers";
-import { json } from "../../../lib/api";
+import { json, siteOrigin } from "../../../lib/api";
 import { interpretEvent, verifyStripeSignature } from "../../../lib/billing/stripe";
-import { liveClock, makeDb } from "../../../lib/db";
-import { markEventSeen, provisionPaidSession, unmarkEvent } from "../../../lib/db/provision";
+import { liveClock, makeDb, type Db } from "../../../lib/db";
+import { issueLoginLinkForShop } from "../../../lib/db/login";
+import { markEventSeen, provisionPaidSession, unmarkEvent, type ProvisionResult } from "../../../lib/db/provision";
 import { expireBySession } from "../../../lib/db/signups";
+import { sendMail, welcomeMail } from "../../../lib/email";
+import { isLocale } from "../../../i18n/utils";
 
 export const prerender = false;
 
@@ -35,6 +38,7 @@ export const POST: APIRoute = async ({ request }): Promise<Response> => {
       const r = await provisionPaidSession(db, what, clock);
       // unknown sessions and wrong amounts are logged and acknowledged: retrying would not change the answer
       if (r.status === "unknown_session" || r.status === "amount_mismatch") console.error("payment not provisioned", r.status, what.sessionId);
+      if (r.status === "created") await sendWelcome(db, r, request, clock);
       return json({ received: true, result: r.status });
     }
     if (what.kind === "expired") await expireBySession(db, what.sessionId, clock.now);
@@ -46,3 +50,15 @@ export const POST: APIRoute = async ({ request }): Promise<Response> => {
     return json({ error: "server_error" }, 500);
   }
 };
+
+/** After a payment: email the owner a first sign-in link. A mail problem never fails the webhook. */
+async function sendWelcome(db: Db, r: Extract<ProvisionResult, { status: "created" }>, request: Request, clock: ReturnType<typeof liveClock>): Promise<void> {
+  try {
+    const locale = isLocale(r.locale) ? r.locale : "en";
+    const link = await issueLoginLinkForShop(db, r.shopId, "", r.email, clock);
+    const url = `${siteOrigin(request, env.PUBLIC_SITE_URL)}/${locale}/login/verify#token=${link.token}`;
+    await sendMail(env, welcomeMail(r.email, locale, url));
+  } catch (e) {
+    console.error("welcome email failed", e instanceof Error ? e.message : e);
+  }
+}

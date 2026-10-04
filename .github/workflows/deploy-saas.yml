@@ -1,0 +1,115 @@
+name: Deploy Simple POS (saas) to Cloudflare Workers
+
+# One workflow does everything, safely to repeat (modelled on Resumai's):
+# tests -> D1 (create if missing) -> migrations -> deploy -> secrets -> Stripe webhook (create once).
+# Needs these repository secrets (Settings > Secrets and variables > Actions):
+#   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, STRIPE_SECRET_KEY, APP_SECRET, RESEND_API_KEY
+# and these repository variables (optional, defaults shown): DOMAIN (pos.arkadya.tech),
+#   EMAIL_FROM (Simple POS <no-reply@arkadya.tech>), EMAIL_REPLY_TO (hello@arkadya.tech)
+on:
+  push:
+    branches: [main]
+    paths: ["saas/**", ".github/workflows/deploy-saas.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-saas
+  cancel-in-progress: false
+
+env:
+  DB_NAME: simple-pos
+  DOMAIN: ${{ vars.DOMAIN || 'pos.arkadya.tech' }}
+  EMAIL_FROM: ${{ vars.EMAIL_FROM || 'Simple POS <no-reply@arkadya.tech>' }}
+  EMAIL_REPLY_TO: ${{ vars.EMAIL_REPLY_TO || 'hello@arkadya.tech' }}
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: saas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: saas/package-lock.json
+      - run: npm ci
+
+      - name: Type-check and test
+        run: |
+          npx astro sync
+          npm run typecheck
+          npm test
+
+      - name: Ensure D1 database
+        run: |
+          ID=$(npx wrangler d1 list --json | node -e "const l=JSON.parse(require('fs').readFileSync(0,'utf8'));const d=l.find(x=>x.name===process.env.DB_NAME);process.stdout.write(d?d.uuid:'')")
+          if [ -z "$ID" ]; then
+            npx wrangler d1 create "$DB_NAME"
+            ID=$(npx wrangler d1 list --json | node -e "const l=JSON.parse(require('fs').readFileSync(0,'utf8'));process.stdout.write(l.find(x=>x.name===process.env.DB_NAME).uuid)")
+          fi
+          echo "DB_ID=$ID" >> "$GITHUB_ENV"
+
+      - name: Configure wrangler (database id, domain, email sender)
+        run: node scripts/configure-wrangler.mjs
+        env:
+          DB_ID: ${{ env.DB_ID }}
+
+      - name: Apply D1 migrations
+        run: npx wrangler d1 migrations apply "$DB_NAME" --remote
+
+      - name: Build
+        run: npm run build
+        env:
+          PUBLIC_SITE_URL: https://${{ env.DOMAIN }}
+
+      - name: Deploy
+        run: npx wrangler deploy
+
+      - name: Ensure Stripe webhook
+        id: stripe
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+        run: |
+          export URL="https://$DOMAIN/api/stripe/webhook"
+          EXISTS=$(curl -s -u "$STRIPE_SECRET_KEY:" "https://api.stripe.com/v1/webhook_endpoints?limit=100" | node -e "const d=JSON.parse(require('fs').readFileSync(0,'utf8'));process.stdout.write((d.data||[]).some(e=>e.url===process.env.URL)?'yes':'no')")
+          if [ "$EXISTS" = "no" ]; then
+            SECRET=$(curl -s -u "$STRIPE_SECRET_KEY:" https://api.stripe.com/v1/webhook_endpoints \
+              -d url="$URL" -d description="Simple POS ($DOMAIN)" \
+              -d "enabled_events[]=checkout.session.completed" \
+              -d "enabled_events[]=checkout.session.async_payment_succeeded" \
+              -d "enabled_events[]=checkout.session.async_payment_failed" \
+              -d "enabled_events[]=checkout.session.expired" | node -e "process.stdout.write(JSON.parse(require('fs').readFileSync(0,'utf8')).secret||'')")
+            echo "::add-mask::$SECRET"
+            echo "whsec=$SECRET" >> "$GITHUB_OUTPUT"
+            echo "Created Stripe webhook"
+          else
+            echo "Stripe webhook already exists (its signing secret is kept as it was)"
+          fi
+
+      - name: Set Worker secrets
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          APP_SECRET: ${{ secrets.APP_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          WHSEC: ${{ steps.stripe.outputs.whsec }}
+        run: |
+          node -e "
+            const e=process.env, o={};
+            for (const k of ['STRIPE_SECRET_KEY','APP_SECRET','RESEND_API_KEY']) if (e[k]) o[k]=e[k];
+            if (e.WHSEC) o.STRIPE_WEBHOOK_SECRET=e.WHSEC;
+            require('fs').writeFileSync('/tmp/secrets.json', JSON.stringify(o));"
+          npx wrangler secret bulk /tmp/secrets.json
+          rm /tmp/secrets.json
+
+      - name: Smoke test
+        run: |
+          sleep 20
+          curl -fsS "https://$DOMAIN/api/health" | grep -q '"ok":true' && echo "::notice::https://$DOMAIN is up and the database answers"
+          curl -fsS "https://$DOMAIN/robots.txt" | grep -q "Sitemap:" && echo "::notice::robots.txt served"

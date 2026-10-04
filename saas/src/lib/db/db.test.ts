@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createTestDb, testClock } from "../../test/d1";
 import type { Db } from "./index";
-import { claimShop, markEventSeen, provisionPaidSession, shopByToken } from "./provision";
+import { claimShop, markEventSeen, provisionPaidSession } from "./provision";
+import { authenticateDevice } from "./devices";
 import { attachStripeSession, expireBySession, isSlugAvailable, reserveSignup } from "./signups";
 import { storedConfig, syncShop } from "./sync";
 import { schema } from "./index";
@@ -10,6 +11,8 @@ import { eq } from "drizzle-orm";
 
 let db: Db;
 let clock: ReturnType<typeof testClock>;
+/** The shop behind a device key (null when the key is unknown, revoked or the shop suspended). */
+const shopByToken = async (d: Db, token: string) => (await authenticateDevice(d, token, clock.now))?.shop ?? null;
 beforeEach(() => {
   db = createTestDb().db;
   clock = testClock();
@@ -73,7 +76,7 @@ describe("payment provisioning", () => {
     expect(r).toMatchObject({ status: "created", slug: "baan-mali" });
     const shops = await db.select().from(schema.shops);
     expect(shops).toHaveLength(1);
-    expect(shops[0]).toMatchObject({ name: "Baan Mali", ownerEmail: "mali@example.com", status: "active", tokenHash: null });
+    expect(shops[0]).toMatchObject({ name: "Baan Mali", ownerEmail: "mali@example.com", status: "active" });
     expect((await db.select().from(schema.payments))[0]).toMatchObject({ amountTotal: 49_900, currency: "thb" });
     expect((await db.select().from(schema.signups).get())?.status).toBe("paid");
   });

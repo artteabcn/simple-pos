@@ -1,4 +1,6 @@
 /** Small helpers shared by the API routes. */
+import { liveClock, makeDb, type Db } from "./db";
+import { authenticateDevice, type Authenticated } from "./db/devices";
 
 export function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -25,6 +27,25 @@ export async function readJson(request: Request, maxBytes: number): Promise<unkn
     throw new BodyError(400);
   }
 }
+
+/** The device behind a request's key, or a ready-made 401 response. */
+export async function requireDevice(request: Request, env: { DB: Parameters<typeof makeDb>[0] }): Promise<{ db: Db; auth: Authenticated } | Response> {
+  const token = bearer(request);
+  if (!token) return json({ error: "unauthorized" }, 401);
+  const db = makeDb(env.DB);
+  const auth = await authenticateDevice(db, token, liveClock().now);
+  return auth ? { db, auth } : json({ error: "unauthorized" }, 401);
+}
+
+/** Where links in emails should point: the configured public address, else the address of this request. */
+export const siteOrigin = (request: Request, configured?: string): string => {
+  try {
+    if (configured) return new URL(configured).origin;
+  } catch {
+    /* fall through to the request's own origin */
+  }
+  return new URL(request.url).origin;
+};
 
 /** `Authorization: Bearer <token>` -> token, or null. */
 export function bearer(request: Request): string | null {

@@ -1,3 +1,41 @@
+CREATE TABLE `devices` (
+	`id` text PRIMARY KEY NOT NULL,
+	`shop_id` text NOT NULL,
+	`token_hash` text NOT NULL,
+	`name` text DEFAULT '' NOT NULL,
+	`last_seen_at` text,
+	`revoked_at` text,
+	`created_at` text NOT NULL,
+	`updated_at` text NOT NULL,
+	FOREIGN KEY (`shop_id`) REFERENCES `shops`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `devices_token_unique` ON `devices` (`token_hash`);--> statement-breakpoint
+CREATE INDEX `devices_shop_idx` ON `devices` (`shop_id`);--> statement-breakpoint
+CREATE TABLE `login_links` (
+	`id` text PRIMARY KEY NOT NULL,
+	`shop_id` text NOT NULL,
+	`email` text NOT NULL,
+	`token_hash` text NOT NULL,
+	`expires_at` text NOT NULL,
+	`used_at` text,
+	`created_at` text NOT NULL,
+	`updated_at` text NOT NULL,
+	FOREIGN KEY (`shop_id`) REFERENCES `shops`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `login_links_token_unique` ON `login_links` (`token_hash`);--> statement-breakpoint
+CREATE INDEX `login_links_email_idx` ON `login_links` (`email`,`created_at`);--> statement-breakpoint
+CREATE TABLE `manager_sessions` (
+	`token_hash` text PRIMARY KEY NOT NULL,
+	`device_id` text NOT NULL,
+	`expires_at` text NOT NULL,
+	`created_at` text NOT NULL,
+	`updated_at` text NOT NULL,
+	FOREIGN KEY (`device_id`) REFERENCES `devices`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE INDEX `manager_sessions_device_idx` ON `manager_sessions` (`device_id`);--> statement-breakpoint
 CREATE TABLE `payments` (
 	`id` text PRIMARY KEY NOT NULL,
 	`shop_id` text NOT NULL,
@@ -38,9 +76,10 @@ CREATE TABLE `shops` (
 	`owner_email` text NOT NULL,
 	`status` text DEFAULT 'active' NOT NULL,
 	`customisation` integer DEFAULT false NOT NULL,
-	`token_hash` text,
-	`token_claimed_at` text,
 	`last_sync_at` text,
+	`pin_hash` text,
+	`pin_failures` integer DEFAULT 0 NOT NULL,
+	`pin_locked_until` text,
 	`profile_json` text DEFAULT '{}' NOT NULL,
 	`menu_json` text DEFAULT '[]' NOT NULL,
 	`config_updated_at` text DEFAULT '1970-01-01T00:00:00.000Z' NOT NULL,
@@ -49,7 +88,6 @@ CREATE TABLE `shops` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `shops_slug_unique` ON `shops` (`slug`);--> statement-breakpoint
-CREATE UNIQUE INDEX `shops_token_hash_unique` ON `shops` (`token_hash`);--> statement-breakpoint
 CREATE INDEX `shops_email_idx` ON `shops` (`owner_email`);--> statement-breakpoint
 CREATE TABLE `signups` (
 	`id` text PRIMARY KEY NOT NULL,
