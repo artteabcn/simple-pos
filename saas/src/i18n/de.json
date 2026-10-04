@@ -264,13 +264,13 @@
   },
   "landing": {
     "nav": {
-      "cta": "Meine Kasse öffnen"
+      "cta": "Jetzt starten"
     },
     "hero": {
       "eyebrow": "Für kleine Restaurants und Läden",
       "title": "Eine einfache Kasse, die Ihr ganzes Team bedienen kann",
       "body": "Artikel antippen, Rechnung erstellen, bar oder per PromptPay kassieren, Beleg drucken. Sie läuft auf jedem Handy oder Tablet, und Ihre Verkäufe liegen sicher in Ihrem Konto.",
-      "cta": "Meine Kasse öffnen",
+      "cta": "Jetzt starten",
       "secondary": "So funktioniert es",
       "note": "Einmal bezahlen, keine monatlichen Gebühren."
     },
@@ -337,7 +337,7 @@
       ],
       "addOnTitle": "Individuelle Anpassung",
       "addOnBody": "Wir passen Speisekarte, Belege und Aussehen an Ihren Laden an.",
-      "cta": "Meine Kasse öffnen"
+      "cta": "Jetzt starten"
     },
     "faq": {
       "title": "Fragen, die Inhaber stellen",
