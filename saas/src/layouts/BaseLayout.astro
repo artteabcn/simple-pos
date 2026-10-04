@@ -6,8 +6,10 @@ interface Props {
   locale: Locale;
   title: string;
   description?: string;
+  /** Private pages (the till, the thank-you page) are kept out of search results. */
+  noindex?: boolean;
 }
-const { locale, title, description = "" } = Astro.props;
+const { locale, title, description = "", noindex = false } = Astro.props;
 const path = Astro.url.pathname.replace(/^\/(en|th|fr|de)(?=\/|$)/, "");
 ---
 
@@ -18,6 +20,7 @@ const path = Astro.url.pathname.replace(/^\/(en|th|fr|de)(?=\/|$)/, "");
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="theme-color" content="#0f766e" />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
     <link rel="canonical" href={new URL(`/${locale}${path}`, Astro.site ?? Astro.url).href} />

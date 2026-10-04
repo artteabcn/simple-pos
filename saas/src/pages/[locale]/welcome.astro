@@ -1,6 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import PosApp from "../../components/pos/PosApp";
+import WelcomeClaim from "../../components/start/WelcomeClaim";
 import { LOCALES, useTranslations, type Locale } from "../../i18n/utils";
 
 export const prerender = true;
@@ -13,6 +13,6 @@ const locale = Astro.params.locale as Locale;
 const t = useTranslations(locale);
 ---
 
-<BaseLayout locale={locale} title={t.app.name} description={t.app.tagline} noindex>
-  <PosApp client:only="react" locale={locale} />
+<BaseLayout locale={locale} title={`${t.welcome.readyTitle} | ${t.app.name}`} noindex>
+  <WelcomeClaim client:only="react" locale={locale} />
 </BaseLayout>

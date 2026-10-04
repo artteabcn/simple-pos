@@ -26,9 +26,12 @@ export function newId(): string {
 
 export const liveCtx = (): Ctx => ({ now: new Date(), id: newId });
 
+/** `remote: true` marks a change that came from the server, so it keeps the server's edit time. */
+export type SetOptions = { remote?: boolean };
+
 export type PosStore = {
   get: () => PosState;
-  set: (fn: (s: PosState) => PosState) => void;
+  set: (fn: (s: PosState) => PosState, opts?: SetOptions) => void;
   subscribe: (cb: () => void) => () => void;
   flush: () => void;
 };
@@ -49,9 +52,13 @@ export function createStore(storage: StorageLike | null): PosStore {
 
   return {
     get: () => state,
-    set: (fn) => {
-      const next = fn(state);
+    set: (fn, opts) => {
+      let next = fn(state);
       if (next === state) return;
+      // Any local edit to the shop settings (name, menu, VAT...) gets a fresh edit time for syncing.
+      if (!opts?.remote && next.shop && next.shop !== state.shop) {
+        next = { ...next, shop: { ...next.shop, updatedAt: new Date().toISOString() } };
+      }
       state = next;
       listeners.forEach((l) => l());
       if (timer === undefined) timer = setTimeout(write, 150);

@@ -1,0 +1,77 @@
+CREATE TABLE `payments` (
+	`id` text PRIMARY KEY NOT NULL,
+	`shop_id` text NOT NULL,
+	`stripe_session_id` text NOT NULL,
+	`stripe_payment_intent` text,
+	`amount_total` integer NOT NULL,
+	`currency` text NOT NULL,
+	`paid_at` text NOT NULL,
+	`created_at` text NOT NULL,
+	`updated_at` text NOT NULL,
+	FOREIGN KEY (`shop_id`) REFERENCES `shops`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `payments_session_unique` ON `payments` (`stripe_session_id`);--> statement-breakpoint
+CREATE INDEX `payments_shop_idx` ON `payments` (`shop_id`);--> statement-breakpoint
+CREATE TABLE `records` (
+	`shop_id` text NOT NULL,
+	`kind` text NOT NULL,
+	`id` text NOT NULL,
+	`record_updated_at` text NOT NULL,
+	`synced_at` text NOT NULL,
+	`deleted` integer DEFAULT false NOT NULL,
+	`event_at` text,
+	`total` real,
+	`data` text NOT NULL,
+	`created_at` text NOT NULL,
+	`updated_at` text NOT NULL,
+	PRIMARY KEY(`shop_id`, `kind`, `id`),
+	FOREIGN KEY (`shop_id`) REFERENCES `shops`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE INDEX `records_changes_idx` ON `records` (`shop_id`,`synced_at`);--> statement-breakpoint
+CREATE INDEX `records_report_idx` ON `records` (`shop_id`,`kind`,`event_at`);--> statement-breakpoint
+CREATE TABLE `shops` (
+	`id` text PRIMARY KEY NOT NULL,
+	`slug` text NOT NULL,
+	`name` text NOT NULL,
+	`owner_email` text NOT NULL,
+	`status` text DEFAULT 'active' NOT NULL,
+	`customisation` integer DEFAULT false NOT NULL,
+	`token_hash` text,
+	`token_claimed_at` text,
+	`last_sync_at` text,
+	`profile_json` text DEFAULT '{}' NOT NULL,
+	`menu_json` text DEFAULT '[]' NOT NULL,
+	`config_updated_at` text DEFAULT '1970-01-01T00:00:00.000Z' NOT NULL,
+	`created_at` text NOT NULL,
+	`updated_at` text NOT NULL
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `shops_slug_unique` ON `shops` (`slug`);--> statement-breakpoint
+CREATE UNIQUE INDEX `shops_token_hash_unique` ON `shops` (`token_hash`);--> statement-breakpoint
+CREATE INDEX `shops_email_idx` ON `shops` (`owner_email`);--> statement-breakpoint
+CREATE TABLE `signups` (
+	`id` text PRIMARY KEY NOT NULL,
+	`slug` text NOT NULL,
+	`shop_name` text NOT NULL,
+	`email` text NOT NULL,
+	`customisation` integer DEFAULT false NOT NULL,
+	`locale` text DEFAULT 'en' NOT NULL,
+	`amount_expected` integer NOT NULL,
+	`stripe_session_id` text,
+	`status` text DEFAULT 'pending' NOT NULL,
+	`expires_at` text NOT NULL,
+	`created_at` text NOT NULL,
+	`updated_at` text NOT NULL
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `signups_session_unique` ON `signups` (`stripe_session_id`);--> statement-breakpoint
+CREATE INDEX `signups_slug_idx` ON `signups` (`slug`);--> statement-breakpoint
+CREATE TABLE `stripe_events` (
+	`id` text PRIMARY KEY NOT NULL,
+	`type` text NOT NULL,
+	`processed_at` text NOT NULL,
+	`created_at` text NOT NULL,
+	`updated_at` text NOT NULL
+);

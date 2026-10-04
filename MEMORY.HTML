@@ -38,13 +38,13 @@
 <tr><td>0</td><td>Harden the legacy app: merge-sync bills, fresh reads, PIN kept, escaping, self-hosted QR, CSV import, charset headers (branch <code>fix/saas-hardening</code>)</td><td class="ok">done, committed, not pushed</td></tr>
 <tr><td>1</td><td>Move to one workspace and the Astro foundation; typed, tested business logic; 4 languages (branch <code>feat/saas-foundation</code>)</td><td class="ok">done, pushed</td></tr>
 <tr><td>2</td><td>Friendlier interface for non-technical owners: tap-to-sell tiles, cash change calculator, PromptPay QR, undo for deletes, first-run wizard, plain wording (branch <code>feat/saas-ui</code>, route <code>/&lt;locale&gt;/app/</code>)</td><td class="ok">built and verified in a browser (EN, TH, DE; phone and desktop); data is still local to the device until step 3</td></tr>
-<tr><td>3</td><td>Stripe Checkout (499 / 299 THB) and D1 replacing GitHub as database</td><td class="muted">planned</td></tr>
+<tr><td>3</td><td>Stripe Checkout (499 THB, +299 THB add-on) and D1 replacing GitHub as database; till sync across devices (branch <code>feat/saas-payments-d1</code>)</td><td class="ok">built; tested with a real SQLite, a local D1 on the Worker runtime and a browser. Not yet run against real Stripe or a remote D1 (owner steps below)</td></tr>
 <tr><td>4</td><td>Landing page, login, server-checked PIN (also closes the open <code>/api/deploy</code> hole)</td><td class="muted">planned</td></tr></table></section>
 
 <section id="infra"><h2>Infrastructure</h2>
 <ul><li>Hosting: Cloudflare Pages, deploys from GitHub <code>artteabcn/simple-pos</code>, branch <code>main</code>. Pages Functions in <code>functions/</code> (legacy).</li>
 <li>Legacy env vars (set in the Pages dashboard, as Secrets): <code>GITHUB_TOKEN</code>, <code>GITHUB_REPO</code>.</li>
-<li>SaaS (planned): D1 binding <code>DB</code>, secrets <code>STRIPE_SECRET_KEY</code>, <code>STRIPE_WEBHOOK_SECRET</code>, session secret. Names only here.</li>
+<li>SaaS: deployed as a <b>Cloudflare Worker with static assets</b> (not Pages: <code>@astrojs/cloudflare</code> 14 builds <code>dist/client</code> + <code>dist/server</code> with a generated wrangler config). Worker is about 316 KB gzipped (limit 3 MiB). Config in <code>saas/wrangler.jsonc</code>: D1 binding <code>DB</code> (id filled in by Cloudflare's automatic provisioning). Secrets, names only: <code>STRIPE_SECRET_KEY</code>, <code>STRIPE_WEBHOOK_SECRET</code>.</li>
 <li>The repository sits in OneDrive. <b>Do not run npm there.</b> Use <code>saas\scripts\mirror.ps1 &lt;install|test|build|check|dev&gt;</code>, which copies the source to <code>%USERPROFILE%\_mig\simple-pos-saas</code> and runs the script there.</li></ul></section>
 
 <section id="legacy"><h2>Legacy app (repository root)</h2>
@@ -74,11 +74,38 @@
 <li>Records carry <code>id</code> and <code>updatedAt</code>; deletes are tombstones kept 30 days; newest <code>updatedAt</code> wins; caps: 30 saved bills, 500 paid bills.</li>
 <li>Shop slug: letters, numbers, hyphens, 2-64 chars (used in URLs and keys). Logo URL: http(s) or site-relative only.</li></ul></section>
 
+<section id="deploy"><h2>Going live: owner steps for the SaaS (step 3)</h2>
+<ol>
+<li><b>Stripe (test mode first).</b> Dashboard: Developers, Webhooks, add endpoint <code>https://&lt;your-domain&gt;/api/stripe/webhook</code> with events <code>checkout.session.completed</code>, <code>checkout.session.async_payment_succeeded</code>, <code>checkout.session.async_payment_failed</code>, <code>checkout.session.expired</code>. Copy the signing secret. Enable PromptPay under Settings, Payment methods if wanted (Checkout shows whatever is enabled there).</li>
+<li><b>Create the Worker from GitHub</b> (Cloudflare, Workers and Pages, Create, Import a repository). Root directory <code>saas</code>, build command <code>npm run build</code>, deploy command <code>npx wrangler deploy</code> (the build writes <code>.wrangler/deploy/config.json</code>, which points wrangler at <code>dist/server</code>; verified with <code>wrangler deploy --dry-run</code>: 307 KB gzipped, bindings DB, ASSETS and SESSION). The D1 database (and the unused session KV) are created automatically on first deploy.</li>
+<li><b>Set the secrets</b> in the Worker's settings as Secrets (not plain variables): <code>STRIPE_SECRET_KEY</code> (the <code>sk_test_</code> key at first) and <code>STRIPE_WEBHOOK_SECRET</code>.</li>
+<li><b>Apply the database migration</b> (from <code>saas/</code>): <code>npx wrangler d1 migrations apply DB --remote</code>. Run this <b>before</b> sending anyone to <code>/start</code>, and again whenever a new file appears in <code>saas/migrations/</code>.</li>
+<li><b>Test the whole path</b> with Stripe's test card 4242 4242 4242 4242: <code>/en/start</code>, pay, land on the thank-you page, open the till, make a sale, a second device has no till key yet, so it stays "only on this device" until sign-in exists (step 4).</li>
+<li>Only then switch to live keys and a live-mode webhook secret.</li>
+</ol>
+<p class="warn">Open question for the owner: the exact Cloudflare build and deploy command fields differ slightly by dashboard version; if the deploy step complains, run <code>npm run build</code> then <code>npx wrangler deploy</code> from <code>saas/</code> once locally to confirm.</p></section>
+
+<section id="data"><h2>Database (D1, Drizzle: <code>saas/src/db/schema.ts</code>)</h2>
+<table><tr><th>Table</th><th>Purpose</th></tr>
+<tr><td><code>shops</code></td><td>One row per paying shop: slug, name, owner email, status, add-on flag, hash of the till key, settings JSON (profile + menu) with its edit time</td></tr>
+<tr><td><code>signups</code></td><td>A started checkout; holds the address for an hour; records the expected amount (49,900 or 79,800 satang)</td></tr>
+<tr><td><code>payments</code></td><td>One row per Stripe payment; unique session id makes provisioning idempotent</td></tr>
+<tr><td><code>stripe_events</code></td><td>Handled Stripe event ids (webhooks are retried)</td></tr>
+<tr><td><code>records</code></td><td>Saved and paid bills and delete markers, keyed (shop, kind, id), with the device edit time, the server sync time and the exact numeric total</td></tr></table>
+<p>All tables carry createdAt and updatedAt. All queries live in <code>saas/src/lib/db/</code>; each takes the database as a parameter so tests run the real migration on Node's built-in SQLite.</p></section>
+
 <section id="api"><h2>API</h2>
 <table><tr><th>Route</th><th>Status</th></tr>
 <tr><td><code>GET /api/data?shop=&amp;kind=bills|paid|menu</code></td><td>legacy, live</td></tr>
 <tr><td><code>POST /api/sync {shopSlug, kind, items}</code></td><td>legacy, live; merges, retries on GitHub 409</td></tr>
-<tr><td><code>POST /api/deploy</code></td><td class="bad">legacy, unauthenticated: remove at step 4</td></tr></table></section>
+<tr><td><code>POST /api/deploy</code></td><td class="bad">legacy, unauthenticated: remove at step 4</td></tr></table>
+<p><b>SaaS (<code>saas/src/pages/api/</code>)</b></p>
+<table><tr><th>Route</th><th>What it does</th></tr>
+<tr><td><code>POST /api/checkout</code></td><td>Validates the form, holds the address for an hour, asks Stripe for a Checkout page (THB, 499 plus optional 299), returns its URL</td></tr>
+<tr><td><code>POST /api/stripe/webhook</code></td><td>Verifies the Stripe signature (HMAC, 5 minute tolerance), handles each event once, creates the shop only for a confirmed payment of the expected amount</td></tr>
+<tr><td><code>POST /api/claim</code></td><td>The thank-you page trades the Stripe session id for the till key (shown once). 202 = not confirmed yet, 409 = already set up</td></tr>
+<tr><td><code>POST /api/till/sync</code></td><td>Bearer till key. Sends changes, receives everyone else's; settings are last-edit-wins, bills merge per record; all input validated with Zod; 1 MB cap</td></tr></table>
+<p><b>Till key:</b> 256 random bits, only its SHA-256 is stored. It lets a device sync one shop and nothing else. Until step 4 (login) it is the only way a device is connected; if the owner closes the thank-you page before it is stored, claiming again issues a new key as long as the till has never synced.</p></section>
 
 <section id="i18n"><h2>Languages</h2>
 <p>Thai, English, French, German. Every string is added to all four JSON files at once. Start in the device language (<code>navigator.languages</code> / Accept-Language), a manual choice wins. Check long-word wrapping in German and Thai.</p></section>
@@ -86,7 +113,15 @@
 <section id="testing"><h2>Testing</h2>
 <pre>cd saas
 .\scripts\mirror.ps1 test     # vitest: calc, PromptPay payload, merge, validation, locale keys
-.\scripts\mirror.ps1 build    # astro build (proves 4-language routing)</pre>
+.\scripts\mirror.ps1 build    # astro build (proves 4-language routing)
+.\scripts\mirror.ps1 typecheck
+.\scripts\mirror.ps1 db:generate       # after editing src/db/schema.ts; copies the SQL back into saas/migrations
+.\scripts\mirror.ps1 db:migrate:local  # applies migrations to the local D1 (in the mirror)
+# end to end on the real Worker runtime: create saas\.dev.vars with test values
+#   STRIPE_SECRET_KEY=sk_test_local_dummy   STRIPE_WEBHOOK_SECRET=whsec_local_test_secret_123
+# start `npm run dev -- --host 127.0.0.1 --port 4321` inside the mirror folder, then:
+node scripts/e2e-local.mjs   # 22 checks: signed webhooks, claim, sync, deletes, security</pre>
+<p>Automated: 89 unit and integration tests (Node SQLite as D1, two simulated tills syncing through the real server code).</p>
 <p>Legacy hardening was verified with a Node harness that runs the real Pages Function against an in-memory GitHub fake, plus a browser run with hostile shop names; a PromptPay QR was decoded with OpenCV to prove it scans.</p></section>
 
 <section id="gotchas"><h2>Gotchas</h2>
@@ -100,6 +135,8 @@
 
 <section id="open"><h2>Open items</h2>
 <ul><li>Rebuild Jira-Bottega and wassanamart in the legacy Studio after <code>fix/saas-hardening</code> is merged to <code>main</code> (owner).</li>
+<li>Step 3 leftovers: no confirmation email yet (Resend); no refund handling (a refund in Stripe does not suspend the shop); history is capped to 500 paid bills per till and shown for 30 days (the server keeps everything, a longer history and export view is still to build); sync returns at most 5,000 changed records per call (fine for now, needs paging for very large first syncs); no rate limiting on the API (add a Cloudflare rate-limit rule on <code>/api/*</code>); the customisation add-on only sets a flag on the shop (who does the work and how the owner is notified is a business process to decide).</li>
+<li>Copy to review before launch (not legal advice, drafted by the assistant): the sign-up page text including "One payment" and the add-on description, the "Payment is handled securely by Stripe" line, and the receipt wording.</li>
 <li>Step 2 leftovers: logo upload (needs asset storage, step 3), PIN protection of My shop (step 4, server-checked), PWA manifest and install button, German/French wording review by a native speaker.</li>
 <li>Existing paid bills of 1,000 THB or more were stored with a wrong total (comma parsing bug, now fixed); history sums for those are wrong.</li>
 <li>Retire the duplicate folder <code>Desktop\SimplePos</code> (no code the repo lacks).</li>

@@ -4,7 +4,12 @@
 **Languages:** th, en, fr, de (all four, always added together). Default by browser language, Thai for the Thai market.
 **Stack:** Astro + React islands + Tailwind v4 + Drizzle/D1 in `saas/`. The repository root is the legacy single-file app, kept running until cutover; do not break it.
 
+**Deploy target (overrides the global "Pages" default):** the SaaS (`saas/`) is a Cloudflare **Worker with static assets**, because `@astrojs/cloudflare` 14 no longer builds for Pages. D1 binding `DB`, secrets `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`.
+
 ## Rules specific to this project
+- Payments: a shop is created only by a correctly signed Stripe webhook for the expected amount (`src/lib/db/provision.ts`); never from the browser. Prices live only in `src/lib/billing/pricing.ts` (satang).
+- Till API calls need the shop's till key (`Authorization: Bearer tk_...`); only its SHA-256 is stored. Validate every request body with Zod; never trust client input.
+- Keep `.dev.vars` local and gitignored (test values only). Real keys only as Cloudflare Secrets.
 - OneDrive: never run `npm install`/builds inside the repo. Use `saas\scripts\mirror.ps1 <install|test|build|check|dev>`.
 - Never parse a formatted amount ("2,400.00") back into a number; keep numbers as numbers (`src/lib/pos/calc.ts`).
 - All bill/paid records need `id` + `updatedAt`; deletes are tombstones (`src/lib/pos/merge.ts`).

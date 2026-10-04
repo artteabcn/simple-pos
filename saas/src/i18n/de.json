@@ -61,5 +61,25 @@
     "title": "Kassenbeleg", "bill": "Rechnung", "taxId": "Steuernr.", "item": "Artikel", "qty": "Anz.", "price": "Preis", "amount": "Betrag",
     "thanks": "Vielen Dank, bis bald!", "cashReceived": "Bar erhalten", "change": "Rückgeld"
   },
-  "install": { "button": "App installieren" }
+  "install": { "button": "App installieren" },
+  "sync": {
+    "saved": "Gespeichert", "saving": "Wird gespeichert…", "offline": "Offline: Ihre Verkäufe bleiben erhalten", "error": "Noch nicht gespeichert, neuer Versuch läuft",
+    "local": "Nur auf diesem Gerät", "unauthorized": "Bitte verbinden Sie dieses Gerät erneut"
+  },
+  "start": {
+    "title": "Eröffnen Sie Ihre eigene Kasse", "subtitle": "Einmal bezahlen. Ihre Verkäufe, Ihre Speisekarte und Ihre Belege auf jedem Handy oder Tablet.",
+    "shopName": "Name des Ladens", "shopNameHint": "So, wie Ihre Kunden ihn kennen", "email": "Ihre E-Mail", "emailHint": "Für Ihr Konto und Ihren Zahlungsbeleg",
+    "addOn": "Individuelle Anpassung", "addOnBody": "Wir passen Speisekarte, Belege und Aussehen an Ihren Laden an.",
+    "setupLine": "Einmalige Einrichtung", "total": "Gesamt heute", "pay": "Weiter zur Zahlung", "secure": "Die Zahlung wird sicher über Stripe abgewickelt.",
+    "cancelled": "Die Zahlung wurde abgebrochen. Es wurde nichts abgebucht.", "errorInvalid": "Bitte prüfen Sie Ladenname und E-Mail.",
+    "errorUnavailable": "Die Zahlung ist gerade nicht möglich. Bitte versuchen Sie es in ein paar Minuten erneut.", "errorNetwork": "Keine Verbindung. Bitte versuchen Sie es erneut.",
+    "haveTill": "Sie haben schon eine Kasse? Öffnen", "working": "Einen Moment…"
+  },
+  "welcome": {
+    "working": "Ihre Kasse wird eingerichtet…", "workingBody": "Ihre Zahlung ist bestätigt. Das dauert nur wenige Sekunden.",
+    "readyTitle": "Ihre Kasse ist bereit", "readyBody": "Ihre Verkäufe und Ihre Speisekarte werden ab jetzt in Ihrem Konto gespeichert.", "open": "Meine Kasse öffnen",
+    "slow": "Das dauert länger als gewöhnlich. Ihre Zahlung ist sicher. Laden Sie diese Seite in einer Minute neu.", "reload": "Neu laden",
+    "claimedTitle": "Diese Kasse ist bereits eingerichtet", "claimedBody": "Öffnen Sie sie auf dem Gerät, auf dem Sie begonnen haben.",
+    "missingTitle": "Hier gibt es nichts einzurichten", "missingBody": "Beginnen Sie von vorn, um Ihre Kasse zu eröffnen.", "startAgain": "Starten"
+  }
 }

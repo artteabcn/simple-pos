@@ -7,7 +7,8 @@ import tailwindcss from "@tailwindcss/vite";
 // Static pages + a small Worker for /api routes (keeps the Worker well under the 3 MiB free-tier limit).
 export default defineConfig({
   output: "server",
-  adapter: cloudflare(),
+  // No image-transform binding needed (no raster images yet); sessions are not used either.
+  adapter: cloudflare({ imageService: "passthrough" }),
   integrations: [react()],
   devToolbar: { enabled: false },
   vite: { plugins: [tailwindcss()] },

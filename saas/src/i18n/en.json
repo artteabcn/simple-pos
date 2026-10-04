@@ -61,5 +61,25 @@
     "title": "Receipt", "bill": "Bill", "taxId": "Tax ID", "item": "Item", "qty": "Qty", "price": "Price", "amount": "Amount",
     "thanks": "Thank you, see you again!", "cashReceived": "Cash received", "change": "Change"
   },
-  "install": { "button": "Install app" }
+  "install": { "button": "Install app" },
+  "sync": {
+    "saved": "Saved", "saving": "Saving…", "offline": "Offline: your sales are kept", "error": "Not saved yet, trying again",
+    "local": "Only on this device", "unauthorized": "Please reconnect this device"
+  },
+  "start": {
+    "title": "Open your own till", "subtitle": "One payment. Your sales, menu and receipts on any phone or tablet.",
+    "shopName": "Shop name", "shopNameHint": "As your customers know it", "email": "Your email", "emailHint": "For your account and your payment receipt",
+    "addOn": "Curated customisation", "addOnBody": "We adapt your menu, receipts and look to your shop.",
+    "setupLine": "One-time setup", "total": "Total today", "pay": "Continue to payment", "secure": "Payment is handled securely by Stripe.",
+    "cancelled": "Payment was cancelled. You have not been charged.", "errorInvalid": "Please check your shop name and email.",
+    "errorUnavailable": "Payment is not available right now. Please try again in a few minutes.", "errorNetwork": "No connection. Please try again.",
+    "haveTill": "Already have a till? Open it", "working": "One moment…"
+  },
+  "welcome": {
+    "working": "Setting up your till…", "workingBody": "Your payment is confirmed. This takes a few seconds.",
+    "readyTitle": "Your till is ready", "readyBody": "Your sales and menu are saved to your account from now on.", "open": "Open my till",
+    "slow": "This is taking longer than usual. Your payment is safe. Reload this page in a minute.", "reload": "Reload",
+    "claimedTitle": "This till is already set up", "claimedBody": "Open it on the device where you started.",
+    "missingTitle": "Nothing to set up here", "missingBody": "Start from the beginning to open your till.", "startAgain": "Start"
+  }
 }

@@ -6,6 +6,7 @@ import { decodeCsvBytes, menuFromCsv } from "../../lib/pos/csv";
 import { sampleMenu } from "../../lib/pos/sample";
 import { newId } from "../../lib/pos/store";
 import { setShop } from "../../lib/pos/state";
+import { loadLink } from "../../lib/pos/sync-client";
 import type { PosState } from "../../lib/validations/pos";
 import type { MenuItem } from "../../lib/validations/shop";
 import { VatChoice } from "./Choices";
@@ -20,7 +21,14 @@ export function SetupWizard({ set }: Props): ReactNode {
   const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1);
-  const [name, setName] = useState("");
+  // The name given at checkout, when this till has just been linked to an account.
+  const [name, setName] = useState(() => {
+    try {
+      return loadLink(localStorage)?.name ?? "";
+    } catch {
+      return "";
+    }
+  });
   const [nameError, setNameError] = useState<string | undefined>();
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [choice, setChoice] = useState<MenuChoice | null>(null);

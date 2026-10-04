@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { History, Bookmark, Store, ShoppingBag } from "lucide-react";
+import { AlertTriangle, Bookmark, Check, History, Loader2, Smartphone, Store, ShoppingBag, WifiOff } from "lucide-react";
 import { clsx } from "clsx";
 import { LOCALES, type Locale } from "../../i18n/utils";
 import { liveBills } from "../../lib/pos/state";
 import { usePos } from "../../lib/pos/store";
+import { loadLink, useSyncStatus, type SyncPhase } from "../../lib/pos/sync-client";
 import { HistoryScreen } from "./HistoryScreen";
 import { I18nProvider, useI18n } from "./i18n";
 import { PrintProvider } from "./Print";
@@ -17,6 +18,36 @@ type Tab = "sell" | "saved" | "history" | "shop";
 const TABS: Tab[] = ["sell", "saved", "history", "shop"];
 const ICONS = { sell: ShoppingBag, saved: Bookmark, history: History, shop: Store } as const;
 const LANGUAGE_NAMES: Record<Locale, string> = { en: "English", th: "ไทย", fr: "Français", de: "Deutsch" };
+
+const hasLink = (): boolean => {
+  try {
+    return loadLink(localStorage) !== null;
+  } catch {
+    return false;
+  }
+};
+
+/** One quiet line that tells the owner whether their sales are safe (so they never have to wonder). */
+function SyncLine({ phase }: { phase: SyncPhase }): ReactNode {
+  const { t } = useI18n();
+  const map: Record<SyncPhase, { text: string; icon: ReactNode; tone: string }> = {
+    local: { text: t.sync.local, icon: <Smartphone size={16} aria-hidden="true" />, tone: "text-stone-600 dark:text-stone-400" },
+    idle: { text: t.sync.saved, icon: <Check size={16} strokeWidth={2.5} aria-hidden="true" />, tone: "text-brand dark:text-teal-300" },
+    syncing: { text: t.sync.saving, icon: <Loader2 size={16} className="animate-spin" aria-hidden="true" />, tone: "text-stone-600 dark:text-stone-400" },
+    offline: { text: t.sync.offline, icon: <WifiOff size={16} aria-hidden="true" />, tone: "text-amber-800 dark:text-amber-300" },
+    error: { text: t.sync.error, icon: <AlertTriangle size={16} aria-hidden="true" />, tone: "text-amber-800 dark:text-amber-300" },
+    unauthorized: { text: t.sync.unauthorized, icon: <AlertTriangle size={16} aria-hidden="true" />, tone: "text-rose-700 dark:text-rose-300" },
+  };
+  const s = map[phase];
+  return (
+    <div className="mx-auto flex max-w-6xl justify-end px-4 pb-2">
+      <p role="status" className={clsx("flex min-h-6 items-center gap-1.5 text-sm font-semibold", s.tone)}>
+        {s.icon}
+        {s.text}
+      </p>
+    </div>
+  );
+}
 
 const readTab = (): Tab => {
   const h = window.location.hash.replace("#", "");
@@ -52,8 +83,11 @@ function Shell(): ReactNode {
     window.location.hash = next;
   }, []);
 
+  const sync = useSyncStatus();
   const savedCount = liveBills(state.saved).length;
   const onboarding = state.shop === null;
+  // A second device that has just been linked: wait for the first sync instead of flashing the setup wizard.
+  const waitingForShop = onboarding && sync.phase === "idle" && !sync.lastSyncedAt && hasLink();
 
   return (
     <div className="app-shell min-h-dvh pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
@@ -71,8 +105,12 @@ function Shell(): ReactNode {
         </label>
       </header>
 
+      <SyncLine phase={sync.phase} />
+
       <main className="mx-auto max-w-6xl px-4">
-        {onboarding ? (
+        {waitingForShop ? (
+          <p role="status" className="py-16 text-center text-lg text-stone-600 dark:text-stone-400">{t.common.loading}</p>
+        ) : onboarding ? (
           <SetupWizard set={set} />
         ) : tab === "sell" ? (
           <SellScreen state={state} set={set} goShop={() => go("shop")} />

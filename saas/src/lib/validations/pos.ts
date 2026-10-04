@@ -5,7 +5,7 @@ export const PaymentMethodSchema = z.enum(["cash", "promptpay", "card"]);
 export type PaymentMethod = z.infer<typeof PaymentMethodSchema>;
 
 const IdSchema = z.string().regex(/^[A-Za-z0-9_-]{1,64}$/);
-const IsoSchema = z.string().min(10).max(40);
+export const IsoSchema = z.string().min(10).max(40);
 
 export const CartLineSchema = z.object({
   itemId: IdSchema,
@@ -62,6 +62,8 @@ export type BillRecord = Bill | Tombstone;
 export const ShopConfigSchema = z.object({
   profile: ShopProfileSchema,
   menu: z.array(MenuItemSchema).max(1000),
+  /** When the shop settings were last edited (any device); the newest edit wins when tills sync. */
+  updatedAt: IsoSchema.optional(),
 });
 export type ShopConfig = z.infer<typeof ShopConfigSchema>;
 

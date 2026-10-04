@@ -61,5 +61,25 @@
     "title": "Ticket de caisse", "bill": "Addition", "taxId": "N° fiscal", "item": "Article", "qty": "Qté", "price": "Prix", "amount": "Montant",
     "thanks": "Merci, à bientôt !", "cashReceived": "Espèces reçues", "change": "Monnaie rendue"
   },
-  "install": { "button": "Installer l'application" }
+  "install": { "button": "Installer l'application" },
+  "sync": {
+    "saved": "Enregistré", "saving": "Enregistrement…", "offline": "Hors ligne : vos ventes sont conservées", "error": "Pas encore enregistré, nouvel essai en cours",
+    "local": "Uniquement sur cet appareil", "unauthorized": "Veuillez reconnecter cet appareil"
+  },
+  "start": {
+    "title": "Ouvrez votre propre caisse", "subtitle": "Un seul paiement. Vos ventes, votre menu et vos tickets sur n'importe quel téléphone ou tablette.",
+    "shopName": "Nom de la boutique", "shopNameHint": "Tel que vos clients le connaissent", "email": "Votre e-mail", "emailHint": "Pour votre compte et votre reçu de paiement",
+    "addOn": "Personnalisation sur mesure", "addOnBody": "Nous adaptons votre menu, vos tickets et l'apparence à votre boutique.",
+    "setupLine": "Installation unique", "total": "Total aujourd'hui", "pay": "Continuer vers le paiement", "secure": "Le paiement est traité en toute sécurité par Stripe.",
+    "cancelled": "Le paiement a été annulé. Vous n'avez pas été débité.", "errorInvalid": "Veuillez vérifier le nom de la boutique et l'e-mail.",
+    "errorUnavailable": "Le paiement n'est pas disponible pour le moment. Veuillez réessayer dans quelques minutes.", "errorNetwork": "Pas de connexion. Veuillez réessayer.",
+    "haveTill": "Vous avez déjà une caisse ? Ouvrez-la", "working": "Un instant…"
+  },
+  "welcome": {
+    "working": "Préparation de votre caisse…", "workingBody": "Votre paiement est confirmé. Cela prend quelques secondes.",
+    "readyTitle": "Votre caisse est prête", "readyBody": "Vos ventes et votre menu sont désormais enregistrés dans votre compte.", "open": "Ouvrir ma caisse",
+    "slow": "Cela prend plus de temps que d'habitude. Votre paiement est en sécurité. Rechargez cette page dans une minute.", "reload": "Recharger",
+    "claimedTitle": "Cette caisse est déjà configurée", "claimedBody": "Ouvrez-la sur l'appareil où vous avez commencé.",
+    "missingTitle": "Rien à configurer ici", "missingBody": "Recommencez depuis le début pour ouvrir votre caisse.", "startAgain": "Commencer"
+  }
 }
