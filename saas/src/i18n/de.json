@@ -1,24 +1,65 @@
 {
   "app": { "name": "Simple POS", "tagline": "Eine einfache Kasse für kleine Restaurants und Läden" },
-  "nav": { "order": "Bestellung", "invoice": "Rechnung", "history": "Verlauf" },
+  "nav": { "sell": "Verkaufen", "saved": "Gemerkt", "history": "Verlauf", "shop": "Mein Laden" },
   "common": {
-    "save": "Speichern", "cancel": "Abbrechen", "delete": "Löschen", "close": "Schließen",
-    "add": "Hinzufügen", "edit": "Bearbeiten", "undo": "Löschen rückgängig", "language": "Sprache",
-    "loading": "Wird geladen…", "synced": "Gespeichert", "syncing": "Wird gespeichert…", "syncFailed": "Noch nicht gespeichert — neuer Versuch folgt"
+    "save": "Speichern", "cancel": "Abbrechen", "delete": "Löschen", "close": "Schließen", "add": "Hinzufügen", "edit": "Bearbeiten",
+    "undo": "Rückgängig", "done": "Fertig", "back": "Zurück", "next": "Weiter", "optional": "optional", "language": "Sprache",
+    "loading": "Wird geladen…", "required": "Bitte ausfüllen", "itemOne": "1 Artikel", "itemMany": "{n} Artikel",
+    "billOne": "1 Rechnung", "billMany": "{n} Rechnungen", "or": "oder"
   },
-  "pos": {
-    "addItem": "Artikel hinzufügen", "selectItem": "Artikel wählen", "discount": "Rabatt", "service": "Servicegebühr",
-    "payment": "Zahlung", "none": "Keiner", "cash": "Bar", "card": "Karte", "promptpay": "PromptPay",
-    "print": "Beleg drucken", "paidCash": "Bar bezahlt", "paidPromptpay": "Mit PromptPay bezahlt",
-    "billName": "Name der Rechnung", "table": "Tisch", "guests": "Gäste", "clear": "Leeren", "saveBill": "Für später merken",
-    "noSavedBills": "Noch keine gespeicherten Rechnungen.", "recall": "Öffnen", "total": "Gesamt",
-    "subtotal": "Zwischensumme", "vatIncluded": "inkl. 7 % MwSt.", "vatAdded": "MwSt. 7 %", "receipt": "Kassenbeleg",
-    "empty": "Noch keine Artikel"
+  "sell": {
+    "search": "Speisekarte durchsuchen", "all": "Alle", "order": "Aktuelle Bestellung", "emptyOrder": "Artikel antippen, um ihn hinzuzufügen",
+    "viewOrder": "Bestellung ansehen", "charge": "{amount} kassieren", "keepForLater": "Für später merken", "printBill": "Rechnung drucken",
+    "clearOrder": "Bestellung leeren", "billName": "Tisch oder Kunde", "billNameHint": "Zum Beispiel: Tisch 3",
+    "removed": "{name} entfernt", "cleared": "Bestellung geleert", "kept": "Bestellung gemerkt", "discount": "Rabatt",
+    "service": "Servicegebühr", "none": "Keiner", "subtotal": "Zwischensumme", "total": "Gesamt",
+    "vatIncluded": "inkl. 7 % MwSt.", "vatAdded": "MwSt. 7 %", "noResults": "Nichts gefunden",
+    "emptyMenuTitle": "Ihre Speisekarte ist leer", "emptyMenuBody": "Fügen Sie hinzu, was Sie verkaufen, und tippen Sie es hier an, um zu verkaufen.",
+    "emptyMenuAction": "Artikel hinzufügen", "decrease": "Einen weniger", "increase": "Einen mehr", "removeLine": "Aus der Bestellung entfernen"
+  },
+  "pay": {
+    "title": "Zahlung annehmen", "method": "Wie bezahlt der Kunde?", "cash": "Bar", "promptpay": "PromptPay", "card": "Karte",
+    "received": "Erhaltenes Bargeld", "exact": "Passend", "other": "Anderer Betrag", "change": "Rückgeld",
+    "notEnough": "Das ist weniger als der Gesamtbetrag", "scan": "Bitten Sie den Kunden, diesen Code zu scannen, und tippen Sie dann unten auf die Schaltfläche.",
+    "promptpayMissing": "Tragen Sie unter Mein Laden Ihre PromptPay-Nummer ein, um hier einen Zahlungscode anzuzeigen.",
+    "cardNote": "Kassieren Sie am Kartenterminal und tippen Sie dann unten auf die Schaltfläche.",
+    "confirm": "Zahlung erhalten", "paid": "Bezahlt", "thanks": "Vielen Dank!", "printReceipt": "Beleg drucken", "newOrder": "Neue Bestellung",
+    "amountDue": "Zu zahlender Betrag"
+  },
+  "saved": {
+    "title": "Gemerkte Rechnungen", "empty": "Keine gemerkten Rechnungen", "emptyBody": "Gemerkte Bestellungen warten hier, zum Beispiel ein Tisch, der noch nicht bezahlt hat.",
+    "open": "Öffnen", "deleted": "Gemerkte Rechnung entfernt"
   },
   "history": {
-    "all": "Letzte 30 Tage", "today": "Heute", "week": "Diese Woche", "month": "Diesen Monat",
-    "total": "Gesamt", "bills": "Rechnungen", "none": "Keine bezahlten Rechnungen in diesem Zeitraum.",
-    "confirmDelete": "Diese Rechnung aus dem Verlauf entfernen?", "view": "Ansehen",
-    "exportJson": "JSON herunterladen", "exportCsv": "Tabelle herunterladen", "printSummary": "Zusammenfassung drucken"
-  }
+    "title": "Verlauf", "today": "Heute", "week": "Diese Woche", "month": "Diesen Monat", "last30": "Letzte 30 Tage",
+    "total": "Einnahmen", "none": "Keine Zahlungen in diesem Zeitraum", "noneBody": "Bezahlte Rechnungen erscheinen hier.",
+    "view": "Ansehen", "deleted": "Rechnung aus dem Verlauf entfernt", "exportCsv": "Tabelle herunterladen", "printSummary": "Zusammenfassung drucken",
+    "paidWith": "Bezahlt mit", "time": "Uhrzeit", "deleteBill": "Rechnung entfernen"
+  },
+  "shop": {
+    "title": "Mein Laden", "details": "Angaben zum Laden", "name": "Name des Ladens", "address": "Adresse", "phone": "Telefonnummer",
+    "taxId": "Steuernummer", "payments": "Zahlungen erhalten", "promptpay": "PromptPay-Nummer",
+    "promptpayHint": "Ihre Handynummer oder 13-stellige ID. Kunden können einen Code auf dem Bildschirm scannen.",
+    "promptpayInvalid": "Geben Sie eine 10-stellige Handynummer oder eine 13-stellige ID ein",
+    "vat": "MwSt.", "vatInclusive": "Preise enthalten bereits die MwSt.", "vatExclusive": "MwSt. auf die Preise aufschlagen", "vatNone": "MwSt. nicht anzeigen",
+    "menu": "Speisekarte", "addItem": "Artikel hinzufügen", "itemName": "Name", "itemNameTh": "Name auf Thai", "itemNameThHint": "Wird angezeigt, wenn die App auf Thai läuft",
+    "price": "Preis", "category": "Gruppe", "categoryHint": "Zum Beispiel: Getränke", "noCategory": "Keine Gruppe", "newGroup": "Neue Gruppe…", "deleteItem": "Artikel entfernen",
+    "itemRemoved": "{name} entfernt", "importCsv": "Aus einer Tabelle importieren", "csvTemplate": "Beispieldatei herunterladen",
+    "importDone": "{n} Artikel hinzugefügt", "importFail": "Die Datei braucht eine Spalte für den Artikelnamen und eine für den Preis.",
+    "saved": "Gespeichert", "editItem": "Artikel bearbeiten", "newItem": "Neuer Artikel", "emptyMenu": "Noch keine Artikel"
+  },
+  "setup": {
+    "step": "Schritt {n} von {m}", "welcomeTitle": "Richten wir Ihren Laden ein", "welcomeBody": "Das dauert etwa zwei Minuten. Sie können alles später ändern.",
+    "nameTitle": "Wie heißt Ihr Laden?", "nameHint": "Der Name erscheint oben und auf Ihren Belegen.",
+    "menuTitle": "Ihre Speisekarte", "menuBody": "Wählen Sie, wie Sie anfangen möchten.", "menuSample": "Mit einer Beispielkarte starten",
+    "menuSampleBody": "Ein paar typische Artikel, die Sie ändern oder löschen können.", "menuImport": "Aus einer Tabelle importieren",
+    "menuImportBody": "Eine CSV-Datei mit Artikelnamen und Preisen.", "menuEmpty": "Ich füge die Artikel selbst hinzu",
+    "menuEmptyBody": "Mit einer leeren Karte starten.", "payTitle": "Zahlungen erhalten", "payBody": "Optional. Das geht auch später unter Mein Laden.",
+    "finish": "Mit dem Verkaufen beginnen", "sampleCategoryDrinks": "Getränke", "sampleCategoryMains": "Hauptgerichte", "sampleCategorySnacks": "Snacks"
+  },
+  "receipt": {
+    "title": "Kassenbeleg", "bill": "Rechnung", "taxId": "Steuernr.", "item": "Artikel", "qty": "Anz.", "price": "Preis", "amount": "Betrag",
+    "thanks": "Vielen Dank, bis bald!", "cashReceived": "Bar erhalten", "change": "Rückgeld"
+  },
+  "install": { "button": "App installieren" }
 }

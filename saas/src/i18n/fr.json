@@ -1,24 +1,65 @@
 {
   "app": { "name": "Simple POS", "tagline": "Une caisse simple pour les petits restaurants et commerces" },
-  "nav": { "order": "Commande", "invoice": "Addition", "history": "Historique" },
+  "nav": { "sell": "Vendre", "saved": "En attente", "history": "Historique", "shop": "Ma boutique" },
   "common": {
-    "save": "Enregistrer", "cancel": "Annuler", "delete": "Supprimer", "close": "Fermer",
-    "add": "Ajouter", "edit": "Modifier", "undo": "Annuler la suppression", "language": "Langue",
-    "loading": "Chargement…", "synced": "Enregistré", "syncing": "Enregistrement…", "syncFailed": "Pas encore enregistré — nouvel essai en cours"
+    "save": "Enregistrer", "cancel": "Annuler", "delete": "Supprimer", "close": "Fermer", "add": "Ajouter", "edit": "Modifier",
+    "undo": "Annuler", "done": "Terminé", "back": "Retour", "next": "Suivant", "optional": "facultatif", "language": "Langue",
+    "loading": "Chargement…", "required": "Merci de remplir ce champ", "itemOne": "1 article", "itemMany": "{n} articles",
+    "billOne": "1 addition", "billMany": "{n} additions", "or": "ou"
   },
-  "pos": {
-    "addItem": "Ajouter un article", "selectItem": "Choisir un article", "discount": "Remise", "service": "Service",
-    "payment": "Paiement", "none": "Aucune", "cash": "Espèces", "card": "Carte", "promptpay": "PromptPay",
-    "print": "Imprimer le ticket", "paidCash": "Payé en espèces", "paidPromptpay": "Payé par PromptPay",
-    "billName": "Nom de l'addition", "table": "Table", "guests": "Couverts", "clear": "Effacer", "saveBill": "Garder pour plus tard",
-    "noSavedBills": "Aucune addition enregistrée.", "recall": "Ouvrir", "total": "Total",
-    "subtotal": "Sous-total", "vatIncluded": "TVA 7 % incluse", "vatAdded": "TVA 7 %", "receipt": "Ticket de caisse",
-    "empty": "Aucun article"
+  "sell": {
+    "search": "Rechercher dans le menu", "all": "Tout", "order": "Commande en cours", "emptyOrder": "Touchez un article pour l'ajouter",
+    "viewOrder": "Voir la commande", "charge": "Encaisser {amount}", "keepForLater": "Mettre de côté", "printBill": "Imprimer l'addition",
+    "clearOrder": "Vider la commande", "billName": "Table ou client", "billNameHint": "Par exemple : Table 3",
+    "removed": "{name} retiré", "cleared": "Commande vidée", "kept": "Commande mise de côté", "discount": "Remise",
+    "service": "Service", "none": "Aucune", "subtotal": "Sous-total", "total": "Total",
+    "vatIncluded": "TVA 7 % incluse", "vatAdded": "TVA 7 %", "noResults": "Aucun résultat pour votre recherche",
+    "emptyMenuTitle": "Votre menu est vide", "emptyMenuBody": "Ajoutez ce que vous vendez, puis touchez-le ici pour commencer à vendre.",
+    "emptyMenuAction": "Ajouter des articles", "decrease": "Un de moins", "increase": "Un de plus", "removeLine": "Retirer de la commande"
+  },
+  "pay": {
+    "title": "Encaisser", "method": "Comment le client paie-t-il ?", "cash": "Espèces", "promptpay": "PromptPay", "card": "Carte",
+    "received": "Espèces reçues", "exact": "Montant exact", "other": "Autre montant", "change": "Monnaie à rendre",
+    "notEnough": "Ce montant est inférieur au total", "scan": "Demandez au client de scanner ce code, puis appuyez sur le bouton ci-dessous.",
+    "promptpayMissing": "Ajoutez votre numéro PromptPay dans Ma boutique pour afficher un code de paiement ici.",
+    "cardNote": "Encaissez sur votre terminal de carte, puis appuyez sur le bouton ci-dessous.",
+    "confirm": "Paiement reçu", "paid": "Payé", "thanks": "Merci !", "printReceipt": "Imprimer le ticket", "newOrder": "Nouvelle commande",
+    "amountDue": "Montant à payer"
+  },
+  "saved": {
+    "title": "Additions en attente", "empty": "Aucune addition en attente", "emptyBody": "Les commandes mises de côté attendent ici, par exemple une table qui n'a pas encore payé.",
+    "open": "Ouvrir", "deleted": "Addition retirée"
   },
   "history": {
-    "all": "30 derniers jours", "today": "Aujourd'hui", "week": "Cette semaine", "month": "Ce mois-ci",
-    "total": "Total", "bills": "additions", "none": "Aucune addition payée sur cette période.",
-    "confirmDelete": "Retirer cette addition de l'historique ?", "view": "Voir",
-    "exportJson": "Télécharger JSON", "exportCsv": "Télécharger le tableur", "printSummary": "Imprimer le récapitulatif"
-  }
+    "title": "Historique", "today": "Aujourd'hui", "week": "Cette semaine", "month": "Ce mois-ci", "last30": "30 derniers jours",
+    "total": "Recettes", "none": "Aucun paiement sur cette période", "noneBody": "Les additions payées apparaîtront ici.",
+    "view": "Voir", "deleted": "Addition retirée de l'historique", "exportCsv": "Télécharger le tableur", "printSummary": "Imprimer le récapitulatif",
+    "paidWith": "Payé par", "time": "Heure", "deleteBill": "Retirer l'addition"
+  },
+  "shop": {
+    "title": "Ma boutique", "details": "Informations", "name": "Nom de la boutique", "address": "Adresse", "phone": "Téléphone",
+    "taxId": "Numéro fiscal", "payments": "Encaissements", "promptpay": "Numéro PromptPay",
+    "promptpayHint": "Votre numéro de mobile ou identifiant à 13 chiffres. Les clients peuvent scanner un code à l'écran.",
+    "promptpayInvalid": "Saisissez un numéro de mobile à 10 chiffres ou un identifiant à 13 chiffres",
+    "vat": "TVA", "vatInclusive": "Les prix incluent déjà la TVA", "vatExclusive": "Ajouter la TVA en plus des prix", "vatNone": "Ne pas afficher la TVA",
+    "menu": "Menu", "addItem": "Ajouter un article", "itemName": "Nom", "itemNameTh": "Nom en thaï", "itemNameThHint": "Affiché quand l'application est en thaï",
+    "price": "Prix", "category": "Groupe", "categoryHint": "Par exemple : Boissons", "noCategory": "Sans groupe", "newGroup": "Nouveau groupe…", "deleteItem": "Retirer l'article",
+    "itemRemoved": "{name} retiré", "importCsv": "Importer depuis un tableur", "csvTemplate": "Télécharger un fichier exemple",
+    "importDone": "{n} articles ajoutés", "importFail": "Le fichier doit avoir une colonne pour le nom de l'article et une pour le prix.",
+    "saved": "Enregistré", "editItem": "Modifier l'article", "newItem": "Nouvel article", "emptyMenu": "Aucun article"
+  },
+  "setup": {
+    "step": "Étape {n} sur {m}", "welcomeTitle": "Configurons votre boutique", "welcomeBody": "Cela prend environ deux minutes. Vous pourrez tout modifier plus tard.",
+    "nameTitle": "Comment s'appelle votre boutique ?", "nameHint": "Ce nom apparaît en haut de l'écran et sur vos tickets.",
+    "menuTitle": "Votre menu", "menuBody": "Choisissez comment commencer.", "menuSample": "Commencer avec un menu d'exemple",
+    "menuSampleBody": "Quelques articles courants que vous pouvez modifier ou supprimer.", "menuImport": "Importer depuis un tableur",
+    "menuImportBody": "Un fichier CSV avec les noms et les prix.", "menuEmpty": "J'ajouterai les articles moi-même",
+    "menuEmptyBody": "Commencer avec un menu vide.", "payTitle": "Encaissements", "payBody": "Facultatif. Vous pourrez le faire plus tard dans Ma boutique.",
+    "finish": "Commencer à vendre", "sampleCategoryDrinks": "Boissons", "sampleCategoryMains": "Plats", "sampleCategorySnacks": "En-cas"
+  },
+  "receipt": {
+    "title": "Ticket de caisse", "bill": "Addition", "taxId": "N° fiscal", "item": "Article", "qty": "Qté", "price": "Prix", "amount": "Montant",
+    "thanks": "Merci, à bientôt !", "cashReceived": "Espèces reçues", "change": "Monnaie rendue"
+  },
+  "install": { "button": "Installer l'application" }
 }

@@ -36,8 +36,8 @@
 <section id="roadmap"><h2>Roadmap</h2>
 <table><tr><th>Step</th><th>What</th><th>Status</th></tr>
 <tr><td>0</td><td>Harden the legacy app: merge-sync bills, fresh reads, PIN kept, escaping, self-hosted QR, CSV import, charset headers (branch <code>fix/saas-hardening</code>)</td><td class="ok">done, committed, not pushed</td></tr>
-<tr><td>1</td><td>Move to one workspace and the Astro foundation; typed, tested business logic; 4 languages</td><td class="warn">in progress</td></tr>
-<tr><td>2</td><td>Friendlier interface for non-technical owners (first-run wizard, plain labels, undo)</td><td class="muted">next</td></tr>
+<tr><td>1</td><td>Move to one workspace and the Astro foundation; typed, tested business logic; 4 languages (branch <code>feat/saas-foundation</code>)</td><td class="ok">done, pushed</td></tr>
+<tr><td>2</td><td>Friendlier interface for non-technical owners: tap-to-sell tiles, cash change calculator, PromptPay QR, undo for deletes, first-run wizard, plain wording (branch <code>feat/saas-ui</code>, route <code>/&lt;locale&gt;/app/</code>)</td><td class="ok">built and verified in a browser (EN, TH, DE; phone and desktop); data is still local to the device until step 3</td></tr>
 <tr><td>3</td><td>Stripe Checkout (499 / 299 THB) and D1 replacing GitHub as database</td><td class="muted">planned</td></tr>
 <tr><td>4</td><td>Landing page, login, server-checked PIN (also closes the open <code>/api/deploy</code> hole)</td><td class="muted">planned</td></tr></table></section>
 
@@ -60,7 +60,13 @@
 <tr><td><code>src/lib/pos/merge.ts</code></td><td>Merge rules shared by browser and Worker (ids, tombstones, caps)</td></tr>
 <tr><td><code>src/lib/validations/shop.ts</code></td><td>Zod schemas: slug, logo URL, VAT mode, menu item, shop profile (single source of types)</td></tr>
 <tr><td><code>src/i18n/{en,th,fr,de}.json</code>, <code>utils.ts</code></td><td>All user-facing text; a test fails if any language misses a key</td></tr>
-<tr><td><code>src/pages/[locale]/index.astro</code>, <code>src/pages/index.astro</code></td><td>Locale routes; root redirects by Accept-Language</td></tr></table></section>
+<tr><td><code>src/pages/[locale]/index.astro</code>, <code>src/pages/index.astro</code></td><td>Locale routes; root redirects by Accept-Language</td></tr>
+<tr><td><code>src/pages/[locale]/app.astro</code></td><td>The till. Hosts the React island <code>PosApp</code> (<code>client:only</code>); tabs live in the URL hash (<code>#sell</code>, <code>#saved</code>, <code>#history</code>, <code>#shop</code>) so back and deep links work</td></tr>
+<tr><td><code>src/lib/pos/state.ts</code></td><td>Pure reducers: order, saved bills, payment, delete + undo (tombstones), menu edits, history ranges, CSV export. No UI, fully tested</td></tr>
+<tr><td><code>src/lib/pos/store.ts</code></td><td>Browser store (localStorage key <code>spos:v1</code>), validated with Zod on load, debounced save, <code>usePos()</code> hook. Step 3 replaces persistence with D1 sync</td></tr>
+<tr><td><code>src/lib/pos/csv.ts</code>, <code>sample.ts</code></td><td>Menu import (BOM, UTF-8 / Windows-874, RFC 4180) and the sample menu</td></tr>
+<tr><td><code>src/components/pos/*</code></td><td>Screens: SellScreen, CartPanel (CartLines + CartTotals), PaySheet, SavedScreen, HistoryScreen, ShopScreen, SetupWizard; shared ui.tsx (Button, Field, Sheet, Toast with Undo), Print.tsx (receipt printed from a hidden area, no pop-up), i18n.tsx</td></tr></table>
+<p><b>UI rules used:</b> one teal accent on warm neutrals, 48 px minimum tap targets, labels above fields, icons from lucide-react (no emoji), motion limited to transform/opacity and disabled by <code>prefers-reduced-motion</code>, dark mode via <code>prefers-color-scheme</code>. Menu items keep <code>nameEN</code> and <code>nameTH</code>; Thai screens show the Thai name, other languages the English one. Group names are the owner's own text and are not translated.</p></section>
 
 <section id="domain"><h2>Domain rules</h2>
 <ul><li>Bill maths: <code>discount = subtotal*d%</code>; <code>service = (subtotal-discount)*s%</code>; VAT 7%: included (<code>total*7/107</code>), added (<code>+7%</code>) or none. Display is whole baht.</li>
@@ -86,11 +92,15 @@
 <section id="gotchas"><h2>Gotchas</h2>
 <ul><li>OneDrive: never install packages inside the repo (npm even replaces a junction). Use the mirror script.</li>
 <li>PowerShell shows UTF-8 Thai as garbage; the files are fine. Verify with Node or a browser.</li>
+<li>Dev server: run <code>npm run dev</code> inside the mirror folder (<code>%USERPROFILE%\_mig\simple-pos-saas</code>) and re-sync source with robocopy after edits. The first start takes about a minute. The Astro dev toolbar is disabled because it floats over the bottom bar and swallows taps.</li>
+<li>Never read a formatted amount back into a number; payment amounts and PromptPay QR use the stored numeric total.</li>
+<li>Pre-existing paid bills on the legacy app with totals of 1,000 or more were stored with the wrong total (old comma-parsing bug).</li>
 <li>Pages: an SPA/static fallback answers 200 for missing files; verify live files by content-type and first bytes.</li>
 <li>Production migrations and merges to <code>main</code> are done by the owner. A push 403 usually means the wrong GitHub account is active.</li></ul></section>
 
 <section id="open"><h2>Open items</h2>
-<ul><li>Push <code>fix/saas-hardening</code>, then rebuild Jira-Bottega and wassanamart in the Studio.</li>
+<ul><li>Rebuild Jira-Bottega and wassanamart in the legacy Studio after <code>fix/saas-hardening</code> is merged to <code>main</code> (owner).</li>
+<li>Step 2 leftovers: logo upload (needs asset storage, step 3), PIN protection of My shop (step 4, server-checked), PWA manifest and install button, German/French wording review by a native speaker.</li>
 <li>Existing paid bills of 1,000 THB or more were stored with a wrong total (comma parsing bug, now fixed); history sums for those are wrong.</li>
 <li>Retire the duplicate folder <code>Desktop\SimplePos</code> (no code the repo lacks).</li>
 <li>Owner to supply: Stripe account (test mode first), final legal text and price wording.</li></ul></section>

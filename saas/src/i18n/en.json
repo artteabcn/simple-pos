@@ -1,24 +1,65 @@
 {
   "app": { "name": "Simple POS", "tagline": "A simple till for small restaurants and shops" },
-  "nav": { "order": "Order", "invoice": "Bill", "history": "History" },
+  "nav": { "sell": "Sell", "saved": "Saved", "history": "History", "shop": "My shop" },
   "common": {
-    "save": "Save", "cancel": "Cancel", "delete": "Delete", "close": "Close",
-    "add": "Add", "edit": "Edit", "undo": "Undo", "language": "Language",
-    "loading": "Loading…", "synced": "Saved", "syncing": "Saving…", "syncFailed": "Not saved yet — will retry"
+    "save": "Save", "cancel": "Cancel", "delete": "Delete", "close": "Close", "add": "Add", "edit": "Edit",
+    "undo": "Undo", "done": "Done", "back": "Back", "next": "Next", "optional": "optional", "language": "Language",
+    "loading": "Loading…", "required": "Please fill this in", "itemOne": "1 item", "itemMany": "{n} items",
+    "billOne": "1 bill", "billMany": "{n} bills", "or": "or"
   },
-  "pos": {
-    "addItem": "Add item", "selectItem": "Choose an item", "discount": "Discount", "service": "Service charge",
-    "payment": "Payment", "none": "None", "cash": "Cash", "card": "Card", "promptpay": "PromptPay",
-    "print": "Print receipt", "paidCash": "Paid in cash", "paidPromptpay": "Paid by PromptPay",
-    "billName": "Bill name", "table": "Table", "guests": "Guests", "clear": "Clear", "saveBill": "Keep for later",
-    "noSavedBills": "No saved bills yet.", "recall": "Open", "total": "Total",
-    "subtotal": "Subtotal", "vatIncluded": "VAT 7% included", "vatAdded": "VAT 7%", "receipt": "Receipt",
-    "empty": "No items yet"
+  "sell": {
+    "search": "Search the menu", "all": "All", "order": "Current order", "emptyOrder": "Tap an item to add it",
+    "viewOrder": "View order", "charge": "Charge {amount}", "keepForLater": "Keep for later", "printBill": "Print bill",
+    "clearOrder": "Clear order", "billName": "Table or customer", "billNameHint": "For example: Table 3",
+    "removed": "Removed {name}", "cleared": "Order cleared", "kept": "Order kept for later", "discount": "Discount",
+    "service": "Service charge", "none": "None", "subtotal": "Subtotal", "total": "Total",
+    "vatIncluded": "VAT 7% included", "vatAdded": "VAT 7%", "noResults": "Nothing matches your search",
+    "emptyMenuTitle": "Your menu is empty", "emptyMenuBody": "Add the things you sell, then tap them here to start selling.",
+    "emptyMenuAction": "Add items", "decrease": "One less", "increase": "One more", "removeLine": "Remove from order"
+  },
+  "pay": {
+    "title": "Take payment", "method": "How is the customer paying?", "cash": "Cash", "promptpay": "PromptPay", "card": "Card",
+    "received": "Cash received", "exact": "Exact amount", "other": "Other amount", "change": "Change to give back",
+    "notEnough": "That is less than the total", "scan": "Ask the customer to scan this code, then press the button below.",
+    "promptpayMissing": "Add your PromptPay number in My shop to show a payment code here.",
+    "cardNote": "Take the payment on your card machine, then press the button below.",
+    "confirm": "Payment received", "paid": "Paid", "thanks": "Thank you!", "printReceipt": "Print receipt", "newOrder": "New order",
+    "amountDue": "Amount to pay"
+  },
+  "saved": {
+    "title": "Saved bills", "empty": "No saved bills", "emptyBody": "Orders you keep for later wait here, for example a table that has not paid yet.",
+    "open": "Open", "deleted": "Saved bill removed"
   },
   "history": {
-    "all": "Last 30 days", "today": "Today", "week": "This week", "month": "This month",
-    "total": "Total", "bills": "bills", "none": "No paid bills in this period.",
-    "confirmDelete": "Remove this bill from the history?", "view": "View",
-    "exportJson": "Download JSON", "exportCsv": "Download spreadsheet", "printSummary": "Print summary"
-  }
+    "title": "History", "today": "Today", "week": "This week", "month": "This month", "last30": "Last 30 days",
+    "total": "Takings", "none": "No payments in this period", "noneBody": "Paid bills will show up here.",
+    "view": "View", "deleted": "Bill removed from history", "exportCsv": "Download spreadsheet", "printSummary": "Print summary",
+    "paidWith": "Paid with", "time": "Time", "deleteBill": "Remove bill"
+  },
+  "shop": {
+    "title": "My shop", "details": "Shop details", "name": "Shop name", "address": "Address", "phone": "Phone number",
+    "taxId": "Tax ID", "payments": "Getting paid", "promptpay": "PromptPay number",
+    "promptpayHint": "Your mobile number or 13-digit ID. Customers can scan a code on screen.",
+    "promptpayInvalid": "Enter a 10-digit mobile number or a 13-digit ID",
+    "vat": "VAT", "vatInclusive": "Prices already include VAT", "vatExclusive": "Add VAT on top of prices", "vatNone": "Do not show VAT",
+    "menu": "Menu", "addItem": "Add an item", "itemName": "Name", "itemNameTh": "Name in Thai", "itemNameThHint": "Shown when the app is in Thai",
+    "price": "Price", "category": "Group", "categoryHint": "For example: Drinks", "noCategory": "No group", "newGroup": "New group…", "deleteItem": "Remove item",
+    "itemRemoved": "Removed {name}", "importCsv": "Import from a spreadsheet", "csvTemplate": "Download an example file",
+    "importDone": "{n} items added", "importFail": "That file needs a column for the item name and one for the price.",
+    "saved": "Saved", "editItem": "Edit item", "newItem": "New item", "emptyMenu": "No items yet"
+  },
+  "setup": {
+    "step": "Step {n} of {m}", "welcomeTitle": "Let us set up your shop", "welcomeBody": "It takes about two minutes. You can change everything later.",
+    "nameTitle": "What is your shop called?", "nameHint": "This appears at the top and on your receipts.",
+    "menuTitle": "Your menu", "menuBody": "Choose how to start.", "menuSample": "Start with a sample menu",
+    "menuSampleBody": "A few typical items you can change or delete.", "menuImport": "Import from a spreadsheet",
+    "menuImportBody": "A CSV file with item names and prices.", "menuEmpty": "I will add items myself",
+    "menuEmptyBody": "Start with an empty menu.", "payTitle": "Getting paid", "payBody": "Optional. You can do this later in My shop.",
+    "finish": "Start selling", "sampleCategoryDrinks": "Drinks", "sampleCategoryMains": "Main dishes", "sampleCategorySnacks": "Snacks"
+  },
+  "receipt": {
+    "title": "Receipt", "bill": "Bill", "taxId": "Tax ID", "item": "Item", "qty": "Qty", "price": "Price", "amount": "Amount",
+    "thanks": "Thank you, see you again!", "cashReceived": "Cash received", "change": "Change"
+  },
+  "install": { "button": "Install app" }
 }

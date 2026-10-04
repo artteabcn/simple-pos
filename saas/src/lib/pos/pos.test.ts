@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calcTotals, formatBaht } from "./calc";
+import { calcTotals, cashSuggestions, formatBaht, formatMoney } from "./calc";
 import { crc16, promptPayPayload } from "./promptpay";
 import { mergeLists, stamp, tombstone, type SyncRecord } from "./merge";
 import { ShopProfileSchema, SlugSchema, LogoUrlSchema } from "../validations/shop";
@@ -25,6 +25,21 @@ describe("calcTotals", () => {
   it("formatBaht keeps numbers as numbers (the 2,400 -> 2 bug)", () => {
     expect(formatBaht(2400, "en-GB")).toBe("2,400");
     expect(parseFloat(formatBaht(2400, "en-GB"))).toBe(2); // why we never parse the display string
+  });
+});
+
+describe("cash and money display", () => {
+  it("suggests the amounts a customer would hand over", () => {
+    expect(cashSuggestions(35)).toEqual([50, 100, 500, 1000]);
+    expect(cashSuggestions(420)).toEqual([450, 500, 1000]);
+    expect(cashSuggestions(419.5)).toEqual([450, 500, 1000]);
+    expect(cashSuggestions(450)).toEqual([500, 1000]);
+    expect(cashSuggestions(1000)).toEqual([1050, 1100, 1500, 2000]);
+  });
+  it("shows satang only when there are some", () => {
+    expect(formatMoney(2400, "en-GB", "฿")).toBe("฿2,400");
+    expect(formatMoney(419.5, "en-GB", "฿")).toBe("฿419.50");
+    expect(formatMoney(1188, "de-DE", "฿")).toBe("฿1.188");
   });
 });
 
@@ -97,12 +112,23 @@ describe("i18n", () => {
     Object.entries(o as Record<string, unknown>).flatMap(([k, v]) =>
       typeof v === "object" && v !== null ? flat(v, prefix + k + ".") : [prefix + k],
     );
-  it("every locale has exactly the same keys and no empty strings", () => {
+  const entries = (o: unknown, prefix = ""): [string, string][] =>
+    Object.entries(o as Record<string, unknown>).flatMap(([k, v]): [string, string][] =>
+      typeof v === "object" && v !== null ? entries(v, prefix + k + ".") : [[prefix + k, String(v)]],
+    );
+  const placeholders = (s: string): string => (s.match(/\{\w+\}/g) ?? []).sort().join(",");
+
+  it("every locale has exactly the same keys", () => {
     const base = flat(useTranslations("en")).sort();
+    for (const l of LOCALES) expect(flat(useTranslations(l)).sort()).toEqual(base);
+  });
+  it("no empty text, and every language uses the same {placeholders}", () => {
+    const en = new Map(entries(useTranslations("en")));
     for (const l of LOCALES) {
-      expect(flat(useTranslations(l)).sort()).toEqual(base);
-      const dump = JSON.stringify(useTranslations(l));
-      expect(dump).not.toContain('""');
+      for (const [key, value] of entries(useTranslations(l))) {
+        expect(value.trim(), `${l}.${key} is empty`).not.toBe("");
+        expect(placeholders(value), `${l}.${key} placeholders`).toBe(placeholders(en.get(key) ?? ""));
+      }
     }
   });
   it("picks the first supported browser language, else English", () => {
