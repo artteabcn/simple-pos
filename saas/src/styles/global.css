@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #2563eb;
+  --color-brand-soft: #eff6ff;
+  --font-sans: "Noto Sans Thai", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html { -webkit-tap-highlight-color: transparent; }
+body { background: #f7fafc; color: #1a202c; }
+@media (prefers-color-scheme: dark) {
+  body { background: #121620; color: #edf2f7; }
+}

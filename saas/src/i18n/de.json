@@ -1,0 +1,24 @@
+{
+  "app": { "name": "Simple POS", "tagline": "Eine einfache Kasse für kleine Restaurants und Läden" },
+  "nav": { "order": "Bestellung", "invoice": "Rechnung", "history": "Verlauf" },
+  "common": {
+    "save": "Speichern", "cancel": "Abbrechen", "delete": "Löschen", "close": "Schließen",
+    "add": "Hinzufügen", "edit": "Bearbeiten", "undo": "Löschen rückgängig", "language": "Sprache",
+    "loading": "Wird geladen…", "synced": "Gespeichert", "syncing": "Wird gespeichert…", "syncFailed": "Noch nicht gespeichert — neuer Versuch folgt"
+  },
+  "pos": {
+    "addItem": "Artikel hinzufügen", "selectItem": "Artikel wählen", "discount": "Rabatt", "service": "Servicegebühr",
+    "payment": "Zahlung", "none": "Keiner", "cash": "Bar", "card": "Karte", "promptpay": "PromptPay",
+    "print": "Beleg drucken", "paidCash": "Bar bezahlt", "paidPromptpay": "Mit PromptPay bezahlt",
+    "billName": "Name der Rechnung", "table": "Tisch", "guests": "Gäste", "clear": "Leeren", "saveBill": "Für später merken",
+    "noSavedBills": "Noch keine gespeicherten Rechnungen.", "recall": "Öffnen", "total": "Gesamt",
+    "subtotal": "Zwischensumme", "vatIncluded": "inkl. 7 % MwSt.", "vatAdded": "MwSt. 7 %", "receipt": "Kassenbeleg",
+    "empty": "Noch keine Artikel"
+  },
+  "history": {
+    "all": "Letzte 30 Tage", "today": "Heute", "week": "Diese Woche", "month": "Diesen Monat",
+    "total": "Gesamt", "bills": "Rechnungen", "none": "Keine bezahlten Rechnungen in diesem Zeitraum.",
+    "confirmDelete": "Diese Rechnung aus dem Verlauf entfernen?", "view": "Ansehen",
+    "exportJson": "JSON herunterladen", "exportCsv": "Tabelle herunterladen", "printSummary": "Zusammenfassung drucken"
+  }
+}

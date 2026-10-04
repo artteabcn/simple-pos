@@ -1,0 +1,24 @@
+{
+  "app": { "name": "Simple POS", "tagline": "เครื่องคิดเงินง่าย ๆ สำหรับร้านอาหารและร้านค้าเล็ก ๆ" },
+  "nav": { "order": "สั่งอาหาร", "invoice": "บิล", "history": "ประวัติ" },
+  "common": {
+    "save": "บันทึก", "cancel": "ยกเลิก", "delete": "ลบ", "close": "ปิด",
+    "add": "เพิ่ม", "edit": "แก้ไข", "undo": "ยกเลิกการลบ", "language": "ภาษา",
+    "loading": "กำลังโหลด…", "synced": "บันทึกแล้ว", "syncing": "กำลังบันทึก…", "syncFailed": "ยังบันทึกไม่สำเร็จ จะลองใหม่"
+  },
+  "pos": {
+    "addItem": "เพิ่มรายการ", "selectItem": "เลือกรายการ", "discount": "ส่วนลด", "service": "ค่าบริการ",
+    "payment": "ชำระเงิน", "none": "ไม่มี", "cash": "เงินสด", "card": "บัตร", "promptpay": "พร้อมเพย์",
+    "print": "พิมพ์ใบเสร็จ", "paidCash": "ชำระด้วยเงินสด", "paidPromptpay": "ชำระด้วยพร้อมเพย์",
+    "billName": "ชื่อบิล", "table": "โต๊ะ", "guests": "จำนวนแขก", "clear": "ล้าง", "saveBill": "เก็บไว้ก่อน",
+    "noSavedBills": "ยังไม่มีบิลที่บันทึกไว้", "recall": "เปิด", "total": "ยอดรวม",
+    "subtotal": "รวมเป็นเงิน", "vatIncluded": "รวม VAT 7% แล้ว", "vatAdded": "VAT 7%", "receipt": "ใบเสร็จรับเงิน",
+    "empty": "ยังไม่มีรายการ"
+  },
+  "history": {
+    "all": "30 วันที่ผ่านมา", "today": "วันนี้", "week": "สัปดาห์นี้", "month": "เดือนนี้",
+    "total": "ยอดรวม", "bills": "บิล", "none": "ไม่มีบิลที่ชำระในช่วงนี้",
+    "confirmDelete": "ลบบิลนี้ออกจากประวัติ?", "view": "ดู",
+    "exportJson": "ดาวน์โหลด JSON", "exportCsv": "ดาวน์โหลดสเปรดชีต", "printSummary": "พิมพ์สรุป"
+  }
+}

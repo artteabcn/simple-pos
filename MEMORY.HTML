@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simple POS - project memory and handover</title>
+<style>
+  :root{--bg:#f7fafc;--card:#fff;--text:#1a202c;--muted:#64748b;--primary:#2563eb;--bdr:#e2e8f0;--ok:#047857;--warn:#b45309;--bad:#b91c1c}
+  @media(prefers-color-scheme:dark){:root{--bg:#121620;--card:#1a202c;--text:#edf2f7;--muted:#a0aec0;--primary:#60a5fa;--bdr:#2d3748;--ok:#34d399;--warn:#fbbf24;--bad:#f87171}}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 system-ui,"Noto Sans Thai",sans-serif}
+  .wrap{max-width:980px;margin:0 auto;padding:16px}
+  nav{position:sticky;top:0;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--bdr);display:flex;flex-wrap:wrap;gap:6px;z-index:5}
+  nav a{color:var(--primary);text-decoration:none;font-size:.82rem;font-weight:600;padding:4px 10px;border:1px solid var(--bdr);border-radius:999px;background:var(--card)}
+  section{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:16px 18px;margin:16px 0}
+  h1{color:var(--primary);margin:.6em 0 .2em} h2{margin:0 0 .5em;color:var(--primary);font-size:1.2rem}
+  table{border-collapse:collapse;width:100%;font-size:.88rem;margin:.5em 0} th,td{border:1px solid var(--bdr);padding:6px 9px;text-align:left;vertical-align:top} th{background:var(--bg)}
+  code,pre{font-family:ui-monospace,Consolas,monospace;font-size:.85em;background:var(--bg);border-radius:5px} code{padding:1px 5px} pre{padding:10px;overflow-x:auto}
+  .ok{color:var(--ok);font-weight:700}.warn{color:var(--warn);font-weight:700}.bad{color:var(--bad);font-weight:700}.muted{color:var(--muted)}
+</style>
+</head>
+<body><div class="wrap">
+<h1>Simple POS</h1>
+<p class="muted">Handover document for a developer joining the project. Last updated 2026-10-04. Never put secrets in this file.</p>
+<nav>
+  <a href="#overview">Overview</a><a href="#roadmap">Roadmap</a><a href="#infra">Infrastructure</a><a href="#legacy">Legacy app</a>
+  <a href="#saas">SaaS app (saas/)</a><a href="#domain">Domain rules</a><a href="#api">API</a><a href="#i18n">Languages</a>
+  <a href="#testing">Testing</a><a href="#gotchas">Gotchas</a><a href="#open">Open items</a><a href="#files">File map</a>
+</nav>
+
+<section id="overview"><h2>Overview</h2>
+<p>A simple point-of-sale for small restaurants and shops in Thailand. Goal: a SaaS where any restaurant registers, pays a one-time fee (499 THB, plus an optional 299 THB curated-customisation add-on) and gets its own POS. Languages: Thai, English, French, German. Typical users are not technical, so plain wording and big touch targets matter more than features.</p>
+<p>Two code bases live in this repository:</p>
+<ul><li><b>Legacy app</b> (repository root): single-file Studio (<code>index.html</code>) that generates one static POS page per shop and commits it to GitHub. Two shops run on it (Jira-Bottega, wassanamart). Kept running untouched until cutover.</li>
+<li><b>SaaS app</b> (<code>saas/</code>): Astro + React islands + Tailwind v4 + Drizzle/D1, built to replace the legacy app.</li></ul></section>
+
+<section id="roadmap"><h2>Roadmap</h2>
+<table><tr><th>Step</th><th>What</th><th>Status</th></tr>
+<tr><td>0</td><td>Harden the legacy app: merge-sync bills, fresh reads, PIN kept, escaping, self-hosted QR, CSV import, charset headers (branch <code>fix/saas-hardening</code>)</td><td class="ok">done, committed, not pushed</td></tr>
+<tr><td>1</td><td>Move to one workspace and the Astro foundation; typed, tested business logic; 4 languages</td><td class="warn">in progress</td></tr>
+<tr><td>2</td><td>Friendlier interface for non-technical owners (first-run wizard, plain labels, undo)</td><td class="muted">next</td></tr>
+<tr><td>3</td><td>Stripe Checkout (499 / 299 THB) and D1 replacing GitHub as database</td><td class="muted">planned</td></tr>
+<tr><td>4</td><td>Landing page, login, server-checked PIN (also closes the open <code>/api/deploy</code> hole)</td><td class="muted">planned</td></tr></table></section>
+
+<section id="infra"><h2>Infrastructure</h2>
+<ul><li>Hosting: Cloudflare Pages, deploys from GitHub <code>artteabcn/simple-pos</code>, branch <code>main</code>. Pages Functions in <code>functions/</code> (legacy).</li>
+<li>Legacy env vars (set in the Pages dashboard, as Secrets): <code>GITHUB_TOKEN</code>, <code>GITHUB_REPO</code>.</li>
+<li>SaaS (planned): D1 binding <code>DB</code>, secrets <code>STRIPE_SECRET_KEY</code>, <code>STRIPE_WEBHOOK_SECRET</code>, session secret. Names only here.</li>
+<li>The repository sits in OneDrive. <b>Do not run npm there.</b> Use <code>saas\scripts\mirror.ps1 &lt;install|test|build|check|dev&gt;</code>, which copies the source to <code>%USERPROFILE%\_mig\simple-pos-saas</code> and runs the script there.</li></ul></section>
+
+<section id="legacy"><h2>Legacy app (repository root)</h2>
+<ul><li><code>index.html</code>: Studio. Owner sets profile and menu, presses Deploy; it commits <code>data/&lt;slug&gt;-manifest.json</code>, <code>-menu.json</code> and <code>shops/&lt;slug&gt;.html</code>.</li>
+<li><code>functions/api/[[path]].js</code>: <code>/api/list</code>, <code>/api/recall</code>, <code>/api/deploy</code> (unauthenticated, to be removed), <code>/api/data</code> (fresh read), <code>/api/sync</code> (merge write for bills and paid bills).</li>
+<li>Generated POS page: Order, Bill and History tabs; receipt with PromptPay QR drawn locally from <code>assets/qr.js</code>; bills in localStorage, merged with the server.</li>
+<li>Existing generated shop pages must be rebuilt in the Studio to receive fixes.</li></ul></section>
+
+<section id="saas"><h2>SaaS app (<code>saas/</code>)</h2>
+<table><tr><th>Path</th><th>Purpose</th></tr>
+<tr><td><code>src/lib/pos/calc.ts</code></td><td>Totals: discount, then service, then VAT (included, added, none)</td></tr>
+<tr><td><code>src/lib/pos/promptpay.ts</code></td><td>PromptPay EMV payload and CRC16; returns empty string for invalid ids</td></tr>
+<tr><td><code>src/lib/pos/merge.ts</code></td><td>Merge rules shared by browser and Worker (ids, tombstones, caps)</td></tr>
+<tr><td><code>src/lib/validations/shop.ts</code></td><td>Zod schemas: slug, logo URL, VAT mode, menu item, shop profile (single source of types)</td></tr>
+<tr><td><code>src/i18n/{en,th,fr,de}.json</code>, <code>utils.ts</code></td><td>All user-facing text; a test fails if any language misses a key</td></tr>
+<tr><td><code>src/pages/[locale]/index.astro</code>, <code>src/pages/index.astro</code></td><td>Locale routes; root redirects by Accept-Language</td></tr></table></section>
+
+<section id="domain"><h2>Domain rules</h2>
+<ul><li>Bill maths: <code>discount = subtotal*d%</code>; <code>service = (subtotal-discount)*s%</code>; VAT 7%: included (<code>total*7/107</code>), added (<code>+7%</code>) or none. Display is whole baht.</li>
+<li>Never parse a formatted amount back into a number (the string "2,400.00" parses as 2). Keep the number.</li>
+<li>Records carry <code>id</code> and <code>updatedAt</code>; deletes are tombstones kept 30 days; newest <code>updatedAt</code> wins; caps: 30 saved bills, 500 paid bills.</li>
+<li>Shop slug: letters, numbers, hyphens, 2-64 chars (used in URLs and keys). Logo URL: http(s) or site-relative only.</li></ul></section>
+
+<section id="api"><h2>API</h2>
+<table><tr><th>Route</th><th>Status</th></tr>
+<tr><td><code>GET /api/data?shop=&amp;kind=bills|paid|menu</code></td><td>legacy, live</td></tr>
+<tr><td><code>POST /api/sync {shopSlug, kind, items}</code></td><td>legacy, live; merges, retries on GitHub 409</td></tr>
+<tr><td><code>POST /api/deploy</code></td><td class="bad">legacy, unauthenticated: remove at step 4</td></tr></table></section>
+
+<section id="i18n"><h2>Languages</h2>
+<p>Thai, English, French, German. Every string is added to all four JSON files at once. Start in the device language (<code>navigator.languages</code> / Accept-Language), a manual choice wins. Check long-word wrapping in German and Thai.</p></section>
+
+<section id="testing"><h2>Testing</h2>
+<pre>cd saas
+.\scripts\mirror.ps1 test     # vitest: calc, PromptPay payload, merge, validation, locale keys
+.\scripts\mirror.ps1 build    # astro build (proves 4-language routing)</pre>
+<p>Legacy hardening was verified with a Node harness that runs the real Pages Function against an in-memory GitHub fake, plus a browser run with hostile shop names; a PromptPay QR was decoded with OpenCV to prove it scans.</p></section>
+
+<section id="gotchas"><h2>Gotchas</h2>
+<ul><li>OneDrive: never install packages inside the repo (npm even replaces a junction). Use the mirror script.</li>
+<li>PowerShell shows UTF-8 Thai as garbage; the files are fine. Verify with Node or a browser.</li>
+<li>Pages: an SPA/static fallback answers 200 for missing files; verify live files by content-type and first bytes.</li>
+<li>Production migrations and merges to <code>main</code> are done by the owner. A push 403 usually means the wrong GitHub account is active.</li></ul></section>
+
+<section id="open"><h2>Open items</h2>
+<ul><li>Push <code>fix/saas-hardening</code>, then rebuild Jira-Bottega and wassanamart in the Studio.</li>
+<li>Existing paid bills of 1,000 THB or more were stored with a wrong total (comma parsing bug, now fixed); history sums for those are wrong.</li>
+<li>Retire the duplicate folder <code>Desktop\SimplePos</code> (no code the repo lacks).</li>
+<li>Owner to supply: Stripe account (test mode first), final legal text and price wording.</li></ul></section>
+
+<section id="files"><h2>File map</h2>
+<pre>/                      legacy app (index.html, functions/, shops/, data/, assets/qr.js, _headers)
+/saas                  Astro SaaS app (see above)
+/saas/scripts/mirror.ps1   run npm scripts outside OneDrive
+/MEMORY.HTML           this file
+/CLAUDE.md             rules for AI assistants working here</pre></section>
+</div></body></html>

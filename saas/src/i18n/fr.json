@@ -1,0 +1,24 @@
+{
+  "app": { "name": "Simple POS", "tagline": "Une caisse simple pour les petits restaurants et commerces" },
+  "nav": { "order": "Commande", "invoice": "Addition", "history": "Historique" },
+  "common": {
+    "save": "Enregistrer", "cancel": "Annuler", "delete": "Supprimer", "close": "Fermer",
+    "add": "Ajouter", "edit": "Modifier", "undo": "Annuler la suppression", "language": "Langue",
+    "loading": "Chargement…", "synced": "Enregistré", "syncing": "Enregistrement…", "syncFailed": "Pas encore enregistré — nouvel essai en cours"
+  },
+  "pos": {
+    "addItem": "Ajouter un article", "selectItem": "Choisir un article", "discount": "Remise", "service": "Service",
+    "payment": "Paiement", "none": "Aucune", "cash": "Espèces", "card": "Carte", "promptpay": "PromptPay",
+    "print": "Imprimer le ticket", "paidCash": "Payé en espèces", "paidPromptpay": "Payé par PromptPay",
+    "billName": "Nom de l'addition", "table": "Table", "guests": "Couverts", "clear": "Effacer", "saveBill": "Garder pour plus tard",
+    "noSavedBills": "Aucune addition enregistrée.", "recall": "Ouvrir", "total": "Total",
+    "subtotal": "Sous-total", "vatIncluded": "TVA 7 % incluse", "vatAdded": "TVA 7 %", "receipt": "Ticket de caisse",
+    "empty": "Aucun article"
+  },
+  "history": {
+    "all": "30 derniers jours", "today": "Aujourd'hui", "week": "Cette semaine", "month": "Ce mois-ci",
+    "total": "Total", "bills": "additions", "none": "Aucune addition payée sur cette période.",
+    "confirmDelete": "Retirer cette addition de l'historique ?", "view": "Voir",
+    "exportJson": "Télécharger JSON", "exportCsv": "Télécharger le tableur", "printSummary": "Imprimer le récapitulatif"
+  }
+}

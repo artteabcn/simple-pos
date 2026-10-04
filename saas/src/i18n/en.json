@@ -1,0 +1,24 @@
+{
+  "app": { "name": "Simple POS", "tagline": "A simple till for small restaurants and shops" },
+  "nav": { "order": "Order", "invoice": "Bill", "history": "History" },
+  "common": {
+    "save": "Save", "cancel": "Cancel", "delete": "Delete", "close": "Close",
+    "add": "Add", "edit": "Edit", "undo": "Undo", "language": "Language",
+    "loading": "Loading…", "synced": "Saved", "syncing": "Saving…", "syncFailed": "Not saved yet — will retry"
+  },
+  "pos": {
+    "addItem": "Add item", "selectItem": "Choose an item", "discount": "Discount", "service": "Service charge",
+    "payment": "Payment", "none": "None", "cash": "Cash", "card": "Card", "promptpay": "PromptPay",
+    "print": "Print receipt", "paidCash": "Paid in cash", "paidPromptpay": "Paid by PromptPay",
+    "billName": "Bill name", "table": "Table", "guests": "Guests", "clear": "Clear", "saveBill": "Keep for later",
+    "noSavedBills": "No saved bills yet.", "recall": "Open", "total": "Total",
+    "subtotal": "Subtotal", "vatIncluded": "VAT 7% included", "vatAdded": "VAT 7%", "receipt": "Receipt",
+    "empty": "No items yet"
+  },
+  "history": {
+    "all": "Last 30 days", "today": "Today", "week": "This week", "month": "This month",
+    "total": "Total", "bills": "bills", "none": "No paid bills in this period.",
+    "confirmDelete": "Remove this bill from the history?", "view": "View",
+    "exportJson": "Download JSON", "exportCsv": "Download spreadsheet", "printSummary": "Print summary"
+  }
+}

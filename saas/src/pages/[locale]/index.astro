@@ -1,0 +1,28 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { LOCALES, useTranslations, type Locale } from "../../i18n/utils";
+
+export const prerender = true;
+
+export function getStaticPaths() {
+  return LOCALES.map((locale) => ({ params: { locale } }));
+}
+
+const locale = Astro.params.locale as Locale;
+const t = useTranslations(locale);
+---
+
+<BaseLayout locale={locale} title={t.app.name} description={t.app.tagline}>
+  <main class="mx-auto max-w-xl p-6">
+    <h1 class="text-brand text-3xl font-extrabold">{t.app.name}</h1>
+    <p class="mt-2 text-slate-600">{t.app.tagline}</p>
+    <nav class="mt-6 flex gap-2" aria-label={t.common.language}>
+      {LOCALES.map((l) => (
+        <a
+          href={`/${l}/`}
+          class:list={["rounded-full px-4 py-2 text-sm font-semibold", l === locale ? "bg-brand text-white" : "bg-slate-200"]}
+        >{l.toUpperCase()}</a>
+      ))}
+    </nav>
+  </main>
+</BaseLayout>
