@@ -101,7 +101,7 @@ describe("events", () => {
 });
 
 describe("signup input", () => {
-  const ok = { shopName: "Baan Mali", slug: "Baan-Mali", email: " Owner@Example.COM ", customisation: true, locale: "de" };
+  const ok = { shopName: "Baan Mali", slug: "Baan-Mali", email: " Owner@Example.COM ", customisation: true, locale: "de", acceptTerms: true };
   it("normalises address and email", () => {
     const r = SignupInputSchema.parse(ok);
     expect(r.slug).toBe("baan-mali");
@@ -111,6 +111,11 @@ describe("signup input", () => {
     for (const slug of ["admin", "ab", "a--b", "../x", "-abc", "abc-", "has space"]) {
       expect(SignupInputSchema.safeParse({ ...ok, slug }).success, slug).toBe(false);
     }
+  });
+  it("will not start a payment unless the terms were accepted", () => {
+    expect(SignupInputSchema.safeParse({ ...ok, acceptTerms: false }).success).toBe(false);
+    expect(SignupInputSchema.safeParse({ ...ok, acceptTerms: undefined }).success).toBe(false);
+    expect(SignupInputSchema.safeParse({ ...ok, acceptTerms: "yes" }).success).toBe(false);
   });
   it("rejects a bad email and an unknown language", () => {
     expect(SignupInputSchema.safeParse({ ...ok, email: "nope" }).success).toBe(false);

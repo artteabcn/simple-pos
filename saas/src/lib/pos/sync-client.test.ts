@@ -25,7 +25,7 @@ beforeEach(async () => {
   requests = 0;
   serverMode = "ok";
   managerProof = null;
-  const r = await reserveSignup(db, { shopName: "Baan Mali", slug: "baan-mali", email: "m@x.co", customisation: false, locale: "en" }, clock);
+  const r = await reserveSignup(db, { shopName: "Baan Mali", slug: "baan-mali", email: "m@x.co", customisation: false, locale: "en", acceptTerms: true },clock);
   if (!r.ok) throw new Error("reserve");
   await attachStripeSession(db, r.signupId, "cs_1", clock.now);
   await provisionPaidSession(db, { sessionId: "cs_1", paymentIntent: null, amountTotal: 49_900, currency: "thb" }, clock);

@@ -123,7 +123,7 @@ r = await get("/sitemap.xml");
 txt = await r.text();
 const locs = [...txt.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
 const dates = [...txt.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1]);
-ok(r.status === 200 && r.headers.get("content-type").includes("xml") && locs.length === 16 && locs.every((u) => !/app|welcome|verify|api/.test(u)), "sitemap.xml: 16 public pages only (4 pages x 4 languages)", { n: locs.length });
+ok(r.status === 200 && r.headers.get("content-type").includes("xml") && locs.length === 28 && locs.every((u) => !/app|welcome|verify|api/.test(u)), "sitemap.xml: 28 public pages only (7 pages x 4 languages)", { n: locs.length });
 ok(dates.every((d) => d <= new Date().toISOString().slice(0, 10)), "sitemap.xml: no date in the future", dates[0]);
 r = await get("/llms.txt");
 txt = await r.text();
@@ -172,7 +172,7 @@ ok(txt.includes("/en/customize/") && txt.includes("line.me/R/ti/p/%40214pknvg"),
 // ---- a refund arriving through a signed webhook
 r = await get("/sitemap.xml");
 const sm = await r.text();
-ok([...sm.matchAll(/<loc>/g)].length === 16 && sm.includes("/th/customize/"), "sitemap.xml now lists 16 public pages (4 x 4 languages)", null);
+ok([...sm.matchAll(/<loc>/g)].length === 28 && sm.includes("/th/terms/") && sm.includes("/de/refunds/"), "sitemap.xml lists the legal pages too (7 x 4 languages)", null);
 const refundEvt = JSON.stringify({ id: "evt_auth_refund", type: "charge.refunded", data: { object: { id: "ch_auth", payment_intent: "pi_a", amount: 49900, amount_refunded: 49900 } } });
 r = await fetch(BASE + "/api/stripe/webhook", { method: "POST", headers: { "content-type": "application/json", "stripe-signature": sign(refundEvt) }, body: refundEvt });
 b = await r.json();
@@ -184,6 +184,25 @@ ok(r.status === 200 && !b.devLinks, "refund: no sign-in link is issued for a swi
 r = await fetch(BASE + "/api/stripe/webhook", { method: "POST", headers: { "content-type": "application/json", "stripe-signature": sign(refundEvt) }, body: refundEvt });
 b = await r.json();
 ok(b.duplicate === true, "refund: the same refund event again does nothing", b);
+
+
+// ---- legal pages and the consent rule
+for (const [kind, enTitle, thTitle] of [["terms", "Terms of Service", "ข้อกำหนดการใช้งาน"], ["privacy", "Privacy Policy", "นโยบายความเป็นส่วนตัว"], ["refunds", "Refund Policy", "นโยบายการคืนเงิน"]]) {
+  const en = await (await get("/en/" + kind + "/")).text();
+  const th = await (await get("/th/" + kind + "/")).text();
+  const fr = await (await get("/fr/" + kind + "/")).text();
+  ok(en.includes("<h1") && en.includes(enTitle) && en.includes(kind === "refunds" ? "hello@arkadya.tech" : "Thai Online Solutions Co., Ltd.") && !en.includes("noindex"), "legal: /en/" + kind + " served, open to search, names the company or contact", null);
+  ok(th.includes(thTitle) && th.includes(kind === "refunds" ? "hello@arkadya.tech" : "บริษัท ไทย ออนไลน์ โซลูชั่นส์ จำกัด"), "legal: /th/" + kind + " in Thai", null);
+  ok(fr.includes('role="note"') && fr.includes(enTitle), "legal: /fr/" + kind + " shows the English text with a note in French", null);
+}
+html = await (await get("/en/")).text();
+ok(html.includes("/en/terms/") && html.includes("/en/privacy/") && html.includes("/en/refunds/"), "landing footer links to the three legal pages", null);
+r = await post("/api/checkout", { shopName: "Consent Cafe", slug: "consent-cafe", email: "c@example.com", customisation: false, locale: "en" });
+ok(r.status === 400 && (await r.json()).fields?.includes("acceptTerms"), "checkout: refused without accepting the terms, and says which field", r.status);
+r = await post("/api/checkout", { shopName: "Consent Cafe", slug: "consent-cafe", email: "c@example.com", customisation: false, locale: "en", acceptTerms: false });
+ok(r.status === 400, "checkout: ticking nothing (false) is refused too", r.status);
+html = await (await get("/en/start/")).text();
+ok(html.length > 500, "start page served", html.length);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

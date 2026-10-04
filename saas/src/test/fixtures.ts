@@ -12,7 +12,7 @@ export async function createPaidShop(
   const slug = o.slug ?? "baan-mali";
   const email = o.email ?? "mali@example.com";
   const session = o.session ?? `cs_${slug}`;
-  const r = await reserveSignup(db, { shopName: o.name ?? "Baan Mali", slug, email, customisation: false, locale: "en" }, clock);
+  const r = await reserveSignup(db, { shopName: o.name ?? "Baan Mali", slug, email, customisation: false, locale: "en", acceptTerms: true }, clock);
   if (!r.ok) throw new Error("slug taken");
   await attachStripeSession(db, r.signupId, session, clock.now);
   const p = await provisionPaidSession(db, { sessionId: session, paymentIntent: o.paymentIntent ?? `pi_${slug}`, amountTotal: 49_900, currency: "thb" }, clock);

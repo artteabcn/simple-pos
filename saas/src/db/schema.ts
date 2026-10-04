@@ -106,6 +106,9 @@ export const signups = sqliteTable(
     customisation: integer("customisation", { mode: "boolean" }).notNull().default(false),
     locale: text("locale").notNull().default("en"),
     amountExpected: integer("amount_expected").notNull(),
+    /** When the customer ticked "I accept the Terms and Privacy Policy", and the version of the text they accepted. */
+    termsAcceptedAt: text("terms_accepted_at"),
+    termsVersion: text("terms_version"),
     stripeSessionId: text("stripe_session_id"),
     status: text("status", { enum: ["pending", "paid", "expired"] }).notNull().default("pending"),
     expiresAt: text("expires_at").notNull(),

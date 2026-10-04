@@ -18,7 +18,7 @@ beforeEach(() => {
   clock = testClock();
 });
 
-const signup = { shopName: "Baan Mali", slug: "baan-mali", email: "mali@example.com", customisation: false, locale: "en" as const };
+const signup = { shopName: "Baan Mali", slug: "baan-mali", email: "mali@example.com", customisation: false, locale: "en" as const, acceptTerms: true as const };
 
 /** Reserve + attach a Stripe session, as the checkout endpoint does. */
 async function startCheckout(over: Partial<typeof signup> = {}, session = "cs_1") {

@@ -1,5 +1,6 @@
 import { and, eq, gt, ne } from "drizzle-orm";
 import { expectedAmount, RESERVATION_MS } from "../billing/pricing";
+import { TERMS_VERSION } from "../../content/legal";
 import type { SignupInput } from "../validations/signup";
 import { schema, type Clock, type Db } from "./index";
 
@@ -37,6 +38,8 @@ export async function reserveSignup(db: Db, input: SignupInput, clock: Clock): P
       customisation: input.customisation,
       locale: input.locale,
       amountExpected: expectedAmount(input.customisation),
+      termsAcceptedAt: nowIso,
+      termsVersion: TERMS_VERSION,
       expiresAt: new Date(clock.now.getTime() + RESERVATION_MS).toISOString(),
       createdAt: nowIso,
       updatedAt: nowIso,

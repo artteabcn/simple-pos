@@ -21,6 +21,8 @@ export const SignupInputSchema = z.object({
   email: z.string().trim().toLowerCase().max(120).pipe(z.email()),
   customisation: z.boolean().default(false),
   locale: z.enum(["en", "th", "fr", "de"]).default("en"),
+  /** The "I accept the Terms and the Privacy Policy" box. Required: the server refuses anything else. */
+  acceptTerms: z.literal(true),
 });
 export type SignupInput = z.infer<typeof SignupInputSchema>;
 

@@ -45,7 +45,7 @@
 <ul><li>Hosting: Cloudflare Pages, deploys from GitHub <code>artteabcn/simple-pos</code>, branch <code>main</code>. Pages Functions in <code>functions/</code> (legacy).</li>
 <li>Legacy env vars (set in the Pages dashboard, as Secrets): <code>GITHUB_TOKEN</code>, <code>GITHUB_REPO</code>.</li>
 <li>SaaS: deployed as a <b>Cloudflare Worker with static assets</b> (not Pages: <code>@astrojs/cloudflare</code> 14 builds <code>dist/client</code> + <code>dist/server</code> with a generated wrangler config). Worker is about 316 KB gzipped (limit 3 MiB). Config in <code>saas/wrangler.jsonc</code>: D1 binding <code>DB</code> (id filled in by Cloudflare's automatic provisioning). Secrets, names only: <code>STRIPE_SECRET_KEY</code>, <code>STRIPE_WEBHOOK_SECRET</code>.</li>
-<li>The repository sits in OneDrive. <b>Do not run npm there.</b> Use <code>saas\scripts\mirror.ps1 &lt;install|test|build|check|dev&gt;</code>, which copies the source to <code>%USERPROFILE%\_mig\simple-pos-saas</code> and runs the script there.</li></ul></section>
+<li>OneDrive sync is not installed on this machine (owner confirmed), so the folder is an ordinary one. All npm work so far was done through <code>saas\scripts\mirror.ps1 &lt;install|test|build|typecheck|db:generate|db:migrate:local|dev&gt;</code>, which copies the source to <code>%USERPROFILE%\_mig\simple-pos-saas</code> and runs the script there. That is the tested path; running npm directly in <code>saas\</code> should also work but has not been tried.</li></ul></section>
 
 <section id="legacy"><h2>Legacy app (repository root)</h2>
 <ul><li><code>index.html</code>: Studio. Owner sets profile and menu, presses Deploy; it commits <code>data/&lt;slug&gt;-manifest.json</code>, <code>-menu.json</code> and <code>shops/&lt;slug&gt;.html</code>.</li>
@@ -96,7 +96,7 @@
 <tr><td><code>devices</code></td><td>One row per phone or tablet that may sync a shop: hash of its own key, name, last seen, revoked at</td></tr>
 <tr><td><code>login_links</code></td><td>One-time email sign-in links (hash of the token, 15 minute expiry, used at)</td></tr>
 <tr><td><code>manager_sessions</code></td><td>"The PIN was entered on this device" proofs, 30 minutes, tied to the device</td></tr>
-<tr><td><code>signups</code></td><td>A started checkout; holds the address for an hour; records the expected amount (49,900 or 79,800 satang)</td></tr>
+<tr><td><code>signups</code></td><td>A started checkout; holds the address for an hour; records the expected amount (49,900 or 79,800 satang) and when the customer accepted the Terms (and which version)</td></tr>
 <tr><td><code>payments</code></td><td>One row per Stripe payment; unique session id makes provisioning idempotent</td></tr>
 <tr><td><code>stripe_events</code></td><td>Handled Stripe event ids (webhooks are retried)</td></tr>
 <tr><td><code>records</code></td><td>Saved and paid bills and delete markers, keyed (shop, kind, id), with the device edit time, the server sync time and the exact numeric total</td></tr></table>
@@ -137,11 +137,11 @@
 #   STRIPE_SECRET_KEY=sk_test_local_dummy   STRIPE_WEBHOOK_SECRET=whsec_local_test_secret_123
 # start `npm run dev -- --host 127.0.0.1 --port 4321` inside the mirror folder, then:
 node scripts/e2e-local.mjs   # 22 checks: signed webhooks, claim, sync, deletes, security</pre>
-<p>Automated: 127 unit and integration tests (Node SQLite as D1, two simulated tills syncing through the real server code, PIN lockout, sign-in links, emails). Local end-to-end on the real Worker runtime: <code>node scripts/e2e-local.mjs</code> (22 checks) and <code>node scripts/e2e-auth.mjs</code> (57 checks: sign-in links, devices, PIN, request form and bot trap, refunds, landing page, robots, sitemap, llms.txt, share image). Add <code>APP_SECRET=...</code> and <code>DEV_ECHO_LINKS=1</code> to <code>.dev.vars</code> for the second script (the flag returns sign-in links in the API reply only when no Resend key is set).</p>
+<p>Automated: 134 unit and integration tests (Node SQLite as D1, two simulated tills syncing through the real server code, PIN lockout, sign-in links, emails). Local end-to-end on the real Worker runtime: <code>node scripts/e2e-local.mjs</code> (22 checks) and <code>node scripts/e2e-auth.mjs</code> (70 checks: sign-in links, devices, PIN, request form and bot trap, refunds, landing page, robots, sitemap, llms.txt, share image). Add <code>APP_SECRET=...</code> and <code>DEV_ECHO_LINKS=1</code> to <code>.dev.vars</code> for the second script (the flag returns sign-in links in the API reply only when no Resend key is set).</p>
 <p>Legacy hardening was verified with a Node harness that runs the real Pages Function against an in-memory GitHub fake, plus a browser run with hostile shop names; a PromptPay QR was decoded with OpenCV to prove it scans.</p></section>
 
 <section id="gotchas"><h2>Gotchas</h2>
-<ul><li>OneDrive: never install packages inside the repo (npm even replaces a junction). Use the mirror script.</li>
+<ul><li>npm replaces a symlinked or junctioned <code>node_modules</code> with a real folder, so do not link it in; use the mirror script (or a real install).</li>
 <li>PowerShell shows UTF-8 Thai as garbage; the files are fine. Verify with Node or a browser.</li>
 <li>Dev server: run <code>npm run dev</code> inside the mirror folder (<code>%USERPROFILE%\_mig\simple-pos-saas</code>) and re-sync source with robocopy after edits. The first start takes about a minute. The Astro dev toolbar is disabled because it floats over the bottom bar and swallows taps.</li>
 <li>Never read a formatted amount back into a number; payment amounts and PromptPay QR use the stored numeric total.</li>
@@ -152,9 +152,9 @@ node scripts/e2e-local.mjs   # 22 checks: signed webhooks, claim, sync, deletes,
 <section id="open"><h2>Open items</h2>
 <p class="bad">Before taking real payments (owner)</p>
 <ul>
-<li><b>Legal pages</b>: terms of sale and privacy policy do not exist yet. Needed before charging customers (Thai Online Solutions Co., Ltd. is the entity named in Resumai's legal text; confirm it is also the operator of Simple POS). Draft on a branch, owner reviews, then publish. Link them from the landing footer and the sign-up page.</li>
-<li><b>Domain</b>: <code>pos.arkadya.tech</code> is a placeholder. Confirm it (or set the <code>DOMAIN</code> variable), then regenerate and commit <code>public/og.png</code> so the QR points at it.</li>
-<li><b>GitHub secrets</b> in <code>artteabcn/simple-pos</code> (names in the deploy section) and a Cloudflare token with Workers, D1 and custom-domain permissions.</li>
+<li class="warn"><b>Legal texts are a DRAFT for the owner to read and change</b> (<code>saas/src/content/legal.ts</code>, adapted from Resumai's, not legal advice): Terms of Service, Privacy Policy (PDPA) and Refund Policy at <code>/&lt;locale&gt;/terms</code>, <code>/privacy</code>, <code>/refunds</code>, authored in Thai and English; French and German visitors see the English text with a note, and English prevails if they differ. The company (Thai Online Solutions Co., Ltd.), address, tax ID and DBD number are copied from Resumai; the contact is hello@arkadya.tech. Choices I made that the owner must confirm: 14-day full refund of the setup fee; the customisation add-on refundable only if work has not started; a full refund switches the till off but keeps the sales data until the owner asks for a copy or deletion; at least 30 days' notice before ever closing the service; price changes apply to new customers only; liability capped at the last 12 months of payments; no advertising and no sale of data. When the text changes, update <code>COMPANY.updated</code> (it is the version stored with every sign-up: <code>signups.terms_version</code>, <code>terms_accepted_at</code>). Sign-up requires ticking "I accept the Terms of Service and the Privacy Policy" (checked on the server).</li>
+<li class="ok"><b>Domain</b> <code>pos.arkadya.tech</code> confirmed by the owner (2026-10-04). The share image QR already points at it.</li>
+<li class="ok"><b>GitHub secrets</b> are set in <code>artteabcn/simple-pos</code> (see the deploy section).</li>
 <li><b>Stripe</b>: test the full path with a test key first (the shared account is live-only, so any other test is a real payment). Check statement descriptor and the "activate account" list in the Stripe dashboard.</li>
 <li><b>Review wording</b> (drafted by the assistant, not legal advice): "One payment, no monthly fee", the 499 / 299 THB descriptions, the receipt and VAT wording, the FAQ answer about tax invoices, and all French, German and Thai text (needs a native reader; Thai was written to be plain and friendly, not formal).</li>
 <li><b>Customisation requests</b>: the form at <code>/&lt;locale&gt;/customize</code> emails <code>hello@arkadya.tech</code> (set <code>TEAM_EMAIL</code> to change) and stores the request in <code>customization_requests</code>; the customer also gets a confirmation with the LINE link (<code>https://line.me/R/ti/p/%40214pknvg</code>, the same account Resumai uses). There is no admin screen yet: requests live in the mailbox and in D1. Who does the work and how fast is a business decision; the pages promise no timing.</li>
@@ -173,7 +173,8 @@ node scripts/e2e-local.mjs   # 22 checks: signed webhooks, claim, sync, deletes,
 <section id="files"><h2>File map</h2>
 <pre>/                      legacy app (index.html, functions/, shops/, data/, assets/qr.js, _headers)
 /saas                  Astro SaaS app (see above)
-/saas/scripts/mirror.ps1   run npm scripts outside OneDrive
+/saas/scripts/mirror.ps1   run npm scripts in a copy under %USERPROFILE%\_mig (the tested path)
+/saas/src/content/legal.ts Terms, Privacy and Refund texts (draft, Thai + English)
 /MEMORY.HTML           this file
 /CLAUDE.md             rules for AI assistants working here</pre></section>
 </div></body></html>

@@ -30,7 +30,8 @@ function Form(): ReactNode {
   const [addOn, setAddOn] = useState(false);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<Problem>(null);
-  const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
+  const [accepted, setAccepted] = useState(false);
+  const [errors, setErrors] = useState<{ name?: string; email?: string; terms?: string }>({});
   const cancelled = typeof location !== "undefined" && new URLSearchParams(location.search).get("cancelled") === "1";
   const total = expectedAmount(addOn) / 100;
 
@@ -38,8 +39,9 @@ function Form(): ReactNode {
     const e: typeof errors = {};
     if (!name.trim()) e.name = t.common.required;
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) e.email = t.common.required;
+    if (!accepted) e.terms = t.legal.acceptError;
     setErrors(e);
-    if (e.name || e.email) return;
+    if (e.name || e.email || e.terms) return;
 
     setBusy(true);
     setProblem(null);
@@ -48,7 +50,7 @@ function Form(): ReactNode {
         const res = await fetch("/api/checkout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ shopName: name.trim(), slug: makeSlug(name), email: email.trim(), customisation: addOn, locale }),
+          body: JSON.stringify({ shopName: name.trim(), slug: makeSlug(name), email: email.trim(), customisation: addOn, locale, acceptTerms: true }),
         });
         if (res.status === 409) continue; // the random address was taken: try another
         const body = (await res.json().catch(() => ({}))) as { url?: string };
@@ -124,6 +126,28 @@ function Form(): ReactNode {
             <dd className="num text-3xl font-extrabold text-stone-900 dark:text-stone-50">{money(total)}</dd>
           </div>
         </dl>
+
+        <div className="flex flex-col gap-1">
+          <div className="flex items-start gap-3">
+            <input
+              id="accept-terms"
+              type="checkbox"
+              checked={accepted}
+              onChange={(e) => { setAccepted(e.target.checked); setErrors((x) => ({ ...x, terms: undefined })); }}
+              aria-invalid={errors.terms ? true : undefined}
+              aria-describedby={errors.terms ? "terms-err" : undefined}
+              className="mt-1 size-6 shrink-0 cursor-pointer accent-teal-700"
+            />
+            <label htmlFor="accept-terms" className="cursor-pointer text-base text-stone-800 dark:text-stone-200">
+              {t.legal.acceptLead}
+              <a href={`/${locale}/terms/`} target="_blank" rel="noopener" className="font-semibold text-brand underline underline-offset-2 dark:text-teal-300">{t.legal.terms}</a>
+              {t.legal.acceptAnd}
+              <a href={`/${locale}/privacy/`} target="_blank" rel="noopener" className="font-semibold text-brand underline underline-offset-2 dark:text-teal-300">{t.legal.privacy}</a>
+              {t.legal.acceptEnd}
+            </label>
+          </div>
+          {errors.terms && <p id="terms-err" role="alert" className="text-sm text-rose-700 dark:text-rose-300">{errors.terms}</p>}
+        </div>
 
         {problem && (
           <p role="alert" className="rounded-xl bg-rose-50 p-4 text-base font-semibold text-rose-800 dark:bg-rose-950 dark:text-rose-200">

@@ -32,6 +32,9 @@ export const GET: APIRoute = () => {
 - [Sign in](${SITE_URL}/en/login/)
 - [Request customisation](${SITE_URL}/en/customize/)
 - [LINE (contact)](${LINE_URL})
+- [Terms of Service](${SITE_URL}/en/terms/)
+- [Privacy Policy](${SITE_URL}/en/privacy/)
+- [Refund Policy](${SITE_URL}/en/refunds/)
 - [Full details for assistants](${SITE_URL}/llms-full.txt)
 `;
   return new Response(body, { headers: { "Content-Type": "text/plain; charset=utf-8" } });

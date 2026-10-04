@@ -404,5 +404,16 @@
     "errorMany": "Sie haben schon mehrere Anfragen gesendet. Bitte warten Sie etwas oder schreiben Sie uns auf LINE.",
     "errorGeneric": "Die Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder schreiben Sie uns auf LINE.",
     "backToTill": "Zurück zu meiner Kasse"
+  },
+  "legal": {
+    "terms": "Nutzungsbedingungen",
+    "privacy": "Datenschutzerklärung",
+    "refunds": "Erstattungsrichtlinie",
+    "notice": "Dieses Dokument ist auf Englisch und Thai verfügbar. Bei Abweichungen gilt der englische Text.",
+    "back": "Zurück zur Startseite",
+    "acceptLead": "Ich akzeptiere die ",
+    "acceptAnd": " und die ",
+    "acceptEnd": ".",
+    "acceptError": "Bitte akzeptieren Sie die Bedingungen, um fortzufahren"
   }
 }

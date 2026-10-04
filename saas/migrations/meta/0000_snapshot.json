@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "bbf280eb-7522-4fbc-95a1-e9964a7faafb",
+  "id": "cceb8422-eac3-4d11-b578-b1747bf5cb10",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "customization_requests": {
@@ -813,6 +813,20 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "terms_accepted_at": {
+          "name": "terms_accepted_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "terms_version": {
+          "name": "terms_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "stripe_session_id": {

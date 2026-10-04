@@ -115,6 +115,8 @@ CREATE TABLE `signups` (
 	`customisation` integer DEFAULT false NOT NULL,
 	`locale` text DEFAULT 'en' NOT NULL,
 	`amount_expected` integer NOT NULL,
+	`terms_accepted_at` text,
+	`terms_version` text,
 	`stripe_session_id` text,
 	`status` text DEFAULT 'pending' NOT NULL,
 	`expires_at` text NOT NULL,

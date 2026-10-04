@@ -404,5 +404,16 @@
     "errorMany": "You already sent a few requests. Please wait a little, or message us on LINE.",
     "errorGeneric": "Could not send your request. Please try again, or message us on LINE.",
     "backToTill": "Back to my till"
+  },
+  "legal": {
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "refunds": "Refund Policy",
+    "notice": "This document is available in English and Thai. If they differ, the English text applies.",
+    "back": "Back to home",
+    "acceptLead": "I accept the ",
+    "acceptAnd": " and the ",
+    "acceptEnd": ".",
+    "acceptError": "Please accept the terms to continue"
   }
 }

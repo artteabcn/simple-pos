@@ -404,5 +404,16 @@
     "errorMany": "Vous avez déjà envoyé plusieurs demandes. Patientez un peu, ou écrivez-nous sur LINE.",
     "errorGeneric": "Impossible d'envoyer votre demande. Réessayez, ou écrivez-nous sur LINE.",
     "backToTill": "Retour à ma caisse"
+  },
+  "legal": {
+    "terms": "Conditions d'utilisation",
+    "privacy": "Politique de confidentialité",
+    "refunds": "Politique de remboursement",
+    "notice": "Ce document est disponible en anglais et en thaï. En cas de différence, le texte anglais prévaut.",
+    "back": "Retour à l'accueil",
+    "acceptLead": "J'accepte les ",
+    "acceptAnd": " et la ",
+    "acceptEnd": ".",
+    "acceptError": "Veuillez accepter les conditions pour continuer"
   }
 }

@@ -7,7 +7,7 @@ export const SITE_URL: string = ((import.meta.env.PUBLIC_SITE_URL as string | un
 export const OG_IMAGE = { path: "/og.png", width: 1200, height: 630 } as const;
 
 /** Pages that exist for the public (no private pages), used by the sitemap and llms.txt. */
-export const PUBLIC_PAGES = ["", "start/", "login/", "customize/"] as const;
+export const PUBLIC_PAGES = ["", "start/", "login/", "customize/", "terms/", "privacy/", "refunds/"] as const;
 
 /** Date of the last content change; never in the future (search engines ignore future dates). */
 export const LAST_MODIFIED = "2026-10-04";

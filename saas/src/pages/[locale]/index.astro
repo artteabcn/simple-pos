@@ -195,7 +195,7 @@ const jsonLd = [
   </main>
 
   <footer class="border-t border-stone-200 bg-white">
-    <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-8 text-base text-stone-600">
+    <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 pt-8 text-base text-stone-600">
       <p>{L.footer.note}</p>
       <nav class="flex gap-5" aria-label="Simple POS">
         <a href={`/${locale}/login/`} class="font-semibold text-stone-800 hover:text-brand">{L.footer.signIn}</a>
@@ -204,6 +204,11 @@ const jsonLd = [
         <a href={LINE_URL} target="_blank" rel="noopener noreferrer" class="font-semibold text-stone-800 hover:text-brand">{L.footer.line}</a>
       </nav>
     </div>
+    <nav class="mx-auto flex max-w-6xl flex-wrap gap-x-6 gap-y-1 px-4 pt-2 pb-8 text-sm text-stone-600" aria-label="Legal">
+      <a href={`/${locale}/terms/`} class="hover:text-brand">{t.legal.terms}</a>
+      <a href={`/${locale}/privacy/`} class="hover:text-brand">{t.legal.privacy}</a>
+      <a href={`/${locale}/refunds/`} class="hover:text-brand">{t.legal.refunds}</a>
+    </nav>
   </footer>
   </div>
 </BaseLayout>
