@@ -1,6 +1,6 @@
 # Landing page redesign: brief for the design session
 
-Branch: `feature/landing-redesign` (started from `fix/default-thai-getstarted`, which has the Thai fallback and the "Get started" wording; PR ArkadyaApps/simple-pos#1). Open the pull request against `main` and stop: the owner merges.
+Repository: **ArkadyaApps/simple-pos** (GitHub account ArkadyaApps; NOT artteabcn/simple-pos, which is the old copy). Work branch: `feature/landing-v2` (from `main`, which already has the Thai fallback and the "Get started" wording). Open the pull request against `main` and stop: the owner merges.
 
 ## Goal
 Redesign the LANDING PAGE of "Simple POS" (one-time fee POS for small shops and restaurants in Thailand, https://pos.arkadya.tech). The current page is too formal, too text-heavy, not catchy. Make it visual-first, friendly, playful, mobile first. In 5 seconds a non-technical shop owner must get: "a cash register on my phone, I pay once, no monthly fee" and tap "Get started".
