@@ -28,7 +28,7 @@ export const GET: APIRoute = () => {
 - [Home (Thai)](${SITE_URL}/th/)
 - [Home (French)](${SITE_URL}/fr/)
 - [Home (German)](${SITE_URL}/de/)
-- [Open your till](${SITE_URL}/en/start/): sign-up and payment
+- [Get started](${SITE_URL}/en/start/): sign-up and payment
 - [Sign in](${SITE_URL}/en/login/)
 - [Request customisation](${SITE_URL}/en/customize/)
 - [LINE (contact)](${LINE_URL})

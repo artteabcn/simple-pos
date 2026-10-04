@@ -264,13 +264,13 @@
   },
   "landing": {
     "nav": {
-      "cta": "Ouvrir ma caisse"
+      "cta": "Commencer"
     },
     "hero": {
       "eyebrow": "Pour les petits restaurants et commerces",
       "title": "Une caisse simple que toute votre équipe sait utiliser",
       "body": "Touchez les articles pour composer l'addition, encaissez en espèces ou par PromptPay, imprimez un ticket. Elle fonctionne sur n'importe quel téléphone ou tablette, et vos ventes sont conservées en sécurité dans votre compte.",
-      "cta": "Ouvrir ma caisse",
+      "cta": "Commencer",
       "secondary": "Voir comment ça marche",
       "note": "Un seul paiement, pas d'abonnement mensuel."
     },
@@ -337,7 +337,7 @@
       ],
       "addOnTitle": "Personnalisation sur mesure",
       "addOnBody": "Nous adaptons votre menu, vos tickets et l'apparence à votre boutique.",
-      "cta": "Ouvrir ma caisse"
+      "cta": "Commencer"
     },
     "faq": {
       "title": "Les questions des commerçants",

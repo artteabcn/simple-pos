@@ -15,13 +15,13 @@ export function isLocale(value: string | undefined): value is Locale {
   return !!value && (LOCALES as readonly string[]).includes(value);
 }
 
-/** First supported language in the browser's preference order, else the default. */
+/** First supported language in the browser's preference order, else Thai (our market). */
 export function pickLocale(preferred: readonly string[]): Locale {
   for (const tag of preferred) {
     const base = tag.toLowerCase().split("-")[0];
     if (isLocale(base)) return base;
   }
-  return DEFAULT_LOCALE;
+  return "th";
 }
 
 export function useTranslations(locale: Locale): Dictionary {

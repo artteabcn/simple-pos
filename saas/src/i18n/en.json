@@ -264,13 +264,13 @@
   },
   "landing": {
     "nav": {
-      "cta": "Open your till"
+      "cta": "Get started"
     },
     "hero": {
       "eyebrow": "For small restaurants and shops",
       "title": "A simple till that your whole team can use",
       "body": "Tap items to build the bill, take cash or PromptPay, print a receipt. It works on any phone or tablet, and your sales are kept safe in your account.",
-      "cta": "Open your till",
+      "cta": "Get started",
       "secondary": "See how it works",
       "note": "One payment, no monthly fee."
     },
@@ -337,7 +337,7 @@
       ],
       "addOnTitle": "Curated customisation",
       "addOnBody": "We adapt your menu, receipts and look to your shop.",
-      "cta": "Open your till"
+      "cta": "Get started"
     },
     "faq": {
       "title": "Questions owners ask",

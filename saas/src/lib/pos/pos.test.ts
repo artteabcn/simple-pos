@@ -134,6 +134,7 @@ describe("i18n", () => {
   it("picks the first supported browser language, else English", () => {
     expect(pickLocale(["es-ES", "de-AT", "en"])).toBe("de");
     expect(pickLocale(["th-TH"])).toBe("th");
-    expect(pickLocale(["ja"])).toBe("en");
+    expect(pickLocale(["ja"])).toBe("th");
+    expect(pickLocale([])).toBe("th");
   });
 });
