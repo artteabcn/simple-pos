@@ -11,6 +11,8 @@ export default defineConfig({
   output: "server",
   // No image-transform binding needed (no raster images yet); sessions are not used either.
   adapter: cloudflare({ imageService: "passthrough" }),
+  // We never use Astro sessions (sign-in is our own); without this the adapter asks for a KV store.
+  session: false,
   integrations: [react()],
   devToolbar: { enabled: false },
   vite: { plugins: [tailwindcss()] },
