@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "Simple POS",
-    "tagline": "A simple till for small restaurants and shops"
+    "tagline": "A simple till for small restaurants and shops",
+    "install": "Install app"
   },
   "nav": {
     "sell": "Sell",

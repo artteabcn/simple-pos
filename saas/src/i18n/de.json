@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "Simple POS",
-    "tagline": "Eine einfache Kasse für kleine Restaurants und Läden"
+    "tagline": "Eine einfache Kasse für kleine Restaurants und Läden",
+    "install": "App installieren"
   },
   "nav": {
     "sell": "Verkaufen",

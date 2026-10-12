@@ -11,8 +11,10 @@ interface Props {
   noindex?: boolean;
   /** Structured data objects (JSON-LD) for this page. */
   jsonLd?: object[];
+  /** The till only: links the per-language web app manifest and the iOS "Add to Home Screen" tags. */
+  manifest?: boolean;
 }
-const { locale, title, description = "", noindex = false, jsonLd = [] } = Astro.props;
+const { locale, title, description = "", noindex = false, jsonLd = [], manifest = false } = Astro.props;
 // "/th/start/" -> "start/"; every page exists in all four languages under the same path
 const rest = Astro.url.pathname.replace(/^\/(en|th|fr|de)\//, "");
 const url = (l: Locale): string => `${SITE_URL}/${l}/${rest}`;
@@ -31,6 +33,16 @@ const ld = (o: object): string => JSON.stringify(o).replace(/</g, "\\u003c");
     <meta name="referrer" content="no-referrer" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="theme-color" content="#0f766e" />
+    {manifest && (
+      <>
+        <link rel="manifest" href={`/${locale}/manifest.webmanifest`} />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content={title} />
+      </>
+    )}
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
     {noindex ? <meta name="robots" content="noindex, nofollow" /> : <link rel="canonical" href={canonical} />}

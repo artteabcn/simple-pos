@@ -13,6 +13,6 @@ const locale = Astro.params.locale as Locale;
 const t = useTranslations(locale);
 ---
 
-<BaseLayout locale={locale} title={t.app.name} description={t.app.tagline} noindex>
+<BaseLayout locale={locale} title={t.app.name} description={t.app.tagline} noindex manifest>
   <PosApp client:only="react" locale={locale} />
 </BaseLayout>

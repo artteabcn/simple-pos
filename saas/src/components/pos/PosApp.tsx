@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { AlertTriangle, Bookmark, Check, History, Loader2, Lock, Smartphone, Store, ShoppingBag, WifiOff } from "lucide-react";
+import { AlertTriangle, Bookmark, Check, Download, History, Loader2, Lock, Smartphone, Store, ShoppingBag, WifiOff } from "lucide-react";
 import { clsx } from "clsx";
 import { LOCALES, type Locale } from "../../i18n/utils";
 import { liveBills } from "../../lib/pos/state";
@@ -65,8 +65,16 @@ const readTab = (): Tab => {
   return (TABS as string[]).includes(h) ? (h as Tab) : "sell";
 };
 
+/** Lets a till opened at least once while online start again with no connection at all. */
+function useServiceWorker(): void {
+  useEffect(() => {
+    if ("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js");
+  }, []);
+}
+
 export default function PosApp({ locale }: { locale: Locale }): ReactNode {
   const [state] = usePos();
+  useServiceWorker();
   return (
     <I18nProvider locale={locale} currency={state.shop?.profile.currency ?? "฿"}>
       <ToastProvider>
@@ -78,10 +86,38 @@ export default function PosApp({ locale }: { locale: Locale }): ReactNode {
   );
 }
 
+/** Captures the browser's own "install this app" prompt so a button can trigger it (Android/desktop Chrome; iOS has no such event — Safari installs via its own Share menu). */
+function useInstallPrompt(): { available: boolean; promptInstall: () => void } {
+  const [evt, setEvt] = useState<BeforeInstallPromptEvent | null>(null);
+  useEffect(() => {
+    const onPrompt = (e: Event): void => {
+      e.preventDefault();
+      setEvt(e as BeforeInstallPromptEvent);
+    };
+    const onInstalled = (): void => setEvt(null);
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
+  }, []);
+  return {
+    available: evt !== null,
+    promptInstall: () => {
+      void evt?.prompt();
+      void evt?.userChoice.then(() => setEvt(null));
+    },
+  };
+}
+
+type BeforeInstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> };
+
 function Shell(): ReactNode {
   const { t, locale } = useI18n();
   const [state, set] = usePos();
   const [tab, setTabState] = useState<Tab>("sell");
+  const install = useInstallPrompt();
 
   useEffect(() => {
     setTabState(readTab());
@@ -109,6 +145,16 @@ function Shell(): ReactNode {
       <header className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
         <p className="min-w-0 truncate text-xl font-extrabold text-brand dark:text-teal-300">{state.shop?.profile.name ?? t.app.name}</p>
         <div className="flex shrink-0 items-center gap-2">
+          {install.available && (
+            <button
+              type="button"
+              onClick={install.promptInstall}
+              className="flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-stone-300 px-3 text-sm font-semibold text-stone-700 touch-manipulation hover:bg-stone-100 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
+            >
+              <Download size={16} aria-hidden="true" />
+              <span className="hidden sm:inline">{t.app.install}</span>
+            </button>
+          )}
           <StaffSwitcher link={link} />
           <label className="flex shrink-0 items-center">
             <span className="sr-only">{t.common.language}</span>
