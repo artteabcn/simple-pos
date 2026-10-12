@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { PosStateSchema, type PosState } from "../validations/pos";
 import { initialState, type Ctx } from "./state";
+import { getStaffSession } from "./staff-session";
 
 const KEY = "spos:v1";
 
@@ -24,7 +25,10 @@ export function newId(): string {
   return Date.now().toString(36) + rand;
 }
 
-export const liveCtx = (): Ctx => ({ now: new Date(), id: newId });
+export const liveCtx = (): Ctx => {
+  const staff = getStaffSession();
+  return { now: new Date(), id: newId, ...(staff ? { staff: { id: staff.staffId, name: staff.staffName } } : {}) };
+};
 
 /** `remote: true` marks a change that came from the server, so it keeps the server's edit time. */
 export type SetOptions = { remote?: boolean };

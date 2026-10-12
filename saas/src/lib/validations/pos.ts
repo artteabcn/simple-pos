@@ -43,6 +43,9 @@ export const BillSchema = z.object({
   received: z.number().optional(),
   savedAt: IsoSchema.optional(),
   paidAt: IsoSchema.optional(),
+  /** Who was signed in as staff when this bill was made, if anyone (attribution is optional, never required). */
+  staffId: IdSchema.optional(),
+  staffName: z.string().max(60).optional(),
 });
 export type Bill = z.infer<typeof BillSchema>;
 

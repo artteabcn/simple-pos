@@ -103,7 +103,9 @@
     "printSummary": "Print summary",
     "paidWith": "Paid with",
     "time": "Time",
-    "deleteBill": "Remove bill"
+    "deleteBill": "Remove bill",
+    "byStaff": "By staff",
+    "unattributed": "Not signed in"
   },
   "shop": {
     "title": "My shop",
@@ -429,5 +431,36 @@
     "revokeConfirmed": "Device revoked",
     "revokeFailed": "Could not revoke the device",
     "loadFailed": "Could not load devices"
+  },
+  "staff": {
+    "title": "Staff",
+    "body": "Give each person their own PIN so sales can be credited to who made them.",
+    "empty": "No staff yet.",
+    "add": "Add staff",
+    "name": "Name",
+    "pin": "PIN (4 to 6 digits)",
+    "save": "Save",
+    "rename": "Rename",
+    "changePin": "Change PIN",
+    "deactivate": "Remove",
+    "deactivateConfirmTitle": "Remove {name}?",
+    "deactivateConfirmBody": "Their PIN will stop working. Past sales keep their name.",
+    "added": "Staff member added",
+    "updated": "Saved",
+    "removed": "Removed",
+    "limit": "You have reached the limit of {n} staff.",
+    "duplicate": "Another staff member already uses that PIN.",
+    "invalid": "Use 4 to 6 digits.",
+    "error": "Something went wrong. Check your connection.",
+    "whoSelling": "Who's selling?",
+    "signedInAs": "Selling as {name}",
+    "switchUser": "Switch",
+    "signOut": "Sign out",
+    "gateTitle": "Staff PIN",
+    "gateBody": "Enter your PIN so sales are credited to you. This is optional.",
+    "skip": "Skip",
+    "unlock": "Continue",
+    "wrong": "Wrong PIN.",
+    "locked": "Too many tries. Try again in {m} minutes."
   }
 }

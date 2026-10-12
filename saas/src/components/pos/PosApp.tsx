@@ -14,6 +14,7 @@ import { SavedScreen } from "./SavedScreen";
 import { SellScreen } from "./SellScreen";
 import { SetupWizard } from "./SetupWizard";
 import { ShopScreen } from "./ShopScreen";
+import { StaffSwitcher } from "./StaffSwitcher";
 import { ToastProvider } from "./ui";
 
 type Tab = "sell" | "saved" | "history" | "shop";
@@ -107,16 +108,19 @@ function Shell(): ReactNode {
     <div className="app-shell min-h-dvh pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
       <header className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
         <p className="min-w-0 truncate text-xl font-extrabold text-brand dark:text-teal-300">{state.shop?.profile.name ?? t.app.name}</p>
-        <label className="flex shrink-0 items-center">
-          <span className="sr-only">{t.common.language}</span>
-          <select
-            value={locale}
-            onChange={(e) => { window.location.href = `/${e.target.value}/app/${window.location.hash}`; }}
-            className="min-h-11 cursor-pointer rounded-xl border border-stone-300 bg-white px-3 text-base font-semibold text-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
-          >
-            {LOCALES.map((l) => <option key={l} value={l}>{LANGUAGE_NAMES[l]}</option>)}
-          </select>
-        </label>
+        <div className="flex shrink-0 items-center gap-2">
+          <StaffSwitcher link={link} />
+          <label className="flex shrink-0 items-center">
+            <span className="sr-only">{t.common.language}</span>
+            <select
+              value={locale}
+              onChange={(e) => { window.location.href = `/${e.target.value}/app/${window.location.hash}`; }}
+              className="min-h-11 cursor-pointer rounded-xl border border-stone-300 bg-white px-3 text-base font-semibold text-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
+            >
+              {LOCALES.map((l) => <option key={l} value={l}>{LANGUAGE_NAMES[l]}</option>)}
+            </select>
+          </label>
+        </div>
       </header>
 
       <SyncLine status={sync} />

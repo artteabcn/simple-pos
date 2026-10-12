@@ -27,6 +27,7 @@ export function HistoryScreen({ state, set }: Props): ReactNode {
   const groups = useMemo(() => groupByDay(bills), [bills]);
   const takings = bills.reduce((s, b) => s + b.total, 0);
   const rangeTitle = { today: t.history.today, week: t.history.week, month: t.history.month, all: t.history.last30 }[range];
+  const byStaff = useMemo(() => staffBreakdown(bills), [bills]);
 
   const download = (): void => {
     const blob = new Blob([billsToCsv(bills, locale)], { type: "text/csv;charset=utf-8" });
@@ -62,6 +63,20 @@ export function HistoryScreen({ state, set }: Props): ReactNode {
         <p className="num text-4xl font-extrabold">{money(takings)}</p>
         <p className="text-sm opacity-90">{count("bill", bills.length)}</p>
       </div>
+
+      {byStaff.length > 1 && (
+        <div className="mt-3 rounded-2xl border border-stone-200 p-4 dark:border-stone-800">
+          <h2 className="mb-2 text-sm font-bold text-stone-700 dark:text-stone-300">{t.history.byStaff}</h2>
+          <ul className="flex flex-col gap-1">
+            {byStaff.map((row) => (
+              <li key={row.name} className="flex items-baseline justify-between text-base">
+                <span className="text-stone-700 dark:text-stone-300">{row.name || t.history.unattributed} · {count("bill", row.count)}</span>
+                <span className="num font-semibold text-stone-900 dark:text-stone-50">{money(row.total)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {bills.length === 0 ? (
         <EmptyState icon={<Receipt size={30} strokeWidth={1.75} aria-hidden="true" />} title={t.history.none} body={t.history.noneBody} />
@@ -186,6 +201,19 @@ function BillSheet(props: {
       </dl>
     </Sheet>
   );
+}
+
+/** Groups bills by who was signed in as staff when they were made. Unattributed bills get their own row. */
+function staffBreakdown(bills: readonly Bill[]): { name: string; count: number; total: number }[] {
+  const map = new Map<string, { name: string; count: number; total: number }>();
+  for (const b of bills) {
+    const key = b.staffName ?? "";
+    const row = map.get(key) ?? { name: key, count: 0, total: 0 };
+    row.count += 1;
+    row.total += b.total;
+    map.set(key, row);
+  }
+  return [...map.values()].sort((a, b) => b.total - a.total);
 }
 
 function Row({ l, r }: { l: string; r: string }): ReactNode {

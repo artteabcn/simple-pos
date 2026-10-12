@@ -103,7 +103,9 @@
     "printSummary": "Imprimer le récapitulatif",
     "paidWith": "Payé par",
     "time": "Heure",
-    "deleteBill": "Retirer l'addition"
+    "deleteBill": "Retirer l'addition",
+    "byStaff": "Par membre du personnel",
+    "unattributed": "Non identifié"
   },
   "shop": {
     "title": "Ma boutique",
@@ -429,5 +431,36 @@
     "revokeConfirmed": "Appareil révoqué",
     "revokeFailed": "Impossible de révoquer l'appareil",
     "loadFailed": "Impossible de charger les appareils"
+  },
+  "staff": {
+    "title": "Personnel",
+    "body": "Donnez à chacun son propre code PIN pour savoir qui a fait chaque vente.",
+    "empty": "Aucun membre du personnel pour l'instant.",
+    "add": "Ajouter une personne",
+    "name": "Nom",
+    "pin": "Code PIN (4 à 6 chiffres)",
+    "save": "Enregistrer",
+    "rename": "Renommer",
+    "changePin": "Changer le code",
+    "deactivate": "Retirer",
+    "deactivateConfirmTitle": "Retirer {name} ?",
+    "deactivateConfirmBody": "Son code PIN cessera de fonctionner. Les ventes passées gardent son nom.",
+    "added": "Membre du personnel ajouté",
+    "updated": "Enregistré",
+    "removed": "Retiré",
+    "limit": "Vous avez atteint la limite de {n} membres du personnel.",
+    "duplicate": "Un autre membre du personnel utilise déjà ce code PIN.",
+    "invalid": "Utilisez 4 à 6 chiffres.",
+    "error": "Une erreur est survenue. Vérifiez votre connexion.",
+    "whoSelling": "Qui vend ?",
+    "signedInAs": "Vente au nom de {name}",
+    "switchUser": "Changer",
+    "signOut": "Se déconnecter",
+    "gateTitle": "Code PIN du personnel",
+    "gateBody": "Saisissez votre code PIN pour que les ventes vous soient créditées. C'est facultatif.",
+    "skip": "Passer",
+    "unlock": "Continuer",
+    "wrong": "Code PIN incorrect.",
+    "locked": "Trop d'essais. Réessayez dans {m} minutes."
   }
 }
