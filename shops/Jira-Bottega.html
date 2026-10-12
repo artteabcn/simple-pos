@@ -131,6 +131,7 @@ footer{text-align:center;padding:14px 0 4px;}
 .month-total{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:12px 0 2px;display:flex;justify-content:space-between;}
 .month-total:first-child{padding-top:0;}
 .paid-del{background:none;border:none;color:var(--danger);font-size:1.1rem;line-height:1;cursor:pointer;padding:4px 6px;flex-shrink:0;}</style>
+<script src="/assets/qr.js"></script>
 <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Jira%20Bottega%22%2C%22short_name%22%3A%22Jira%20Bottega%22%2C%22start_url%22%3A%22.%2FJira-Bottega.html%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f7fafc%22%2C%22theme_color%22%3A%22%232563eb%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fsimple-pos-58v.pages.dev%2Fdata%2Flogos%2FJira-Bottega.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
 <meta name="theme-color" content="#2563eb">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -913,9 +914,10 @@ const uiDict={
   TH:{orderTab:"🧾 คำสั่งซื้อ",invoiceTab:"🖨️ ใบแจ้งหนี้",histTab:"📋 ประวัติ",addItem:"➕ เพิ่มรายการ",disc:"ส่วนลด",sc:"ค่าบริการ",pm:"ชำระเงิน",print:"🖨️ พิมพ์ใบเสร็จ",paidCash:"💵 เงินสด",paidPp:"📱 พร้อมเพย์",favLabel:"⭐ รายการโปรด",favMax:"เลือกรายการโปรดได้สูงสุด 6 รายการ",
       histAll:"ทั้งหมด (30 วัน)",histToday:"วันนี้",histWeek:"สัปดาห์นี้",histMonth:"เดือนนี้",histTotal:"ยอดรวม",histBills:"บิล",histNone:"ไม่มีบิลที่ชำระในช่วงนี้",histDelConfirm:"ลบบิลนี้ออกจากประวัติ?",histDel:"ลบ",histView:"👁️ ดู"}
 };
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 async function loadLiveMenu(){
   try{
-    const r=await fetch(`/data/${SLUG}-menu.json`);
+    const r=await fetch(`/data/${SLUG}-menu.json`,{cache:"no-store"});
     if(r.ok){dataset=await r.json();fb();up();renderFavorites();}
   }catch(e){}
   return true;
@@ -927,8 +929,8 @@ function m(p){
   document.getElementById("b1").className=p==="calc"?"active":"";
   document.getElementById("b2").className=p==="doc"?"active":"";
   document.getElementById("b3").className=p==="hist"?"active":"";
-  if(p==="doc")calc();
-  if(p==="hist")renderPaidBills();
+  if(p==="doc"){calc();renderBills();pullKind("bills").then(ok=>{if(ok)renderBills();});}
+  if(p==="hist"){renderPaidBills();pullKind("paid").then(ok=>{if(ok)renderPaidBills();});}
 }
 function sl(lang){
   l=lang;
@@ -968,7 +970,7 @@ function up(forceAll){
   const showAll=forceAll||f==="ALL";
   document.querySelectorAll(".item-row select").forEach(s=>{
     const cur=s.value;
-    s.innerHTML=`<option value="">-- ${l==="EN"?"Select item":"เลือกรายการ"} --</option>`;
+    s.innerHTML=`<option value="">-- ${l==="EN"?"Select item":"เลือกรายการ"} --<\/option>`;
     dataset.forEach(d=>{
       if(showAll||d.category===f||d.id===cur){
         const o=document.createElement("option");o.value=d.id;
@@ -1113,58 +1115,59 @@ function calc(){
   let rows="";
   items.forEach(i=>{
     rows+=`<tr>
-      <td style="padding:5px 6px">${l==="EN"?i.nEN:i.nTH}</td>
-      <td style="text-align:right;padding:5px 6px">${i.q}</td>
-      <td style="text-align:right;padding:5px 6px">${Math.round(i.p)}.00</td>
-      <td style="text-align:right;padding:5px 6px;font-weight:600">${Math.round(i.t)}.00</td>
-    </tr>`;
+      <td style="padding:5px 6px">${esc(l==="EN"?i.nEN:i.nTH)}<\/td>
+      <td style="text-align:right;padding:5px 6px">${i.q}<\/td>
+      <td style="text-align:right;padding:5px 6px">${Math.round(i.p)}.00<\/td>
+      <td style="text-align:right;padding:5px 6px;font-weight:600">${Math.round(i.t)}.00<\/td>
+    <\/tr>`;
   });
   let vatLine="";
   if(VAT_MODE==="inclusive"&&vat>0){
-    vatLine=`<tr><td style="color:#555;font-size:11px">${labels.vatIncl}</td><td style="text-align:right;font-size:11px;color:#555">(${Math.round(vat)}.00)</td></tr>`;
+    vatLine=`<tr><td style="color:#555;font-size:11px">${labels.vatIncl}<\/td><td style="text-align:right;font-size:11px;color:#555">(${Math.round(vat)}.00)<\/td><\/tr>`;
   } else if(VAT_MODE==="exclusive"&&vat>0){
-    vatLine=`<tr><td style="color:#555">${labels.vatExtra}</td><td style="text-align:right;font-weight:600">+${Math.round(vat)}.00</td></tr>`;
+    vatLine=`<tr><td style="color:#555">${labels.vatExtra}<\/td><td style="text-align:right;font-weight:600">+${Math.round(vat)}.00<\/td><\/tr>`;
   }
   const ppData=PP_ID?ppPayload(PP_ID,total):"";
+  let qrSvg="";
+  try{if(ppData&&window.QR)qrSvg=window.QR.svg(ppData,200);}catch(e){}
   const ppSection=ppData?`
     <div style="text-align:center;margin:14px 0;padding:12px;border:1px solid #e2e8f0;border-radius:8px">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=10&data=${encodeURIComponent(ppData)}"
-           width="200" height="200" alt="PromptPay QR" style="display:block;margin:0 auto">
-      <div style="font-size:11px;color:#555;margin-top:6px;font-weight:600">พร้อมเพย์ · PromptPay · ${PP_ID}</div>
-      <div style="font-size:14px;color:#2563eb;font-weight:800;margin-top:4px">${CURRENCY}${Math.round(total)}.00</div>
-    </div>`:"";
-  const logoHtml=LOGO_URL?`<div style="text-align:center;margin-bottom:10px"><img src="https://simple-pos-58v.pages.dev/data/logos/Jira-Bottega.png" style="max-height:56px;width:auto" alt="logo"></div>`:"";
-  const empty=`<tr><td colspan="4" style="text-align:center;padding:14px;color:#aaa">-- Empty --</td></tr>`;
+      <div style="width:200px;height:200px;margin:0 auto">${qrSvg}<\/div>
+      <div style="font-size:11px;color:#555;margin-top:6px;font-weight:600">พร้อมเพย์ · PromptPay · ${PP_ID}<\/div>
+      <div style="font-size:14px;color:#2563eb;font-weight:800;margin-top:4px">${CURRENCY}${Math.round(total)}.00<\/div>
+    <\/div>`:"";
+  const logoHtml=LOGO_URL?`<div style="text-align:center;margin-bottom:10px"><img src="https://simple-pos-58v.pages.dev/data/logos/Jira-Bottega.png" style="max-height:56px;width:auto" alt="logo"><\/div>`:"";
+  const empty=`<tr><td colspan="4" style="text-align:center;padding:14px;color:#aaa">-- Empty --<\/td><\/tr>`;
   const doc=`<!DOCTYPE html><html><body style="font-family:sans-serif;font-size:13px;padding:14px;color:#222;margin:0">
   ${logoHtml}
   <table style="width:100%;margin-bottom:10px"><tr>
-    <td style="vertical-align:top;padding-right:10px"><strong style="font-size:15px">Jira Bottega</strong><br>
-    <span style="color:#666">DBD 085567012791</span><br><span style="color:#666">Moo 4, Khanom Beach, Nakhon Si Thammarat, Thailand</span><br><span style="color:#666">Tel:  833972 285</span></td>
-    <td style="text-align:right;vertical-align:top"><strong style="font-size:14px">${labels.title}</strong><br>
-    <span style="color:#666;font-size:11px">Ref: REC-CF · ${dStr}</span></td>
-  </tr></table>
+    <td style="vertical-align:top;padding-right:10px"><strong style="font-size:15px">Jira Bottega<\/strong><br>
+    <span style="color:#666">DBD 085567012791<\/span><br><span style="color:#666">Moo 4, Khanom Beach, Nakhon Si Thammarat, Thailand<\/span><br><span style="color:#666">Tel:  833972 285<\/span><\/td>
+    <td style="text-align:right;vertical-align:top"><strong style="font-size:14px">${labels.title}<\/strong><br>
+    <span style="color:#666;font-size:11px">Ref: REC-CF · ${dStr}<\/span><\/td>
+  <\/tr><\/table>
   <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:12px;color:#555">
-    <span>📍 ${tab}</span><span>👥 ${note}</span>
-  </div>
+    <span>📍 ${esc(tab)}<\/span><span>👥 ${esc(note)}<\/span>
+  <\/div>
   <table style="width:100%;border-collapse:collapse;margin-bottom:12px">
     <thead><tr style="background:#2563eb;color:#fff">
-      <th style="text-align:left;padding:6px">Item</th>
-      <th style="text-align:right;padding:6px">Qty</th>
-      <th style="text-align:right;padding:6px">Unit</th>
-      <th style="text-align:right;padding:6px">Total</th>
-    </tr></thead><tbody>${rows||empty}</tbody>
-  </table>
+      <th style="text-align:left;padding:6px">Item<\/th>
+      <th style="text-align:right;padding:6px">Qty<\/th>
+      <th style="text-align:right;padding:6px">Unit<\/th>
+      <th style="text-align:right;padding:6px">Total<\/th>
+    <\/tr><\/thead><tbody>${rows||empty}<\/tbody>
+  <\/table>
   <table style="width:50%;margin-left:auto;border-collapse:collapse;line-height:2">
-    <tr><td style="color:#555">${labels.sub}</td><td style="text-align:right;font-weight:600">${Math.round(sub)}.00</td></tr>
-    ${dVal>0?`<tr><td style="color:#ef4444">${labels.disc}</td><td style="text-align:right;color:#ef4444;font-weight:600">-${Math.round(dVal)}.00</td></tr>`:""}
-    ${sVal>0?`<tr><td style="color:#555">${labels.sc}</td><td style="text-align:right;font-weight:600">+${Math.round(sVal)}.00</td></tr>`:""}
+    <tr><td style="color:#555">${labels.sub}<\/td><td style="text-align:right;font-weight:600">${Math.round(sub)}.00<\/td><\/tr>
+    ${dVal>0?`<tr><td style="color:#ef4444">${labels.disc}<\/td><td style="text-align:right;color:#ef4444;font-weight:600">-${Math.round(dVal)}.00<\/td><\/tr>`:""}
+    ${sVal>0?`<tr><td style="color:#555">${labels.sc}<\/td><td style="text-align:right;font-weight:600">+${Math.round(sVal)}.00<\/td><\/tr>`:""}
     ${vatLine}
-    <tr style="background:#eff6ff"><td style="color:#2563eb;font-weight:800;font-size:15px;padding:5px 6px">${labels.total}</td>
-      <td style="text-align:right;color:#2563eb;font-weight:800;font-size:15px;padding:5px 6px">${Math.round(total)}.00</td></tr>
-  </table>
-  <div style="margin-top:10px;font-size:12px;color:#555"><strong>${labels.payment}</strong> ${pm}</div>
+    <tr style="background:#eff6ff"><td style="color:#2563eb;font-weight:800;font-size:15px;padding:5px 6px">${labels.total}<\/td>
+      <td style="text-align:right;color:#2563eb;font-weight:800;font-size:15px;padding:5px 6px">${Math.round(total)}.00<\/td><\/tr>
+  <\/table>
+  <div style="margin-top:10px;font-size:12px;color:#555"><strong>${labels.payment}<\/strong> ${esc(pm)}<\/div>
   ${ppSection}
-  </body></html>`;
+  <\/body><\/html>`;
   document.querySelector("iframe").srcdoc=doc;
   saveDraft();
 }
@@ -1190,15 +1193,15 @@ function renderEditList(){
   const cats=getCategories();
   editItems.forEach((item,i)=>{
     const card=document.createElement("div");card.className="edit-item-card";
-    const catOptions=cats.map(c=>`<option value="${c}" ${item.category===c?"selected":""}>${c}</option>`).join("");
+    const catOptions=cats.map(c=>`<option value="${esc(c)}" ${item.category===c?"selected":""}>${esc(c)}<\/option>`).join("");
     card.innerHTML=`
-      <div class="edit-item-row"><input value="${item.nameEN||""}" placeholder="English name" oninput="editItems[${i}].nameEN=this.value"><input value="${item.nameTH||""}" placeholder="ชื่อภาษาไทย" oninput="editItems[${i}].nameTH=this.value"></div>
+      <div class="edit-item-row"><input value="${esc(item.nameEN)}" placeholder="English name" oninput="editItems[${i}].nameEN=this.value"><input value="${esc(item.nameTH)}" placeholder="ชื่อภาษาไทย" oninput="editItems[${i}].nameTH=this.value"><\/div>
       <div class="edit-item-row four">
-        <select onchange="editItems[${i}].category=this.value"><option value="">-- Category --</option>${catOptions}</select>
+        <select onchange="editItems[${i}].category=this.value"><option value="">-- Category --<\/option>${catOptions}<\/select>
         <input type="number" value="${item.price||0}" placeholder="Price" oninput="editItems[${i}].price=parseFloat(this.value)||0">
-        <button type="button" class="fav-toggle${item.favorite?" active":""}" onclick="toggleFavorite(${i})" title="Favorite">⭐</button>
-        <button class="del-item-btn" onclick="editItems.splice(${i},1);renderEditList()">✕</button>
-      </div>`,
+        <button type="button" class="fav-toggle${item.favorite?" active":""}" onclick="toggleFavorite(${i})" title="Favorite">⭐<\/button>
+        <button class="del-item-btn" onclick="editItems.splice(${i},1);renderEditList()">✕<\/button>
+      <\/div>`,
     list.appendChild(card);
   });
 }
@@ -1223,7 +1226,7 @@ async function saveMenu(){
       if(!catMap[item.category])catMap[item.category]={id:"cat_"+Date.now()+Math.random().toString(36).substr(2,3),categoryName:item.category,visible:true,items:[]};
       catMap[item.category].items.push({id:item.id,nameEN:item.nameEN,nameTH:item.nameTH,price:item.price});
     });
-    const manifest={bizName:"Jira Bottega",bizTax:"DBD 085567012791",bizAddress:"Moo 4, Khanom Beach, Nakhon Si Thammarat, Thailand",bizTel:"Tel:  833972 285",bizCurrency:CURRENCY,bizLogo:LOGO_URL,bizPromptpay:PP_ID,bizVatMode:VAT_MODE,menuStructure:Object.values(catMap)};
+    const manifest={bizName:"Jira Bottega",bizTax:"DBD 085567012791",bizAddress:"Moo 4, Khanom Beach, Nakhon Si Thammarat, Thailand",bizTel:"Tel:  833972 285",bizCurrency:CURRENCY,bizLogo:LOGO_URL,bizPromptpay:PP_ID,bizPin:SHOP_PIN,bizVatMode:VAT_MODE,menuStructure:Object.values(catMap)};
     const apiPost=(path,content,msg)=>fetch("/api/deploy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,path,content,message:msg})});
     const r1=await apiPost(`data/${SLUG}-menu.json`,menuJson,"pos(edit): menu update from POS terminal");
     const r2=await apiPost(`data/${SLUG}-manifest.json`,JSON.stringify(manifest,null,2),"pos(edit): manifest sync from POS terminal");
@@ -1241,37 +1244,66 @@ async function saveMenu(){
     status.className="save-status err";
   }
 }
-async function syncBillsToServer(bills){
-  const badge=document.getElementById("syncBadge");badge.className="sync-badge busy";badge.textContent=l==="EN"?"Syncing bills…":"กำลังซิงก์บิล…";
-  try{
-    const r=await fetch("/api/deploy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,path:`data/${SLUG}-bills.json`,content:JSON.stringify(bills,null,2),message:`pos(bills): sync ${SLUG}`})});
-    if(r.ok){ badge.className="sync-badge"; badge.textContent=l==="EN"?"Synced":"ซิงก์แล้ว"; setTimeout(()=>badge.className="sync-badge",1500); }
-    else{ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync failed":"ซิงก์ล้มเหลว"; }
-  }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync error":"เกิดข้อผิดพลาด"; }
+const KEYS={bills:"pos_bills_"+SLUG,paid:"pos_paid_"+SLUG};
+const CAPS={bills:30,paid:500};
+const syncTimers={};
+function stampItem(b){
+  if(!b.id){const s=(b.label||"")+"|"+(b.paidAt||b.savedAt||"")+"|"+(b.total||0);let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;b.id="L"+(h>>>0).toString(36);}
+  b.id=String(b.id).replace(/[^A-Za-z0-9_-]/g,"");
+  if(!b.updatedAt)b.updatedAt=b.paidAt||b.savedAt||new Date(0).toISOString();
+  return b;
 }
-async function loadBillsFromServer(){
-  const badge=document.getElementById("syncBadge");badge.className="sync-badge busy";badge.textContent=l==="EN"?"Loading saved bills…":"กำลังโหลดบิลที่บันทึกไว้…";
-  try{
-    const r=await fetch(`/data/${SLUG}-bills.json`);
-    if(r.ok){ const bills=await r.json(); localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills)); renderBills(); badge.className="sync-badge"; badge.textContent=l==="EN"?"Loaded":"โหลดแล้ว"; setTimeout(()=>badge.className="sync-badge",1500); return true; }
-    badge.className="sync-badge"; badge.textContent=""; return false;
-  }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Load error":"โหลดไม่ได้"; return false; }
+function newId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
+function sortKey(x){return x.paidAt||x.savedAt||x.updatedAt||"";}
+function mergeLists(a,b,cap){
+  const map={};
+  a.concat(b).forEach(x=>{stampItem(x);const o=map[x.id];if(!o||x.updatedAt>o.updatedAt)map[x.id]=x;});
+  const all=Object.values(map).sort((p,q)=>sortKey(q).localeCompare(sortKey(p)));
+  const cutoff=Date.now()-30*24*60*60*1000;
+  const live=all.filter(x=>!x.deleted).slice(0,cap);
+  const dead=all.filter(x=>x.deleted&&new Date(x.updatedAt).getTime()>cutoff);
+  return live.concat(dead).sort((p,q)=>sortKey(q).localeCompare(sortKey(p)));
 }
-async function syncPaidBillsToServer(paid){
-  const badge=document.getElementById("syncBadge");badge.className="sync-badge busy";badge.textContent=l==="EN"?"Syncing paid bills…":"กำลังซิงก์บิลที่ชำระ…";
-  try{
-    const r=await fetch("/api/deploy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,path:`data/${SLUG}-paid.json`,content:JSON.stringify(paid,null,2),message:`pos(paid): sync ${SLUG}`})});
-    if(r.ok){ badge.className="sync-badge"; badge.textContent=l==="EN"?"Synced":"ซิงก์แล้ว"; setTimeout(()=>badge.className="sync-badge",1500); }
-    else{ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync failed":"ซิงก์ล้มเหลว"; }
-  }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync error":"เกิดข้อผิดพลาด"; }
+function readList(kind){try{return JSON.parse(localStorage.getItem(KEYS[kind])||"[]").map(stampItem);}catch(e){return[];}}
+function writeList(kind,list){localStorage.setItem(KEYS[kind],JSON.stringify(list));}
+function liveList(kind){return readList(kind).filter(x=>!x.deleted);}
+function commitList(kind,list){writeList(kind,mergeLists(list,[],CAPS[kind]));scheduleSync(kind);}
+function tomb(b){return{id:b.id,deleted:true,updatedAt:new Date().toISOString(),paidAt:b.paidAt,savedAt:b.savedAt};}
+function setBadge(cls,txt){const b=document.getElementById("syncBadge");if(!b)return;b.className="sync-badge"+(cls?" "+cls:"");b.textContent=txt||"";}
+function scheduleSync(kind){
+  clearTimeout(syncTimers[kind]);
+  syncTimers[kind]=setTimeout(()=>syncKind(kind),2500);
 }
-async function loadPaidBillsFromServer(){
+async function syncKind(kind){
+  clearTimeout(syncTimers[kind]);
+  setBadge("busy",l==="EN"?"Syncing…":"กำลังซิงก์…");
   try{
-    const r=await fetch(`/data/${SLUG}-paid.json`);
-    if(r.ok){ const paid=await r.json(); localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(paid||[])); renderPaidBills(); return true; }
+    const r=await fetch("/api/sync",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,kind,items:readList(kind)})});
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    const j=await r.json();
+    writeList(kind,mergeLists(readList(kind),j.items||[],CAPS[kind]));
+    setBadge("busy",l==="EN"?"Synced":"ซิงก์แล้ว");setTimeout(()=>setBadge("",""),1500);
+    if(kind==="bills")renderBills();else renderPaidBills();
+    return true;
+  }catch(e){
+    setBadge("err",l==="EN"?"Sync failed - will retry":"ซิงก์ล้มเหลว จะลองใหม่");
+    syncTimers[kind]=setTimeout(()=>syncKind(kind),30000);
     return false;
-  }catch(e){ return false; }
+  }
 }
+async function pullKind(kind){
+  try{
+    const r=await fetch("/api/data?shop="+encodeURIComponent(SLUG)+"&kind="+kind,{cache:"no-store"});
+    if(!r.ok)return false;
+    const server=await r.json();if(!Array.isArray(server))return false;
+    const merged=mergeLists(readList(kind),server,CAPS[kind]);
+    writeList(kind,merged);
+    const known={};server.forEach(x=>{stampItem(x);known[x.id]=x.updatedAt;});
+    if(merged.some(x=>known[x.id]!==x.updatedAt))scheduleSync(kind);
+    return true;
+  }catch(e){return false;}
+}
+window.addEventListener("online",()=>{scheduleSync("bills");scheduleSync("paid");});
 function saveDraft(){
   const rows=[];
   document.querySelectorAll(".item-row").forEach(row=>{
@@ -1330,24 +1362,22 @@ function collectOrder(){
     pm:document.getElementById("pm").value,
     tab:document.getElementById("tab").value,
     note:document.getElementById("note").value,
-    total:parseFloat(document.getElementById("totalBox").textContent)||0};
+    total:parseFloat(document.getElementById("totalBox").textContent.replace(/[^0-9.]/g,""))||0};
 }
 function saveBill(){
   const order=collectOrder();
   if(!order.rows.length){alert(l==="EN"?"No items to save.":"ยังไม่มีรายการ");return;}
   const label=document.getElementById("billLabel").value.trim()||
     ("Bill "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}));
-  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");
-  bills.unshift({label,...order,savedAt:new Date().toISOString()});
-  localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills.slice(0,30)));
-  // Optimistically persist to server-backed store so bills are available across devices
-  try{ syncBillsToServer(bills.slice(0,30)); }catch(e){}
+  const now=new Date().toISOString();
+  const bills=readList("bills");
+  bills.unshift({id:newId(),label,...order,savedAt:now,updatedAt:now});
+  commitList("bills",bills);
   clearOrder();
   renderBills();
 }
 function recallBill(idx){
-  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");
-  const b=bills[idx];if(!b)return;
+  const b=liveList("bills")[idx];if(!b)return;
   document.getElementById("disc").value=b.disc||"0";
   document.getElementById("sc").value=b.sc||"0";
   if(b.pm)document.getElementById("pm").value=b.pm;
@@ -1366,25 +1396,23 @@ function recallBill(idx){
   calc();m("calc");
 }
 function deleteBill(idx){
-  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");
-  bills.splice(idx,1);
-  localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills));
-  try{ syncBillsToServer(bills); }catch(e){}
+  const b=liveList("bills")[idx];if(!b)return;
+  commitList("bills",readList("bills").map(x=>x.id===b.id?tomb(x):x));
   renderBills();
 }
 function renderBills(){
   const el=document.getElementById("savedBills");
-  const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");
-  if(!bills.length){el.innerHTML=`<p style="color:var(--muted);font-size:.85rem;margin:4px 0 0">${l==="EN"?"No saved bills yet.":"ยังไม่มีบิลที่บันทึกไว้"}</p>`;return;}
+  const bills=liveList("bills");
+  if(!bills.length){el.innerHTML=`<p style="color:var(--muted);font-size:.85rem;margin:4px 0 0">${l==="EN"?"No saved bills yet.":"ยังไม่มีบิลที่บันทึกไว้"}<\/p>`;return;}
   el.innerHTML=bills.map((b,i)=>`
     <div class="bill-row">
       <div class="bill-info">
-        <strong>${b.label}</strong>
-        <span class="bill-meta">${new Date(b.savedAt).toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</span>
-      </div>
-      <button class="btn-sm btn-recall" onclick="recallBill(${i})">↩ Recall</button>
-      <button class="btn-sm btn-del" onclick="deleteBill(${i})">✕</button>
-    </div>`).join("");
+        <strong>${esc(b.label)}<\/strong>
+        <span class="bill-meta">${new Date(b.savedAt).toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}<\/span>
+      <\/div>
+      <button class="btn-sm btn-recall" onclick="recallBill(${i})">↩ Recall<\/button>
+      <button class="btn-sm btn-del" onclick="deleteBill(${i})">✕<\/button>
+    <\/div>`).join("");
 }
 function clearOrder(){
   document.getElementById("lines").innerHTML="";
@@ -1400,26 +1428,22 @@ function markAsPaid(pmOverride){
   if(pmOverride)order.pm=pmOverride;
   const label=document.getElementById("billLabel").value.trim()||
     ("Bill "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}));
-  const paid=getPaidBills(true);
-  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,8);
-  paid.unshift({id,label,...order,paidAt:new Date().toISOString()});
-  localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(paid.slice(0,500)));
-  // Persist paid bill to server so history survives across devices / clears
-  try{ syncPaidBillsToServer(paid.slice(0,500)); }catch(e){}
+  const now=new Date().toISOString();
+  const paid=readList("paid");
+  paid.unshift({id:newId(),label,...order,paidAt:now,updatedAt:now});
+  commitList("paid",paid);
   clearOrder();
   m("hist");
 }
 function getPaidBills(unfiltered){
-  const all=JSON.parse(localStorage.getItem("pos_paid_"+SLUG)||"[]");
+  const all=liveList("paid");
   if(unfiltered)return all;
   const cutoff=Date.now()-30*24*60*60*1000;
   return all.filter(b=>new Date(b.paidAt).getTime()>cutoff);
 }
 function deletePaidBill(id){
   if(!confirm(uiDict[l].histDelConfirm))return;
-  const all=getPaidBills(true).filter(b=>b.id!==id);
-  localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(all));
-  try{ syncPaidBillsToServer(all); }catch(e){}
+  commitList("paid",readList("paid").map(x=>x.id===id?tomb(x):x));
   renderPaidBills();
 }
 function filterPaidBills(bills,mode){
@@ -1442,12 +1466,12 @@ function renderPaidBills(){
   const bills=filterPaidBills(getPaidBills(),mode);
   if(!bills.length){
     sumEl.style.display="none";
-    el.innerHTML=`<p style="color:var(--muted);font-size:.85rem;margin:0">${ui.histNone}</p>`;
+    el.innerHTML=`<p style="color:var(--muted);font-size:.85rem;margin:0">${ui.histNone}<\/p>`;
     return;
   }
   const grandTotal=bills.reduce((s,b)=>s+(b.total||0),0);
   sumEl.style.display="flex";
-  sumEl.innerHTML=`<span>${ui.histTotal} (${bills.length} ${ui.histBills})</span><span>${CURRENCY}${Math.round(grandTotal)}.00</span>`;
+  sumEl.innerHTML=`<span>${ui.histTotal} (${bills.length} ${ui.histBills})<\/span><span>${CURRENCY}${Math.round(grandTotal)}.00<\/span>`;
   // Group by month, then by day within each month, tracking subtotals at both levels
   const monthGroups={};
   bills.forEach(b=>{
@@ -1465,19 +1489,19 @@ function renderPaidBills(){
       const cards=dayBills.map(b=>`
         <div class="paid-card">
           <div class="paid-card-header">
-            <span class="paid-card-label">${b.label}</span>
+            <span class="paid-card-label">${esc(b.label)}<\/span>
             <span style="display:flex;align-items:center;gap:4px">
-              <span class="paid-card-total">${CURRENCY}${Math.round(b.total||0)}.00</span>
-              <button class="paid-del" onclick="deletePaidBill('${b.id}')" title="${ui.histDel}">✕</button>
-            </span>
-          </div>
-          <div class="paid-card-meta">${new Date(b.paidAt).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})} · ${b.pm||""} · ${b.tab||""}${b.note?" · "+b.note:""}</div>
-          <div class="paid-items">${b.rows.map(r=>`${r.qty}× ${l==="EN"?r.nameEN:r.nameTH} (${CURRENCY}${Math.round(r.price)})`).join(", ")}</div>
-          <div style="display:flex;gap:6px;margin-top:8px"><button class="btn-sm" style="background:var(--pl);color:var(--primary)" onclick="viewPaidBill('${b.id}')">${ui.histView}</button></div>
-        </div>`).join("");
-      return `<div class="hist-day"><span>${day}</span><span>${CURRENCY}${Math.round(dayTotal)}.00</span></div>${cards}`;
+              <span class="paid-card-total">${CURRENCY}${Math.round(b.total||0)}.00<\/span>
+              <button class="paid-del" onclick="deletePaidBill('${b.id}')" title="${ui.histDel}">✕<\/button>
+            <\/span>
+          <\/div>
+          <div class="paid-card-meta">${new Date(b.paidAt).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})} · ${esc(b.pm)} · ${esc(b.tab)}${b.note?" · "+esc(b.note):""}<\/div>
+          <div class="paid-items">${b.rows.map(r=>`${r.qty}× ${esc(l==="EN"?r.nameEN:r.nameTH)} (${CURRENCY}${Math.round(r.price)})`).join(", ")}<\/div>
+          <div style="display:flex;gap:6px;margin-top:8px"><button class="btn-sm" style="background:var(--pl);color:var(--primary)" onclick="viewPaidBill('${b.id}')">${ui.histView}<\/button><\/div>
+        <\/div>`).join("");
+      return `<div class="hist-day"><span>${day}<\/span><span>${CURRENCY}${Math.round(dayTotal)}.00<\/span><\/div>${cards}`;
     }).join("");
-    return `<div class="month-total"><span>${month}</span><span>${CURRENCY}${Math.round(mg.total)}.00</span></div>${dayHtml}`;
+    return `<div class="month-total"><span>${month}<\/span><span>${CURRENCY}${Math.round(mg.total)}.00<\/span><\/div>${dayHtml}`;
   }).join("");
 }
 function viewPaidBill(id){
@@ -1485,15 +1509,15 @@ function viewPaidBill(id){
   const labels=dict[l];
   const dStr=new Date(b.paidAt).toLocaleString("en-GB");
   let rows="";
-  b.rows.forEach(r=>{rows+=`<tr><td style="padding:5px 6px">${l==="EN"?r.nameEN:r.nameTH}</td><td style="text-align:right;padding:5px 6px">${r.qty}</td><td style="text-align:right;padding:5px 6px">${Math.round(r.price)}.00</td><td style="text-align:right;padding:5px 6px;font-weight:600">${Math.round(r.qty*r.price)}.00</td></tr>`;});
-  const win=window.open("","_blank");
-  win.document.write(`<!DOCTYPE html><html><head><title>${b.label}</title><style>body{font-family:sans-serif;padding:18px;color:#222}table{width:100%;border-collapse:collapse;margin:10px 0}th{background:#2563eb;color:#fff;padding:6px;text-align:left}td{border-bottom:1px solid #eee}h2{color:#2563eb}.btns button{padding:8px 14px;margin-right:8px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer}@media print{.btns{display:none}}</style></head><body>
-    <h2>${labels.title}</h2>
-    <div style="font-size:12px;color:#666;margin-bottom:10px">${dStr} · ${b.tab||""} · ${b.pm||""}${b.note?" · "+b.note:""}</div>
-    <table><thead><tr><th>Item</th><th style="text-align:right">Qty</th><th style="text-align:right">Unit</th><th style="text-align:right">Total</th></tr></thead><tbody>${rows}</tbody></table>
-    <div style="text-align:right;font-size:18px;font-weight:800;color:#2563eb;margin-top:8px">${labels.total} ${CURRENCY}${Math.round(b.total||0)}.00</div>
-    <div class="btns"><button onclick="window.print()">🖨 Print</button><button onclick="window.close()">Close</button></div>
-  </body></html>`);
+  b.rows.forEach(r=>{rows+=`<tr><td style="padding:5px 6px">${esc(l==="EN"?r.nameEN:r.nameTH)}<\/td><td style="text-align:right;padding:5px 6px">${r.qty}<\/td><td style="text-align:right;padding:5px 6px">${Math.round(r.price)}.00<\/td><td style="text-align:right;padding:5px 6px;font-weight:600">${Math.round(r.qty*r.price)}.00<\/td><\/tr>`;});
+  const win=window.open("","_blank");if(!win)return;
+  win.document.write(`<!DOCTYPE html><html><head><title>${esc(b.label)}<\/title><style>body{font-family:sans-serif;padding:18px;color:#222}table{width:100%;border-collapse:collapse;margin:10px 0}th{background:#2563eb;color:#fff;padding:6px;text-align:left}td{border-bottom:1px solid #eee}h2{color:#2563eb}.btns button{padding:8px 14px;margin-right:8px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer}@media print{.btns{display:none}}<\/style><\/head><body>
+    <h2>${labels.title}<\/h2>
+    <div style="font-size:12px;color:#666;margin-bottom:10px">${dStr} · ${esc(b.tab)} · ${esc(b.pm)}${b.note?" · "+esc(b.note):""}<\/div>
+    <table><thead><tr><th>Item<\/th><th style="text-align:right">Qty<\/th><th style="text-align:right">Unit<\/th><th style="text-align:right">Total<\/th><\/tr><\/thead><tbody>${rows}<\/tbody><\/table>
+    <div style="text-align:right;font-size:18px;font-weight:800;color:#2563eb;margin-top:8px">${labels.total} ${CURRENCY}${Math.round(b.total||0)}.00<\/div>
+    <div class="btns"><button onclick="window.print()">🖨 Print<\/button><button onclick="window.close()">Close<\/button><\/div>
+  <\/body><\/html>`);
   win.document.close();
 }
 function downloadBlob(content,filename,mime){
@@ -1538,20 +1562,20 @@ function printHistorySummary(){
   const grandTotal=bills.reduce((s,b)=>s+(b.total||0),0);
   let rows="";
   bills.forEach(b=>{
-    rows+=`<tr><td style="padding:5px 6px">${b.label}<br><span style="color:#888;font-size:11px">${new Date(b.paidAt).toLocaleString("en-GB")}</span></td><td style="text-align:right;padding:5px 6px">${b.pm||""}</td><td style="text-align:right;padding:5px 6px;font-weight:600">${CURRENCY}${Math.round(b.total||0)}.00</td></tr>`;
+    rows+=`<tr><td style="padding:5px 6px">${esc(b.label)}<br><span style="color:#888;font-size:11px">${new Date(b.paidAt).toLocaleString("en-GB")}<\/span><\/td><td style="text-align:right;padding:5px 6px">${esc(b.pm)}<\/td><td style="text-align:right;padding:5px 6px;font-weight:600">${CURRENCY}${Math.round(b.total||0)}.00<\/td><\/tr>`;
   });
-  const win=window.open("","_blank");
-  win.document.write(`<!DOCTYPE html><html><head><title>${ui.histTotal}</title><style>body{font-family:sans-serif;padding:18px;color:#222}table{width:100%;border-collapse:collapse}th{background:#2563eb;color:#fff;padding:6px;text-align:left}td{border-bottom:1px solid #eee}h2{color:#2563eb}.grand{font-size:18px;font-weight:800;color:#2563eb;text-align:right;margin-top:10px}</style></head><body>
-    <h2>${labels.title}</h2>
-    <div style="font-size:12px;color:#666;margin-bottom:10px">${SLUG} · ${new Date().toLocaleString("en-GB")}</div>
-    <table><thead><tr><th>${ui.histTotal}</th><th style="text-align:right">${ui.pm}</th><th style="text-align:right">${ui.histTotal}</th></tr></thead><tbody>${rows}</tbody></table>
-    <div class="grand">${CURRENCY}${Math.round(grandTotal)}.00 · ${bills.length} ${ui.histBills}</div>
-  </body></html>`);
+  const win=window.open("","_blank");if(!win)return;
+  win.document.write(`<!DOCTYPE html><html><head><title>${ui.histTotal}<\/title><style>body{font-family:sans-serif;padding:18px;color:#222}table{width:100%;border-collapse:collapse}th{background:#2563eb;color:#fff;padding:6px;text-align:left}td{border-bottom:1px solid #eee}h2{color:#2563eb}.grand{font-size:18px;font-weight:800;color:#2563eb;text-align:right;margin-top:10px}<\/style><\/head><body>
+    <h2>${labels.title}<\/h2>
+    <div style="font-size:12px;color:#666;margin-bottom:10px">${SLUG} · ${new Date().toLocaleString("en-GB")}<\/div>
+    <table><thead><tr><th>${ui.histTotal}<\/th><th style="text-align:right">${ui.pm}<\/th><th style="text-align:right">${ui.histTotal}<\/th><\/tr><\/thead><tbody>${rows}<\/tbody><\/table>
+    <div class="grand">${CURRENCY}${Math.round(grandTotal)}.00 · ${bills.length} ${ui.histBills}<\/div>
+  <\/body><\/html>`);
   win.document.close();
   setTimeout(()=>win.print(),400);
 }
 fb();renderFavorites();
-loadLiveMenu().then(()=>{ Promise.all([loadBillsFromServer(),loadPaidBillsFromServer()]).then(()=>{ if(!restoreDraft())add(); renderBills(); renderPaidBills(); }); });
+loadLiveMenu().then(()=>{ Promise.all([pullKind("bills"),pullKind("paid")]).then(()=>{ if(!restoreDraft())add(); renderBills(); renderPaidBills(); }); });
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();window.__installEvt=e;const b=document.getElementById("installBtn");if(b){b.style.display="inline-block";b.onclick=()=>{e.prompt();e.userChoice.then(()=>{b.style.display="none";window.__installEvt=null;});};};});
 </script>
 </body>
