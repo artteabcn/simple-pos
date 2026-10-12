@@ -1,0 +1,11 @@
+---
+// Pick the visitor's language from Accept-Language (no IP lookups); a chosen language lives in the URL.
+import { pickLocale } from "../i18n/utils";
+
+const header = Astro.request.headers.get("accept-language") ?? "";
+const preferred = header
+  .split(",")
+  .map((p) => p.trim().split(";")[0])
+  .filter(Boolean);
+return Astro.redirect(`/${pickLocale(preferred)}/`, 302);
+---

@@ -1,0 +1,214 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { INTL_TAG, LOCALES, useTranslations, type Locale } from "../../i18n/utils";
+import { formatMoney } from "../../lib/pos/calc";
+import { itemName } from "../../lib/pos/state";
+import { sampleMenu } from "../../lib/pos/sample";
+import { LINE_URL, PRICE_ADDON_BAHT, PRICE_SETUP_BAHT, SITE_URL } from "../../lib/site";
+
+export const prerender = true;
+
+export function getStaticPaths() {
+  return LOCALES.map((locale) => ({ params: { locale } }));
+}
+
+const locale = Astro.params.locale as Locale;
+const t = useTranslations(locale);
+const L = t.landing;
+const tag = INTL_TAG[locale];
+const money = (n: number): string => formatMoney(n, tag, "฿");
+const names: Record<Locale, string> = { en: "English", th: "ไทย", fr: "Français", de: "Deutsch" };
+
+// the drawn till: three items of the sample menu, in the visitor's language
+const mock = sampleMenu({ drinks: "", mains: "", snacks: "" })
+  .slice(3, 7)
+  .map((m, i) => ({ name: itemName(m, locale), price: m.price, qty: [2, 0, 1, 0][i] ?? 0 }));
+const mockTotal = mock.reduce((s, m) => s + m.price * m.qty, 0);
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Arkadya.tech",
+    url: SITE_URL,
+    logo: `${SITE_URL}/favicon.svg`,
+  },
+  { "@context": "https://schema.org", "@type": "WebSite", name: "Simple POS", url: `${SITE_URL}/${locale}/`, inLanguage: tag },
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Simple POS",
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Any (web browser on phone, tablet or computer)",
+    description: t.app.tagline,
+    inLanguage: ["en", "th", "fr", "de"],
+    offers: { "@type": "Offer", price: String(PRICE_SETUP_BAHT), priceCurrency: "THB", availability: "https://schema.org/InStock", url: `${SITE_URL}/${locale}/start/` },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: L.faq.items.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+  },
+];
+---
+
+<BaseLayout locale={locale} title={`${t.app.name} | ${t.app.tagline}`} description={L.hero.body} jsonLd={jsonLd}>
+  <div class="min-h-screen bg-stone-50 text-stone-900">
+  <header class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4">
+    <a href={`/${locale}/`} class="text-xl font-extrabold whitespace-nowrap text-brand">Simple POS</a>
+    <nav class="flex items-center gap-2 sm:gap-4" aria-label="Simple POS">
+      <details class="relative">
+        <summary class="flex min-h-11 cursor-pointer list-none items-center rounded-xl border border-stone-300 bg-white px-3 text-base font-semibold text-stone-900 [&::-webkit-details-marker]:hidden">
+          {names[locale]}
+        </summary>
+        <ul class="absolute right-0 z-20 mt-1 w-40 rounded-xl border border-stone-200 bg-white p-1 shadow-lg">
+          {LOCALES.map((l) => (
+            <li><a href={`/${l}/`} hreflang={INTL_TAG[l]} lang={l} class="flex min-h-11 items-center rounded-lg px-3 text-base font-semibold text-stone-900 hover:bg-stone-100" aria-current={l === locale ? "true" : undefined}>{names[l]}</a></li>
+          ))}
+        </ul>
+      </details>
+      <a href={`/${locale}/login/`} class="hidden min-h-11 items-center px-2 text-base font-semibold text-stone-700 hover:text-brand sm:flex">{L.footer.signIn}</a>
+      <a href={`/${locale}/start/`} class="bg-brand hover:bg-brand-strong hidden min-h-11 items-center rounded-xl px-4 text-base font-bold whitespace-nowrap text-white transition-colors sm:flex">{L.nav.cta}</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero: text left, a drawn till right (stacked on phones) -->
+    <section class="mx-auto grid max-w-6xl items-center gap-10 px-4 pt-6 pb-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16 lg:pt-14 lg:pb-24">
+      <div class="reveal">
+        <p class="text-sm font-bold tracking-wide text-brand uppercase">{L.hero.eyebrow}</p>
+        <h1 class="mt-3 text-4xl leading-[1.12] font-extrabold tracking-tight text-stone-900 sm:text-5xl">{L.hero.title}</h1>
+        <p class="mt-5 max-w-xl text-lg leading-relaxed text-stone-600">{L.hero.body}</p>
+        <div class="mt-8 flex flex-wrap items-center gap-3">
+          <a href={`/${locale}/start/`} class="bg-brand hover:bg-brand-strong flex min-h-14 items-center rounded-xl px-7 text-lg font-bold text-white transition-[background-color,transform] active:scale-[0.98]">
+            {L.hero.cta} · {money(PRICE_SETUP_BAHT)}
+          </a>
+          <a href="#how" class="flex min-h-14 items-center rounded-xl px-5 text-lg font-semibold text-brand hover:bg-brand/10">{L.hero.secondary}</a>
+        </div>
+        <p class="mt-4 text-base font-semibold text-stone-700">{L.hero.note}</p>
+      </div>
+
+      <div class="reveal mx-auto w-full max-w-xs [animation-delay:120ms]" aria-hidden="true">
+        <div class="rounded-[2.5rem] border border-stone-200 bg-stone-100 p-3 shadow-[0_30px_60px_-25px_rgba(15,118,110,0.35)]">
+          <div class="overflow-hidden rounded-[2rem] bg-stone-50">
+            <div class="flex items-center justify-between px-4 pt-4 pb-2">
+              <span class="text-sm font-extrabold text-brand">Baan Mali</span>
+              <span class="flex items-center gap-1 text-[11px] font-bold text-brand">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+              </span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 px-3 pb-3">
+              {mock.map((m, i) => (
+                <div class:list={["relative flex min-h-20 flex-col justify-between rounded-2xl border-2 bg-white p-2.5", m.qty > 0 ? "border-brand bg-brand/5" : "border-stone-200"]}>
+                  <span class="text-[13px] leading-tight font-semibold text-stone-900">{m.name}</span>
+                  <span class="text-sm font-bold text-brand">{money(m.price)}</span>
+                  {m.qty > 0 && <span class:list={["absolute top-1.5 right-1.5 min-w-6 rounded-full bg-brand px-1.5 py-0.5 text-center text-xs font-bold text-white", i === 0 && "tap-pop"]}>{m.qty}</span>}
+                </div>
+              ))}
+            </div>
+            <div class="mx-3 mb-3 flex items-center justify-between rounded-2xl bg-brand px-4 py-3 text-white">
+              <span class="text-sm font-semibold">{L.mock.total}</span>
+              <span class="text-lg font-extrabold">{money(mockTotal)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section id="how" class="border-y border-stone-200 bg-white">
+      <div class="mx-auto grid max-w-6xl gap-8 px-4 py-16 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+        <h2 class="text-3xl leading-tight font-extrabold tracking-tight text-stone-900 sm:text-4xl">{L.how.title}</h2>
+        <ol class="divide-y divide-stone-200">
+          {L.how.steps.map((s, i) => (
+            <li class="reveal-scroll flex gap-5 py-6 first:pt-0">
+              <span class="text-4xl leading-none font-extrabold text-brand/30" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+              <div>
+                <h3 class="text-xl font-bold text-stone-900">{s.title}</h3>
+                <p class="mt-1 text-base leading-relaxed text-stone-600">{s.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    <!-- Why -->
+    <section class="mx-auto max-w-6xl px-4 py-16">
+      <h2 class="max-w-2xl text-3xl leading-tight font-extrabold tracking-tight text-stone-900 sm:text-4xl">{L.why.title}</h2>
+      <ul class="mt-10 grid gap-x-16 gap-y-8 sm:grid-cols-2">
+        {L.why.items.map((f) => (
+          <li class="reveal-scroll border-t-2 border-brand pt-4">
+            <h3 class="text-xl font-bold text-stone-900">{f.title}</h3>
+            <p class="mt-1 text-base leading-relaxed text-stone-600">{f.body}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <!-- Price -->
+    <section id="price" class="bg-brand/5">
+      <div class="mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+        <div>
+          <h2 class="text-3xl leading-tight font-extrabold tracking-tight text-stone-900 sm:text-4xl">{L.price.title}</h2>
+          <p class="mt-3 max-w-md text-lg text-stone-600">{L.price.amount}</p>
+        </div>
+        <div class="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-[0_30px_60px_-30px_rgba(15,118,110,0.3)] sm:p-8">
+          <p class="text-base font-bold text-stone-700">{L.price.name}</p>
+          <p class="mt-1 text-6xl font-extrabold tracking-tight text-stone-900">{money(PRICE_SETUP_BAHT)}</p>
+          <ul class="mt-6 flex flex-col gap-3">
+            {L.price.includes.map((i) => (
+              <li class="flex gap-3 text-base text-stone-800">
+                <svg class="mt-0.5 shrink-0 text-brand" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+                {i}
+              </li>
+            ))}
+          </ul>
+          <div class="mt-6 flex items-start justify-between gap-4 rounded-2xl bg-stone-100 p-4">
+            <div>
+              <p class="text-base font-bold text-stone-900">{L.price.addOnTitle}</p>
+              <p class="text-base text-stone-600">{L.price.addOnBody}</p>
+            </div>
+            <p class="shrink-0 text-lg font-extrabold text-brand">+{money(PRICE_ADDON_BAHT)}</p>
+          </div>
+          <a href={`/${locale}/customize/`} class="mt-3 flex min-h-11 items-center justify-center text-base font-semibold text-brand underline-offset-4 hover:underline">{L.footer.customize}</a>
+          <a href={`/${locale}/start/`} class="bg-brand hover:bg-brand-strong mt-6 flex min-h-14 items-center justify-center rounded-xl text-lg font-bold text-white transition-[background-color,transform] active:scale-[0.98]">{L.price.cta}</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="mx-auto max-w-3xl px-4 py-16">
+      <h2 class="text-3xl leading-tight font-extrabold tracking-tight text-stone-900 sm:text-4xl">{L.faq.title}</h2>
+      <div class="mt-8 divide-y divide-stone-200 border-y border-stone-200">
+        {L.faq.items.map((f) => (
+          <details class="group py-1">
+            <summary class="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 text-lg font-bold text-stone-900 [&::-webkit-details-marker]:hidden">
+              {f.q}
+              <svg class="shrink-0 text-brand transition-transform duration-200 group-open:rotate-45" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+            </summary>
+            <p class="pb-4 text-base leading-relaxed text-stone-600">{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-stone-200 bg-white">
+    <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 pt-8 text-base text-stone-600">
+      <p>{L.footer.note}</p>
+      <nav class="flex gap-5" aria-label="Simple POS">
+        <a href={`/${locale}/login/`} class="font-semibold text-stone-800 hover:text-brand">{L.footer.signIn}</a>
+        <a href={`/${locale}/start/`} class="font-semibold text-stone-800 hover:text-brand">{L.nav.cta}</a>
+        <a href={`/${locale}/customize/`} class="font-semibold text-stone-800 hover:text-brand">{L.footer.customize}</a>
+        <a href={LINE_URL} target="_blank" rel="noopener noreferrer" class="font-semibold text-stone-800 hover:text-brand">{L.footer.line}</a>
+      </nav>
+    </div>
+    <nav class="mx-auto flex max-w-6xl flex-wrap gap-x-6 gap-y-1 px-4 pt-2 pb-8 text-sm text-stone-600" aria-label="Legal">
+      <a href={`/${locale}/terms/`} class="hover:text-brand">{t.legal.terms}</a>
+      <a href={`/${locale}/privacy/`} class="hover:text-brand">{t.legal.privacy}</a>
+      <a href={`/${locale}/refunds/`} class="hover:text-brand">{t.legal.refunds}</a>
+    </nav>
+  </footer>
+  </div>
+</BaseLayout>
