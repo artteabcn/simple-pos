@@ -4,10 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>wassana minimart - POS</title>
-<meta name="theme-color" content="#2563eb">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="wassana minimart">
-<link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22wassana%20minimart%22%2C%22short_name%22%3A%22wassana%22%2C%22start_url%22%3A%22.%2Fwassanamart.html%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f7fafc%22%2C%22theme_color%22%3A%22%232563eb%22%7D">
 <style>
 :root{--bg:#f3f5f9;--bg-soft:#eef1f7;--card:#fff;--text:#111827;--muted:#6b7280;--primary:#2563eb;--primary-dark:#1d4ed8;--primary-light:#93c5fd;--pl:#eef2ff;--bdr:#e5e9f0;--danger:#ef4444;--danger-dark:#dc2626;--success:#10b981;--success-dark:#059669;--shadow-sm:0 1px 2px rgba(15,23,42,.06);--shadow-md:0 4px 14px rgba(15,23,42,.08);--shadow-lg:0 12px 32px rgba(15,23,42,.14);--radius-lg:18px;--radius-md:12px;--radius-sm:9px;--bar-h:88px;}
 @media(prefers-color-scheme:dark){:root{--bg:#0b0f19;--bg-soft:#111726;--card:#161d2e;--text:#eef1f7;--muted:#8b93a7;--primary:#5b8def;--primary-dark:#3b6fd9;--primary-light:#3f5a86;--pl:rgba(91,141,239,.14);--bdr:#232b3d;--shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow-md:0 4px 16px rgba(0,0,0,.45);--shadow-lg:0 16px 36px rgba(0,0,0,.55);}}
@@ -41,6 +37,13 @@ header{display:flex;align-items:center;justify-content:space-between;padding:4px
 .filter-bar .chip:nth-child(8n+6){--accent:#0891b2;}
 .filter-bar .chip:nth-child(8n+7){--accent:#65a30d;}
 .filter-bar .chip:nth-child(8n+8){--accent:#db2777;}
+/* Favorites — up to 6 big one-tap buttons for the most-ordered items */
+.fav-label{display:block;font-size:.7rem;font-weight:700;margin-bottom:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.fav-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:76px;padding:10px 8px;border-radius:var(--radius-md);border:2px solid var(--primary);background:var(--pl);color:var(--primary);cursor:pointer;transition:transform .1s,background .15s,color .15s;}
+.fav-btn:active{transform:scale(.96);background:var(--primary);color:#fff;}
+.fav-name{font-size:.92rem;font-weight:700;text-align:center;line-height:1.25;word-break:break-word;}
+.fav-price{font-size:.8rem;font-weight:600;opacity:.85;font-variant-numeric:tabular-nums;}
 .item-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-bottom:10px;align-items:center;}
 .item-row select{width:100%;padding:13px 10px;border-radius:var(--radius-sm);border:1px solid var(--bdr);font-size:1.02rem;font-weight:600;background:var(--bg-soft);color:var(--text);min-height:54px;transition:border-color .15s;}
 .item-row select:focus{outline:none;border-color:var(--primary);}
@@ -76,9 +79,12 @@ footer{text-align:center;padding:14px 0 4px;}
 .edit-item-card{background:var(--bg-soft);border:1px solid var(--bdr);border-radius:var(--radius-md);padding:12px;margin-bottom:10px;}
 .edit-item-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;}
 .edit-item-row.three{grid-template-columns:1fr 1fr 80px;}
+.edit-item-row.four{grid-template-columns:1fr 1fr 44px 44px;}
 .edit-item-card input{width:100%;padding:11px 10px;border-radius:8px;border:1px solid var(--bdr);font-size:.95rem;background:var(--card);color:var(--text);box-sizing:border-box;min-height:44px;}
 .edit-item-card select{width:100%;padding:11px 10px;border-radius:8px;border:1px solid var(--bdr);font-size:.95rem;background:var(--card);color:var(--text);min-height:44px;}
 .del-item-btn{background:var(--danger);color:#fff;border:none;border-radius:8px;padding:11px;cursor:pointer;font-size:1rem;width:100%;font-weight:700;min-height:44px;}
+.fav-toggle{background:var(--bg-soft);border:1px solid var(--bdr);border-radius:8px;width:100%;min-height:44px;font-size:1.1rem;cursor:pointer;opacity:.4;transition:opacity .15s,background .15s,border-color .15s;}
+.fav-toggle.active{opacity:1;background:#fef9c3;border-color:#eab308;}
 .save-status{text-align:center;font-size:.85rem;padding:10px;border-radius:10px;margin-top:8px;display:none;font-weight:600;}
 .save-status.ok{background:rgba(16,185,129,.12);color:var(--success-dark);display:block;}
 .save-status.err{background:rgba(239,68,68,.12);color:var(--danger-dark);display:block;}
@@ -124,8 +130,11 @@ footer{text-align:center;padding:14px 0 4px;}
 .hist-summary{background:var(--pl);border-radius:10px;padding:11px 12px;margin-bottom:12px;justify-content:space-between;align-items:center;font-size:.88rem;font-weight:700;color:var(--primary);}
 .month-total{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:12px 0 2px;display:flex;justify-content:space-between;}
 .month-total:first-child{padding-top:0;}
-.paid-del{background:none;border:none;color:var(--danger);font-size:1.1rem;line-height:1;cursor:pointer;padding:4px 6px;flex-shrink:0;}
-</style>
+.paid-del{background:none;border:none;color:var(--danger);font-size:1.1rem;line-height:1;cursor:pointer;padding:4px 6px;flex-shrink:0;}</style>
+<link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22wassana%20minimart%22%2C%22short_name%22%3A%22wassana%20minimart%22%2C%22start_url%22%3A%22.%2Fwassanamart.html%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f7fafc%22%2C%22theme_color%22%3A%22%232563eb%22%2C%22icons%22%3A%5B%5D%7D">
+<meta name="theme-color" content="#2563eb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="wassana minimart">
 </head>
 <body>
 <div class="app">
@@ -144,6 +153,10 @@ footer{text-align:center;padding:14px 0 4px;}
 </div>
 <div class="hero" id="totalBox">0.00 ฿</div>
 <div id="pCalc" class="panel active">
+  <div class="card" id="favCard" style="display:none">
+    <label class="fav-label" id="lFav">⭐ Favorites</label>
+    <div class="fav-grid" id="favGrid"></div>
+  </div>
   <div class="filter-bar" id="fBar"></div>
   <div class="card">
     <div id="lines"></div>
@@ -265,15 +278,15 @@ const dict={
   TH:{title:"ใบเสร็จรับเงิน",tax:"เลขประจำตัวผู้เสียภาษี:",sub:"รวมยอด",vatIncl:"รวม VAT 7% แล้ว",vatExtra:"ภาษีมูลค่าเพิ่ม (7%)",sc:"ค่าบริการ",disc:"ส่วนลด",total:"ยอดรวมสุทธิ (฿)",payment:"ช่องทางชำระ:"}
 };
 const uiDict={
-  EN:{orderTab:"🧾 Order",invoiceTab:"🖨️ Invoice",histTab:"📋 History",addItem:"➕ Add Item",disc:"Discount",sc:"Service",pm:"Payment",print:"🖨️ Print Receipt",paidCash:"💵 Cash Paid",paidPp:"📱 PromptPay Paid",
+  EN:{orderTab:"🧾 Order",invoiceTab:"🖨️ Invoice",histTab:"📋 History",addItem:"➕ Add Item",disc:"Discount",sc:"Service",pm:"Payment",print:"🖨️ Print Receipt",paidCash:"💵 Cash Paid",paidPp:"📱 PromptPay Paid",favLabel:"⭐ Favorites",favMax:"You can mark up to 6 favorites.",
       histAll:"All (30 days)",histToday:"Today",histWeek:"This Week",histMonth:"This Month",histTotal:"Total",histBills:"bills",histNone:"No paid bills in this period.",histDelConfirm:"Delete this bill from history?",histDel:"Delete",histView:"👁️ View"},
-  TH:{orderTab:"🧾 คำสั่งซื้อ",invoiceTab:"🖨️ ใบแจ้งหนี้",histTab:"📋 ประวัติ",addItem:"➕ เพิ่มรายการ",disc:"ส่วนลด",sc:"ค่าบริการ",pm:"ชำระเงิน",print:"🖨️ พิมพ์ใบเสร็จ",paidCash:"💵 เงินสด",paidPp:"📱 พร้อมเพย์",
+  TH:{orderTab:"🧾 คำสั่งซื้อ",invoiceTab:"🖨️ ใบแจ้งหนี้",histTab:"📋 ประวัติ",addItem:"➕ เพิ่มรายการ",disc:"ส่วนลด",sc:"ค่าบริการ",pm:"ชำระเงิน",print:"🖨️ พิมพ์ใบเสร็จ",paidCash:"💵 เงินสด",paidPp:"📱 พร้อมเพย์",favLabel:"⭐ รายการโปรด",favMax:"เลือกรายการโปรดได้สูงสุด 6 รายการ",
       histAll:"ทั้งหมด (30 วัน)",histToday:"วันนี้",histWeek:"สัปดาห์นี้",histMonth:"เดือนนี้",histTotal:"ยอดรวม",histBills:"บิล",histNone:"ไม่มีบิลที่ชำระในช่วงนี้",histDelConfirm:"ลบบิลนี้ออกจากประวัติ?",histDel:"ลบ",histView:"👁️ ดู"}
 };
 async function loadLiveMenu(){
   try{
     const r=await fetch(`/data/${SLUG}-menu.json`);
-    if(r.ok){dataset=await r.json();fb();up();}
+    if(r.ok){dataset=await r.json();fb();up();renderFavorites();}
   }catch(e){}
   return true;
 }
@@ -306,7 +319,8 @@ function sl(lang){
   document.getElementById("fOptToday").textContent=ui.histToday;
   document.getElementById("fOptWeek").textContent=ui.histWeek;
   document.getElementById("fOptMonth").textContent=ui.histMonth;
-  up();calc();
+  document.getElementById("lFav").textContent=ui.favLabel;
+  up();calc();renderFavorites();
   if(document.getElementById("pHist").className.indexOf("active")>-1)renderPaidBills();
 }
 function fb(){
@@ -338,6 +352,9 @@ function up(forceAll){
 function applyRow(row,r){
   const sel=row.querySelector("select");
   let item=dataset.find(x=>x.id===r.id);
+  // Item id no longer exists in dataset (menu edit / live reload) —
+  // inject a synthetic option from the saved snapshot so the row is
+  // never silently dropped on recall.
   if(!item){
     item={id:r.id,nameEN:r.nameEN||"Unknown",nameTH:r.nameTH||"ไม่ทราบ",price:r.price||0};
     const o=document.createElement("option");o.value=item.id;
@@ -363,7 +380,6 @@ function add(){
   del.onclick=()=>{row.remove();calc();};
   row.append(sel,step,del);
   document.getElementById("lines").appendChild(row);
-  return row;
 }
 function addNoUpd(){
   const id="r_"+Math.random().toString(36).substr(2,5);
@@ -387,6 +403,37 @@ function hc(id){
   const sel=document.getElementById(id).querySelector("select");
   const item=dataset.find(d=>d.id===sel.value);
   sel.dataset.price=item?item.price:0;calc();
+}
+function renderFavorites(){
+  const card=document.getElementById("favCard");
+  const grid=document.getElementById("favGrid");
+  const favs=dataset.filter(d=>d.favorite).slice(0,6);
+  grid.innerHTML="";
+  if(!favs.length){card.style.display="none";return;}
+  card.style.display="block";
+  favs.forEach(d=>{
+    const b=document.createElement("button");b.type="button";b.className="fav-btn";
+    const nm=document.createElement("span");nm.className="fav-name";nm.textContent=l==="EN"?d.nameEN:d.nameTH;
+    const pr=document.createElement("span");pr.className="fav-price";pr.textContent=CURRENCY+d.price;
+    b.append(nm,pr);
+    b.onclick=()=>addFavorite(d.id);
+    grid.appendChild(b);
+  });
+}
+function addFavorite(id){
+  const rows=document.querySelectorAll(".item-row");
+  for(const row of rows){
+    const sel=row.querySelector("select");
+    if(sel.value===id){
+      const q=row.querySelector(".q");
+      q.value=(parseInt(q.value)||0)+1;
+      calc();return;
+    }
+  }
+  const row=addNoUpd();
+  up(true);
+  row.querySelector("select").value=id;
+  hc(row.id);
 }
 function ppPayload(rawId,amount){
   const id=rawId.replace(/\D/g,"");if(!id)return"";
@@ -516,9 +563,10 @@ function renderEditList(){
     const catOptions=cats.map(c=>`<option value="${c}" ${item.category===c?"selected":""}>${c}</option>`).join("");
     card.innerHTML=`
       <div class="edit-item-row"><input value="${item.nameEN||""}" placeholder="English name" oninput="editItems[${i}].nameEN=this.value"><input value="${item.nameTH||""}" placeholder="ชื่อภาษาไทย" oninput="editItems[${i}].nameTH=this.value"></div>
-      <div class="edit-item-row three">
+      <div class="edit-item-row four">
         <select onchange="editItems[${i}].category=this.value"><option value="">-- Category --</option>${catOptions}</select>
         <input type="number" value="${item.price||0}" placeholder="Price" oninput="editItems[${i}].price=parseFloat(this.value)||0">
+        <button type="button" class="fav-toggle${item.favorite?" active":""}" onclick="toggleFavorite(${i})" title="Favorite">⭐</button>
         <button class="del-item-btn" onclick="editItems.splice(${i},1);renderEditList()">✕</button>
       </div>`,
     list.appendChild(card);
@@ -527,6 +575,12 @@ function renderEditList(){
 function addEditItem(){
   const cats=getCategories();
   editItems.push({id:"item_"+Math.random().toString(36).substr(2,5),nameEN:"",nameTH:"",price:0,category:cats[0]||""});
+  renderEditList();
+}
+function toggleFavorite(i){
+  const activeCount=editItems.filter(x=>x.favorite).length;
+  if(!editItems[i].favorite&&activeCount>=6){alert(uiDict[l].favMax);return;}
+  editItems[i].favorite=!editItems[i].favorite;
   renderEditList();
 }
 async function saveMenu(){
@@ -544,7 +598,7 @@ async function saveMenu(){
     const r1=await apiPost(`data/${SLUG}-menu.json`,menuJson,"pos(edit): menu update from POS terminal");
     const r2=await apiPost(`data/${SLUG}-manifest.json`,JSON.stringify(manifest,null,2),"pos(edit): manifest sync from POS terminal");
     if(r1.ok&&r2.ok){
-      dataset=editItems;fb();up();calc();
+      dataset=editItems;fb();up();calc();renderFavorites();
       status.textContent="✅ Saved! Menu updated on server.";
       status.className="save-status ok";
       setTimeout(closeEdit,1500);
@@ -556,22 +610,6 @@ async function saveMenu(){
     status.textContent="❌ "+e.message;
     status.className="save-status err";
   }
-}
-function saveDraft(){
-  const rows=[];
-  document.querySelectorAll(".item-row").forEach(row=>{
-    const sel=row.querySelector("select");
-    const qty=parseInt(row.querySelector(".q").value)||0;
-    if(sel.value&&qty>0)rows.push({id:sel.value,qty});
-  });
-  localStorage.setItem("pos_draft_"+SLUG,JSON.stringify({
-    rows,
-    disc:document.getElementById("disc").value,
-    sc:document.getElementById("sc").value,
-    pm:document.getElementById("pm").value,
-    tab:document.getElementById("tab").value,
-    note:document.getElementById("note").value
-  }));
 }
 async function syncBillsToServer(bills){
   const badge=document.getElementById("syncBadge");badge.className="sync-badge busy";badge.textContent=l==="EN"?"Syncing bills…":"กำลังซิงก์บิล…";
@@ -589,6 +627,37 @@ async function loadBillsFromServer(){
     badge.className="sync-badge"; badge.textContent=""; return false;
   }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Load error":"โหลดไม่ได้"; return false; }
 }
+async function syncPaidBillsToServer(paid){
+  const badge=document.getElementById("syncBadge");badge.className="sync-badge busy";badge.textContent=l==="EN"?"Syncing paid bills…":"กำลังซิงก์บิลที่ชำระ…";
+  try{
+    const r=await fetch("/api/deploy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({shopSlug:SLUG,path:`data/${SLUG}-paid.json`,content:JSON.stringify(paid,null,2),message:`pos(paid): sync ${SLUG}`})});
+    if(r.ok){ badge.className="sync-badge"; badge.textContent=l==="EN"?"Synced":"ซิงก์แล้ว"; setTimeout(()=>badge.className="sync-badge",1500); }
+    else{ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync failed":"ซิงก์ล้มเหลว"; }
+  }catch(e){ badge.className="sync-badge err"; badge.textContent=l==="EN"?"Sync error":"เกิดข้อผิดพลาด"; }
+}
+async function loadPaidBillsFromServer(){
+  try{
+    const r=await fetch(`/data/${SLUG}-paid.json`);
+    if(r.ok){ const paid=await r.json(); localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(paid||[])); renderPaidBills(); return true; }
+    return false;
+  }catch(e){ return false; }
+}
+function saveDraft(){
+  const rows=[];
+  document.querySelectorAll(".item-row").forEach(row=>{
+    const sel=row.querySelector("select");
+    const qty=parseInt(row.querySelector(".q").value)||0;
+    if(sel.value&&qty>0)rows.push({id:sel.value,qty});
+  });
+  localStorage.setItem("pos_draft_"+SLUG,JSON.stringify({
+    rows,
+    disc:document.getElementById("disc").value,
+    sc:document.getElementById("sc").value,
+    pm:document.getElementById("pm").value,
+    tab:document.getElementById("tab").value,
+    note:document.getElementById("note").value
+  }));
+}
 function restoreDraft(){
   try{
     const raw=localStorage.getItem("pos_draft_"+SLUG);
@@ -603,7 +672,9 @@ function restoreDraft(){
     document.getElementById("lines").innerHTML="";
     const prevF=f;f="ALL";
     const added=[];
-    d.rows.forEach(r=>{ const row=addNoUpd(); added.push({row,r}); });
+    d.rows.forEach(r=>{
+      const row=addNoUpd(); added.push({row,r});
+    });
     up(true);
     added.forEach(({row,r})=>applyRow(row,r));
     f=prevF;
@@ -639,6 +710,7 @@ function saveBill(){
   const bills=JSON.parse(localStorage.getItem("pos_bills_"+SLUG)||"[]");
   bills.unshift({label,...order,savedAt:new Date().toISOString()});
   localStorage.setItem("pos_bills_"+SLUG,JSON.stringify(bills.slice(0,30)));
+  // Optimistically persist to server-backed store so bills are available across devices
   try{ syncBillsToServer(bills.slice(0,30)); }catch(e){}
   clearOrder();
   renderBills();
@@ -654,7 +726,9 @@ function recallBill(idx){
   document.getElementById("lines").innerHTML="";
   const prevF=f;f="ALL";
   const added=[];
-  b.rows.forEach(r=>{ const row=addNoUpd(); added.push({row,r}); });
+  b.rows.forEach(r=>{
+    const row=addNoUpd(); added.push({row,r});
+  });
   up(true);
   added.forEach(({row,r})=>applyRow(row,r));
   f=prevF;
@@ -700,6 +774,8 @@ function markAsPaid(pmOverride){
   const id=Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   paid.unshift({id,label,...order,paidAt:new Date().toISOString()});
   localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(paid.slice(0,500)));
+  // Persist paid bill to server so history survives across devices / clears
+  try{ syncPaidBillsToServer(paid.slice(0,500)); }catch(e){}
   clearOrder();
   m("hist");
 }
@@ -713,6 +789,7 @@ function deletePaidBill(id){
   if(!confirm(uiDict[l].histDelConfirm))return;
   const all=getPaidBills(true).filter(b=>b.id!==id);
   localStorage.setItem("pos_paid_"+SLUG,JSON.stringify(all));
+  try{ syncPaidBillsToServer(all); }catch(e){}
   renderPaidBills();
 }
 function filterPaidBills(bills,mode){
@@ -843,8 +920,8 @@ function printHistorySummary(){
   win.document.close();
   setTimeout(()=>win.print(),400);
 }
-fb();
-loadLiveMenu().then(()=>{ loadBillsFromServer().then(()=>{ if(!restoreDraft())add(); renderBills(); renderPaidBills(); }); });
+fb();renderFavorites();
+loadLiveMenu().then(()=>{ Promise.all([loadBillsFromServer(),loadPaidBillsFromServer()]).then(()=>{ if(!restoreDraft())add(); renderBills(); renderPaidBills(); }); });
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();window.__installEvt=e;const b=document.getElementById("installBtn");if(b){b.style.display="inline-block";b.onclick=()=>{e.prompt();e.userChoice.then(()=>{b.style.display="none";window.__installEvt=null;});};};});
 </script>
 </body>
