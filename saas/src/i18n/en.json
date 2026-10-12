@@ -415,5 +415,19 @@
     "acceptAnd": " and the ",
     "acceptEnd": ".",
     "acceptError": "Please accept the terms to continue"
+  },
+  "devices": {
+    "title": "Devices",
+    "body": "Phones and tablets that can sell and sync for this shop.",
+    "empty": "No other devices yet.",
+    "current": "This device",
+    "lastSeen": "Last used {when}",
+    "neverUsed": "Not used yet",
+    "revoke": "Revoke",
+    "revokeConfirmTitle": "Revoke {name}?",
+    "revokeConfirmBody": "It will stop being able to sell or sync for this shop. This cannot be undone here.",
+    "revokeConfirmed": "Device revoked",
+    "revokeFailed": "Could not revoke the device",
+    "loadFailed": "Could not load devices"
   }
 }

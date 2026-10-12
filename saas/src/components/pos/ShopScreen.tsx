@@ -7,6 +7,7 @@ import type { PosState } from "../../lib/validations/pos";
 import type { MenuItem, ShopProfile } from "../../lib/validations/shop";
 import type { Link } from "../../lib/pos/sync-client";
 import { VatChoice } from "./Choices";
+import { DevicesCard } from "./DevicesCard";
 import { PinCard } from "./PinCard";
 import { useI18n } from "./i18n";
 import { Button, Field, Sheet, useToast } from "./ui";
@@ -100,6 +101,7 @@ export function ShopScreen({ state, set, link = null, pinSet = false }: Props): 
       <h1 className="text-2xl font-extrabold text-stone-900 dark:text-stone-50">{t.shop.title}</h1>
 
       {link && <PinCard link={link} pinSet={pinSet} />}
+      {link && <DevicesCard link={link} />}
 
       <Card title={t.shop.details}>
         <SavedField label={t.shop.name} value={p.name} required onCommit={(v) => patch({ name: v })} />

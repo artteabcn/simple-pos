@@ -4,7 +4,7 @@ import { createTestDb, testClock } from "../../test/d1";
 import { createPaidShop } from "../../test/fixtures";
 import { loginMail, sendMail, welcomeMail } from "../email";
 import { LOCALES } from "../../i18n/utils";
-import { authenticateDevice, createDevice, listDevices, revokeAllDevices } from "./devices";
+import { authenticateDevice, createDevice, listDevices, revokeAllDevices, revokeDevice } from "./devices";
 import { schema, type Db } from "./index";
 import { issueLoginLinks, MAX_LINKS_PER_HOUR, redeemLoginLink } from "./login";
 import { hashPin, isManager, MANAGER_SESSION_MS, MAX_PIN_FAILURES, PIN_LOCK_MS, setPin, unlockWithPin } from "./pin";
@@ -35,6 +35,26 @@ describe("devices", () => {
     const { shop, token } = await createPaidShop(db, clock);
     await revokeAllDevices(db, shop.id, clock.now);
     expect(await authenticateDevice(db, token, clock.now)).toBeNull();
+  });
+  it("revokes one device without touching the shop's others", async () => {
+    const { shop, token } = await createPaidShop(db, clock);
+    const second = await createDevice(db, shop.id, "Back counter", clock);
+    expect(await revokeDevice(db, shop.id, second.deviceId, clock.now)).toBe(true);
+    expect(await authenticateDevice(db, second.token, clock.now)).toBeNull();
+    expect(await authenticateDevice(db, token, clock.now)).not.toBeNull();
+  });
+  it("cannot revoke a device belonging to a different shop", async () => {
+    const { shop: shopA } = await createPaidShop(db, clock, { slug: "shop-a" });
+    const { shop: shopB, token: tokenB } = await createPaidShop(db, clock, { slug: "shop-b" });
+    const deviceB = await createDevice(db, shopB.id, "Shop B till", clock);
+    expect(await revokeDevice(db, shopA.id, deviceB.deviceId, clock.now)).toBe(false);
+    expect(await authenticateDevice(db, tokenB, clock.now)).not.toBeNull();
+  });
+  it("revoking an already-revoked device reports false", async () => {
+    const { shop } = await createPaidShop(db, clock);
+    const second = await createDevice(db, shop.id, "Back counter", clock);
+    expect(await revokeDevice(db, shop.id, second.deviceId, clock.now)).toBe(true);
+    expect(await revokeDevice(db, shop.id, second.deviceId, clock.now)).toBe(false);
   });
   it("never stores the key itself", async () => {
     const { token } = await createPaidShop(db, clock);

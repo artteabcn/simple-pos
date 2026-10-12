@@ -28,6 +28,18 @@ export async function revokeAllDevices(db: Db, shopId: string, now: Date): Promi
     .where(and(eq(devices.shopId, shopId), isNull(devices.revokedAt)));
 }
 
+/** Revokes one device (a lost or stolen phone) without touching the shop's other devices. False if it was already gone. */
+export async function revokeDevice(db: Db, shopId: string, deviceId: string, now: Date): Promise<boolean> {
+  const row = await db
+    .select({ id: devices.id })
+    .from(devices)
+    .where(and(eq(devices.id, deviceId), eq(devices.shopId, shopId), isNull(devices.revokedAt)))
+    .get();
+  if (!row) return false;
+  await db.update(devices).set({ revokedAt: now.toISOString(), updatedAt: now.toISOString() }).where(eq(devices.id, deviceId));
+  return true;
+}
+
 /** "last seen" is written at most every 10 minutes so a busy till does not write on every sync. */
 const SEEN_EVERY_MS = 10 * 60 * 1000;
 

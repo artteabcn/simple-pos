@@ -415,5 +415,19 @@
     "acceptAnd": " et la ",
     "acceptEnd": ".",
     "acceptError": "Veuillez accepter les conditions pour continuer"
+  },
+  "devices": {
+    "title": "Appareils",
+    "body": "Téléphones et tablettes qui peuvent vendre et synchroniser pour cette boutique.",
+    "empty": "Aucun autre appareil pour l'instant.",
+    "current": "Cet appareil",
+    "lastSeen": "Dernière utilisation {when}",
+    "neverUsed": "Pas encore utilisé",
+    "revoke": "Révoquer",
+    "revokeConfirmTitle": "Révoquer {name} ?",
+    "revokeConfirmBody": "Il ne pourra plus vendre ni synchroniser pour cette boutique. Cette action est irréversible depuis ici.",
+    "revokeConfirmed": "Appareil révoqué",
+    "revokeFailed": "Impossible de révoquer l'appareil",
+    "loadFailed": "Impossible de charger les appareils"
   }
 }
