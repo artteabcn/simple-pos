@@ -1,7 +1,7 @@
 /** Small helpers shared by the API routes. */
 import { liveClock, makeDb, type Clock, type Db } from "./db";
 import { authenticateDevice, type Authenticated } from "./db/devices";
-import { isManager } from "./db/pin";
+import { isManager, safeEqual } from "./db/pin";
 
 export function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -54,6 +54,17 @@ export async function requireManager(
   if (!env.APP_SECRET) return json({ error: "pin_unavailable" }, 503);
   const unlocked = await isManager(who.db, who.auth.device, request.headers.get("x-manager-token"), clock.now);
   return unlocked ? who : json({ error: "manager_required" }, 403);
+}
+
+/**
+ * Gate for the team's admin screen (customization requests) — a different audience from shop/till auth,
+ * so it is not device- or shop-scoped. A single shared secret (`ADMIN_TOKEN`, a Cloudflare secret like
+ * APP_SECRET) compared in constant time; never stored anywhere, so there is nothing in D1 to leak it.
+ */
+export function requireAdmin(request: Request, env: { ADMIN_TOKEN?: string }): Response | null {
+  if (!env.ADMIN_TOKEN) return json({ error: "admin_unavailable" }, 503);
+  const token = bearer(request);
+  return token && safeEqual(token, env.ADMIN_TOKEN) ? null : json({ error: "unauthorized" }, 401);
 }
 
 /** Where links in emails should point: the configured public address, else the address of this request. */

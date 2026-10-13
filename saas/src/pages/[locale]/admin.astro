@@ -1,0 +1,30 @@
+---
+import "../../styles/global.css";
+import AdminApp from "../../components/admin/AdminApp";
+import { LOCALES } from "../../i18n/utils";
+
+export const prerender = true;
+
+export function getStaticPaths() {
+  return LOCALES.map((locale) => ({ params: { locale } }));
+}
+
+// The team's own tool, not part of the public multi-language site: English-only regardless of the
+// locale in the URL (Astro's i18n routing requires every page to sit under a locale prefix — there is
+// no way to opt a plain .astro page out of that — so this exists at /en/admin/, /th/admin/ etc. equally;
+// /en/admin/ is the one to actually use and share).
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Admin — Simple POS</title>
+  </head>
+  <body class="min-h-screen font-sans antialiased">
+    <AdminApp client:only="react" />
+  </body>
+</html>
