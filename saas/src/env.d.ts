@@ -18,6 +18,8 @@ interface Env {
   PUBLIC_SITE_URL?: string;
   /** Local development only: return sign-in links in the API reply when no email key is set. Never set in production. */
   DEV_ECHO_LINKS?: string;
+  /** Shared secret for the team's /admin screen (customisation requests). Without it, /admin is unusable. */
+  ADMIN_TOKEN?: string;
 }
 
 declare module "cloudflare:workers" {

@@ -69,7 +69,7 @@ export type UnlockOutcome =
   | { ok: false; reason: "locked"; retryAfterSec: number }
   | { ok: false; reason: "error" };
 
-const authHeaders = (link: Link, withManager = false): Record<string, string> => ({
+export const authHeaders = (link: Link, withManager = false): Record<string, string> => ({
   Authorization: `Bearer ${link.token}`,
   "Content-Type": "application/json",
   ...(withManager && getManager() ? { "X-Manager-Token": getManager()!.token } : {}),

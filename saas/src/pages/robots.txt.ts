@@ -4,7 +4,7 @@ import { SITE_URL } from "../lib/site";
 export const prerender = true;
 
 /** Private pages and the API stay out of search; the public pages are open to search and AI assistants. */
-const PRIVATE = ["/api/", "/*/app/", "/*/welcome", "/*/login/verify"];
+const PRIVATE = ["/api/", "/*/app/", "/*/welcome", "/*/login/verify", "/*/admin"];
 const AI_BOTS = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-User", "PerplexityBot", "Google-Extended", "Applebot-Extended"];
 
 export const GET: APIRoute = () => {

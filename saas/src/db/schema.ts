@@ -17,6 +17,9 @@ export const shops = sqliteTable(
     pinHash: text("pin_hash"),
     pinFailures: integer("pin_failures").notNull().default(0),
     pinLockedUntil: text("pin_locked_until"),
+    /** Shared lockout across every staff member's PIN attempts, separate from the manager's own. */
+    staffPinFailures: integer("staff_pin_failures").notNull().default(0),
+    staffPinLockedUntil: text("staff_pin_locked_until"),
     /** Shop profile and menu as validated JSON; the newest edit wins (configUpdatedAt). */
     profileJson: text("profile_json").notNull().default("{}"),
     menuJson: text("menu_json").notNull().default("[]"),
@@ -71,6 +74,36 @@ export const managerSessions = sqliteTable(
     updatedAt: text("updated_at").notNull().$defaultFn(now).$onUpdateFn(now),
   },
   (t) => [index("manager_sessions_device_idx").on(t.deviceId)],
+);
+
+/** One staff member of a shop: their own name and PIN, so a sale can be attributed to who rang it up. */
+export const staff = sqliteTable(
+  "staff",
+  {
+    id: text("id").primaryKey(),
+    shopId: text("shop_id").notNull().references(() => shops.id),
+    name: text("name").notNull(),
+    /** HMAC of the PIN (see shops.pinHash); salted with this staff row's own id, never the PIN itself. */
+    pinHash: text("pin_hash").notNull(),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    createdAt: text("created_at").notNull().$defaultFn(now),
+    updatedAt: text("updated_at").notNull().$defaultFn(now).$onUpdateFn(now),
+  },
+  (t) => [index("staff_shop_idx").on(t.shopId, t.active)],
+);
+
+/** Short-lived "this staff PIN was entered on this device" proof, tagging the sales made until it expires. */
+export const staffSessions = sqliteTable(
+  "staff_sessions",
+  {
+    tokenHash: text("token_hash").primaryKey(),
+    deviceId: text("device_id").notNull().references(() => devices.id),
+    staffId: text("staff_id").notNull().references(() => staff.id),
+    expiresAt: text("expires_at").notNull(),
+    createdAt: text("created_at").notNull().$defaultFn(now),
+    updatedAt: text("updated_at").notNull().$defaultFn(now).$onUpdateFn(now),
+  },
+  (t) => [index("staff_sessions_device_idx").on(t.deviceId)],
 );
 
 /** "Curated customisation" requests: what the owner needs, so the team can get back to them. */
@@ -172,6 +205,7 @@ export const records = sqliteTable(
 
 export type ShopRow = typeof shops.$inferSelect;
 export type DeviceRow = typeof devices.$inferSelect;
+export type StaffRow = typeof staff.$inferSelect;
 export type CustomizationRequestRow = typeof customizationRequests.$inferSelect;
 export type SignupRow = typeof signups.$inferSelect;
 export type PaymentRow = typeof payments.$inferSelect;

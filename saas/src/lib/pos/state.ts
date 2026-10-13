@@ -13,7 +13,7 @@ import type {
 } from "../validations/pos";
 
 /** Injected so the logic stays pure and testable. */
-export type Ctx = { now: Date; id: () => string };
+export type Ctx = { now: Date; id: () => string; staff?: { id: string; name: string } };
 
 export const SAVED_CAP = 30;
 export const PAID_CAP = 500;
@@ -83,6 +83,7 @@ function snapshot(s: PosState, ctx: Ctx, extra: Partial<Bill>): Bill {
     servicePct: s.order.servicePct,
     vatMode: s.shop?.profile.vatMode ?? "inclusive",
     ...t,
+    ...(ctx.staff ? { staffId: ctx.staff.id, staffName: ctx.staff.name } : {}),
     ...extra,
   };
 }

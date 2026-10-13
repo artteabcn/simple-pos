@@ -4,6 +4,8 @@ name: Deploy Simple POS (saas) to Cloudflare Workers
 # tests -> D1 (create if missing) -> migrations -> deploy -> secrets -> Stripe webhook (create once).
 # Needs these repository secrets (Settings > Secrets and variables > Actions):
 #   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, STRIPE_SECRET_KEY, APP_SECRET, RESEND_API_KEY
+#   ADMIN_TOKEN is optional: without it, /<locale>/admin/ (the team's customisation-requests screen)
+#   stays unusable (503) rather than unprotected. Any long random string.
 # and these repository variables (optional, defaults shown): DOMAIN (pos.arkadya.tech),
 #   EMAIL_FROM (Simple POS <no-reply@arkadya.tech>), EMAIL_REPLY_TO (hello@arkadya.tech)
 on:
@@ -99,11 +101,12 @@ jobs:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           APP_SECRET: ${{ secrets.APP_SECRET }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
           WHSEC: ${{ steps.stripe.outputs.whsec }}
         run: |
           node -e "
             const e=process.env, o={};
-            for (const k of ['STRIPE_SECRET_KEY','APP_SECRET','RESEND_API_KEY']) if (e[k]) o[k]=e[k];
+            for (const k of ['STRIPE_SECRET_KEY','APP_SECRET','RESEND_API_KEY','ADMIN_TOKEN']) if (e[k]) o[k]=e[k];
             if (e.WHSEC) o.STRIPE_WEBHOOK_SECRET=e.WHSEC;
             require('fs').writeFileSync('/tmp/secrets.json', JSON.stringify(o));"
           npx wrangler secret bulk /tmp/secrets.json

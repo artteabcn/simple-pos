@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "Simple POS",
-    "tagline": "Eine einfache Kasse für kleine Restaurants und Läden"
+    "tagline": "Eine einfache Kasse für kleine Restaurants und Läden",
+    "install": "App installieren"
   },
   "nav": {
     "sell": "Verkaufen",
@@ -103,7 +104,9 @@
     "printSummary": "Zusammenfassung drucken",
     "paidWith": "Bezahlt mit",
     "time": "Uhrzeit",
-    "deleteBill": "Rechnung entfernen"
+    "deleteBill": "Rechnung entfernen",
+    "byStaff": "Nach Personal",
+    "unattributed": "Nicht angemeldet"
   },
   "shop": {
     "title": "Mein Laden",
@@ -415,5 +418,50 @@
     "acceptAnd": " und die ",
     "acceptEnd": ".",
     "acceptError": "Bitte akzeptieren Sie die Bedingungen, um fortzufahren"
+  },
+  "devices": {
+    "title": "Geräte",
+    "body": "Telefone und Tablets, die für diesen Laden verkaufen und synchronisieren können.",
+    "empty": "Noch keine weiteren Geräte.",
+    "current": "Dieses Gerät",
+    "lastSeen": "Zuletzt genutzt {when}",
+    "neverUsed": "Noch nicht genutzt",
+    "revoke": "Entziehen",
+    "revokeConfirmTitle": "{name} entziehen?",
+    "revokeConfirmBody": "Das Gerät kann für diesen Laden nicht mehr verkaufen oder synchronisieren. Das lässt sich hier nicht rückgängig machen.",
+    "revokeConfirmed": "Gerät entzogen",
+    "revokeFailed": "Gerät konnte nicht entzogen werden",
+    "loadFailed": "Geräte konnten nicht geladen werden"
+  },
+  "staff": {
+    "title": "Personal",
+    "body": "Geben Sie jeder Person eine eigene PIN, damit Verkäufe zugeordnet werden können.",
+    "empty": "Noch kein Personal.",
+    "add": "Person hinzufügen",
+    "name": "Name",
+    "pin": "PIN (4 bis 6 Ziffern)",
+    "save": "Speichern",
+    "rename": "Umbenennen",
+    "changePin": "PIN ändern",
+    "deactivate": "Entfernen",
+    "deactivateConfirmTitle": "{name} entfernen?",
+    "deactivateConfirmBody": "Die PIN funktioniert dann nicht mehr. Vergangene Verkäufe behalten den Namen.",
+    "added": "Person hinzugefügt",
+    "updated": "Gespeichert",
+    "removed": "Entfernt",
+    "limit": "Sie haben das Limit von {n} Personen erreicht.",
+    "duplicate": "Eine andere Person verwendet diese PIN bereits.",
+    "invalid": "Verwenden Sie 4 bis 6 Ziffern.",
+    "error": "Etwas ist schiefgelaufen. Prüfen Sie Ihre Verbindung.",
+    "whoSelling": "Wer verkauft?",
+    "signedInAs": "Verkauf als {name}",
+    "switchUser": "Wechseln",
+    "signOut": "Abmelden",
+    "gateTitle": "Personal-PIN",
+    "gateBody": "Geben Sie Ihre PIN ein, damit Verkäufe Ihnen zugeordnet werden. Das ist freiwillig.",
+    "skip": "Überspringen",
+    "unlock": "Weiter",
+    "wrong": "Falsche PIN.",
+    "locked": "Zu viele Versuche. Versuchen Sie es in {m} Minuten erneut."
   }
 }

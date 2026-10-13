@@ -23,7 +23,8 @@ export async function hashPin(secret: string, shopId: string, pin: string): Prom
   return toHex(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${shopId}:${pin}`)));
 }
 
-function safeEqual(a: string, b: string): boolean {
+/** Constant-time string compare, so a wrong guess cannot be timed to learn how much of it was right. */
+export function safeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let d = 0;
   for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);

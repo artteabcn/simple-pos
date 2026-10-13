@@ -77,6 +77,18 @@ describe("payment", () => {
   it("refuses an empty order", () => {
     expect(payOrder(withShop(), ctx(at(13)), "cash")).toBeNull();
   });
+  it("tags a paid bill with whoever is signed in as staff", () => {
+    const s = addToOrder(withShop(), beer);
+    const withStaff: Ctx = { ...ctx(at(13)), staff: { id: "stf1", name: "Nok" } };
+    const r = payOrder(s, withStaff, "cash", 100);
+    expect(r?.bill.staffId).toBe("stf1");
+    expect(r?.bill.staffName).toBe("Nok");
+  });
+  it("leaves a paid bill unattributed when no one is signed in as staff", () => {
+    const r = payOrder(addToOrder(withShop(), beer), ctx(at(13)), "cash", 100);
+    expect(r?.bill.staffId).toBeUndefined();
+    expect(r?.bill.staffName).toBeUndefined();
+  });
 });
 
 describe("delete and undo", () => {

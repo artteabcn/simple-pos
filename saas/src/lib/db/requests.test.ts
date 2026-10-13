@@ -10,7 +10,7 @@ import { authenticateDevice } from "./devices";
 import { schema, type Db } from "./index";
 import { issueLoginLinks } from "./login";
 import { applyRefund, ownerLocale } from "./refunds";
-import { createRequest } from "./requests";
+import { createRequest, listRequests, setRequestStatus } from "./requests";
 
 let db: Db;
 let clock: ReturnType<typeof testClock>;
@@ -62,6 +62,35 @@ describe("saving requests", () => {
     expect((await createRequest(db, { ...input(), email: "other@example.com" }, clock)).ok).toBe(true); // other people are unaffected
     clock.advance(61 * 60_000);
     expect((await createRequest(db, input(), clock)).ok).toBe(true);
+  });
+});
+
+describe("admin: listing and status", () => {
+  const input = (email: string) => CustomizationSchema.parse({ ...form, email });
+
+  it("lists newest first", async () => {
+    await createRequest(db, input("a@example.com"), clock);
+    clock.advance(1000);
+    await createRequest(db, input("b@example.com"), clock);
+    clock.advance(1000);
+    await createRequest(db, input("c@example.com"), clock);
+    const rows = await listRequests(db);
+    expect(rows.map((r) => r.email)).toEqual(["c@example.com", "b@example.com", "a@example.com"]);
+  });
+  it("filters by status", async () => {
+    const a = await createRequest(db, input("a@example.com"), clock);
+    await createRequest(db, input("b@example.com"), clock);
+    if (!a.ok) throw new Error("expected ok");
+    expect(await setRequestStatus(db, a.id, "done", clock.now)).toBe(true);
+    expect((await listRequests(db, "done")).map((r) => r.email)).toEqual(["a@example.com"]);
+    expect((await listRequests(db, "new")).map((r) => r.email)).toEqual(["b@example.com"]);
+  });
+  it("respects the limit", async () => {
+    for (let i = 0; i < 5; i++) await createRequest(db, input(`e${i}@example.com`), clock);
+    expect(await listRequests(db, undefined, 3)).toHaveLength(3);
+  });
+  it("setting the status of an unknown request reports false", async () => {
+    expect(await setRequestStatus(db, "nope", "done", clock.now)).toBe(false);
   });
 });
 

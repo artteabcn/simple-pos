@@ -1,6 +1,7 @@
 /** Small helpers shared by the API routes. */
-import { liveClock, makeDb, type Db } from "./db";
+import { liveClock, makeDb, type Clock, type Db } from "./db";
 import { authenticateDevice, type Authenticated } from "./db/devices";
+import { isManager, safeEqual } from "./db/pin";
 
 export function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -35,6 +36,35 @@ export async function requireDevice(request: Request, env: { DB: Parameters<type
   const db = makeDb(env.DB);
   const auth = await authenticateDevice(db, token, liveClock().now);
   return auth ? { db, auth } : json({ error: "unauthorized" }, 401);
+}
+
+/**
+ * Same as requireDevice, but also requires this device to be unlocked as manager (the `X-Manager-Token`
+ * header), matching the "staff can sell, only the manager changes settings" rule: before any manager PIN
+ * is ever set there is nothing to protect yet, so any device of the shop is let through.
+ */
+export async function requireManager(
+  request: Request,
+  env: { DB: Parameters<typeof makeDb>[0]; APP_SECRET?: string },
+  clock: Clock = liveClock(),
+): Promise<{ db: Db; auth: Authenticated } | Response> {
+  const who = await requireDevice(request, env);
+  if (who instanceof Response) return who;
+  if (!who.auth.shop.pinHash) return who;
+  if (!env.APP_SECRET) return json({ error: "pin_unavailable" }, 503);
+  const unlocked = await isManager(who.db, who.auth.device, request.headers.get("x-manager-token"), clock.now);
+  return unlocked ? who : json({ error: "manager_required" }, 403);
+}
+
+/**
+ * Gate for the team's admin screen (customization requests) — a different audience from shop/till auth,
+ * so it is not device- or shop-scoped. A single shared secret (`ADMIN_TOKEN`, a Cloudflare secret like
+ * APP_SECRET) compared in constant time; never stored anywhere, so there is nothing in D1 to leak it.
+ */
+export function requireAdmin(request: Request, env: { ADMIN_TOKEN?: string }): Response | null {
+  if (!env.ADMIN_TOKEN) return json({ error: "admin_unavailable" }, 503);
+  const token = bearer(request);
+  return token && safeEqual(token, env.ADMIN_TOKEN) ? null : json({ error: "unauthorized" }, 401);
 }
 
 /** Where links in emails should point: the configured public address, else the address of this request. */

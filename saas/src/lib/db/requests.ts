@@ -1,8 +1,12 @@
-import { and, eq, gt, sql } from "drizzle-orm";
+import { and, desc, eq, gt, sql } from "drizzle-orm";
+import type { CustomizationRequestRow } from "../../db/schema";
 import { MAX_REQUESTS_PER_HOUR, type CustomizationInput } from "../validations/customization";
 import { schema, type Clock, type Db } from "./index";
 
 const { customizationRequests, shops } = schema;
+
+export const REQUEST_STATUSES = ["new", "in_progress", "done"] as const;
+export type RequestStatus = (typeof REQUEST_STATUSES)[number];
 
 export type CreateRequestResult = { ok: true; id: string; shopName: string; hasShop: boolean } | { ok: false; reason: "rate_limited" };
 
@@ -33,4 +37,21 @@ export async function createRequest(db: Db, input: CustomizationInput, clock: Cl
     updatedAt: nowIso,
   });
   return { ok: true, id, shopName: input.shopName || shop?.name || "", hasShop: !!shop };
+}
+
+/** For the team's admin screen: most recent first, optionally only one status. */
+export async function listRequests(db: Db, status?: RequestStatus, limit = 200): Promise<CustomizationRequestRow[]> {
+  return db
+    .select()
+    .from(customizationRequests)
+    .where(status ? eq(customizationRequests.status, status) : undefined)
+    .orderBy(desc(customizationRequests.createdAt))
+    .limit(limit);
+}
+
+export async function setRequestStatus(db: Db, id: string, status: RequestStatus, now: Date): Promise<boolean> {
+  const row = await db.select({ id: customizationRequests.id }).from(customizationRequests).where(eq(customizationRequests.id, id)).get();
+  if (!row) return false;
+  await db.update(customizationRequests).set({ status, updatedAt: now.toISOString() }).where(eq(customizationRequests.id, id));
+  return true;
 }

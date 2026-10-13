@@ -90,10 +90,24 @@ export async function onRequest(context) {
 
     // -- DEPLOY: POST /api/deploy --
     // isBase64: true skips re-encoding (for binary files like logos)
+    //
+    // SECURITY: this endpoint has no real auth (both callers — the Studio and each
+    // shop's PIN-gated menu editor — are static client pages with no place to hold
+    // a secret, so a bearer token here would just be security theater). The actual
+    // guard is that `path` must be one of the few per-shop paths this shop's slug is
+    // allowed to touch, so a caller can never write outside its own shop's files
+    // (in particular, never functions/, index.html, or anything under .github/).
+    // This is a stopgap until the legacy app is retired in favor of the SaaS
+    // backend's per-device token + Zod-validated API.
     if (urlPath === "/api/deploy" && method === "POST") {
         try {
             const { shopSlug, path, content, message, isBase64 } = await context.request.json();
             if (!shopSlug || !path || !content) return new Response("Missing Required Fields", { status: 400 });
+            if (!SLUG_RE.test(shopSlug)) return jsonResp({ error: "Bad shop slug" }, 400);
+            if (!isAllowedDeployPath(shopSlug, path)) return jsonResp({ error: "Path not allowed for this shop" }, 403);
+            const maxLen = isBase64 ? 4_000_000 : 500_000; // base64 logo vs. JSON/HTML text
+            if (typeof content !== "string" || content.length > maxLen) return jsonResp({ error: "Content too large" }, 413);
+            if (typeof message !== "string" || message.length > 300) return new Response("Bad message", { status: 400 });
 
             const url = `https://api.github.com/repos/${repo}/contents/${path}`;
 
@@ -139,6 +153,18 @@ function jsonResp(data, status) {
 const SLUG_RE = /^[A-Za-z0-9][A-Za-z0-9-]{0,63}$/;
 const KINDS = { menu: { file: "menu" }, bills: { file: "bills", cap: 30 }, paid: { file: "paid", cap: 500 } };
 const TOMBSTONE_MS = 30 * 24 * 60 * 60 * 1000;
+const LOGO_EXT_RE = /^[a-z0-9]{3,4}$/; // png, jpg, jpeg, gif, webp — no svg (can carry script)
+const SAFE_LOGO_EXTS = new Set(["png", "jpg", "jpeg", "gif", "webp"]);
+
+// A shop's deploy token may only ever touch its own four files.
+function isAllowedDeployPath(shopSlug, path) {
+    if (path === `shops/${shopSlug}.html`) return true;
+    if (path === `data/${shopSlug}-manifest.json`) return true;
+    if (path === `data/${shopSlug}-menu.json`) return true;
+    const m = /^data\/logos\/([^/]+)\.([^./]+)$/.exec(path);
+    if (m && m[1] === shopSlug && LOGO_EXT_RE.test(m[2]) && SAFE_LOGO_EXTS.has(m[2].toLowerCase())) return true;
+    return false;
+}
 
 function toB64(str) {
     const bytes = new TextEncoder().encode(str);
